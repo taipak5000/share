@@ -23,6 +23,7 @@
             --accent-purple: #af52de;
             --accent-green: #34c759;
             --accent-red: #ff3b30;
+            --accent-indigo: #5e5ce6;
         }
 
         /* 🌙 ダークモード用の共通色 */
@@ -192,6 +193,39 @@
         .badge-yellow { background: rgba(255,149,0,0.15); color: var(--accent-orange); }
         .badge-green { background: rgba(52,199,89,0.15); color: var(--accent-green); }
         .badge-gray { background: rgba(142,142,147,0.15); color: var(--text-gray); }
+
+        /* ═══ ジャンル選択・絞り込みボタン ═══ */
+        .filter-row, .genre-selector {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .filter-row { margin-bottom: 14px; }
+        .genre-selector { margin-bottom: 10px; }
+
+        .filter-btn, .genre-btn {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-gray);
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .filter-btn { padding: 6px 12px; font-size: 12.5px; }
+        .genre-btn { padding: 4px 10px; font-size: 11.5px; }
+
+        .filter-btn:not(.active):hover, .genre-btn:not(.active):hover {
+            border-color: var(--text-gray);
+        }
+
+        .filter-btn.active, .genre-btn.active {
+            border-color: transparent;
+            color: #ffffff;
+        }
 
         .action-links {
             display: flex;
@@ -402,9 +436,21 @@
 
     <div class="section-card">
         <div class="section-header">📍 設置した創作物一覧</div>
-        
+
+        <div class="filter-row">
+            <button v-for="f in filterOptions" :key="f.value" class="filter-btn"
+                    :class="{ active: activeFilter === f.value }"
+                    :style="activeFilter === f.value ? { background: f.color } : {}"
+                    @click="activeFilter = f.value">
+                {{ f.label }}
+            </button>
+        </div>
+
         <div v-if="placedItems.length === 0" style="text-align: center; color: var(--text-gray); padding: 30px 0; font-size: 13px;">
             現在管理している創作物は記憶されていません。<br>下のボタンから追加してください！
+        </div>
+        <div v-else-if="sortedPlacedItems.length === 0" style="text-align: center; color: var(--text-gray); padding: 30px 0; font-size: 13px;">
+            選択したジャンルに該当する設置物はありません。
         </div>
 
         <div v-for="item in sortedPlacedItems" :key="item.id" class="item-card">
@@ -415,6 +461,15 @@
                 <span v-else :class="['badge', getDaysLeft(item.placedDate) < 0 ? 'badge-red' : (getDaysLeft(item.placedDate) <= 3 ? 'badge-yellow' : 'badge-green')]">
                     {{ getDaysLeft(item.placedDate) < 0 ? '⚠️ 消滅' : (getDaysLeft(item.placedDate) === 0 ? '⏰ 今日まで' : 'あと ' + getDaysLeft(item.placedDate) + '日') }}
                 </span>
+            </div>
+
+            <div class="genre-selector">
+                <button v-for="g in genreOptions" :key="g.value" class="genre-btn"
+                        :class="{ active: item.genre === g.value }"
+                        :style="item.genre === g.value ? { background: g.color } : {}"
+                        @click="setItemGenre(item.id, g.value)">
+                    {{ g.label }}
+                </button>
             </div>
 
             <div class="date-inputs">
@@ -484,7 +539,8 @@
                             placedItems.value = decoded.placedItems.map(item => ({
                                 ...item,
                                 placedDate: new Date(item.placedDate),
-                                isSuspended: item.isSuspended || false
+                                isSuspended: item.isSuspended || false,
+                                genre: item.genre || ''
                             }));
                         }
                     } catch (e) {
@@ -516,8 +572,28 @@
                 return expiry.toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' });
             };
 
+            // 🏷️ ジャンル選択・絞り込み
+            const genreOptions = [
+                { value: '', label: '未選択', color: '#8e8e93' },
+                { value: 'ボート', label: '⛵ ボート', color: '#007aff' },
+                { value: 'メモリー', label: '💭 メモリー', color: '#af52de' },
+                { value: 'スペース', label: '🌌 スペース', color: '#5e5ce6' }
+            ];
+            const filterOptions = [{ value: 'all', label: 'すべて', color: '#8e8e93' }, ...genreOptions];
+            const activeFilter = ref('all');
+
+            const setItemGenre = (id, genre) => {
+                const item = placedItems.value.find(i => i.id === id);
+                if (item) item.genre = genre;
+            };
+
+            const filteredPlacedItems = computed(() => {
+                if (activeFilter.value === 'all') return placedItems.value;
+                return placedItems.value.filter(item => (item.genre || '') === activeFilter.value);
+            });
+
             const sortedPlacedItems = computed(() => {
-                return [...placedItems.value].sort((a, b) => {
+                return [...filteredPlacedItems.value].sort((a, b) => {
                     if (a.isSuspended && !b.isSuspended) return 1;
                     if (!a.isSuspended && b.isSuspended) return -1;
                     if (a.isSuspended && b.isSuspended) return 0;
@@ -550,7 +626,7 @@
                 if (item) { item.placedDate = new Date(dateString); item.isSuspended = false; }
             };
 
-            const addItem = () => { placedItems.value.push({ id: uuid(), memo: "", placedDate: new Date(), isSuspended: false }); };
+            const addItem = () => { placedItems.value.push({ id: uuid(), memo: "", placedDate: new Date(), isSuspended: false, genre: '' }); };
             const removeItem = (id) => { const idx = placedItems.value.findIndex(i => i.id === id); if (idx !== -1) placedItems.value.splice(idx, 1); };
             const rePlaceItem = (id) => { const item = placedItems.value.find(i => i.id === id); if (item) { item.placedDate = new Date(); item.isSuspended = false; } };
             const suspendItem = (id) => { const item = placedItems.value.find(i => i.id === id); if (item) item.isSuspended = true; };
@@ -574,7 +650,8 @@
             return {
                 isDarkMode, toggleTheme, showSidebar,
                 placedItems, sortedPlacedItems, stats, getDaysLeft, getExpiryDateString, formatDateForInput,
-                updateItemDate, addItem, removeItem, rePlaceItem, suspendItem
+                updateItemDate, addItem, removeItem, rePlaceItem, suspendItem,
+                genreOptions, filterOptions, activeFilter, setItemGenre
             };
         }
     }).mount('#app');
