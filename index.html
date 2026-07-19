@@ -465,9 +465,9 @@
 
             <div class="genre-selector">
                 <button v-for="g in genreOptions" :key="g.value" class="genre-btn"
-                        :class="{ active: item.genre === g.value }"
-                        :style="item.genre === g.value ? { background: g.color } : {}"
-                        @click="setItemGenre(item.id, g.value)">
+                        :class="{ active: isGenreActive(item, g.value) }"
+                        :style="isGenreActive(item, g.value) ? { background: g.color } : {}"
+                        @click="toggleItemGenre(item.id, g.value)">
                     {{ g.label }}
                 </button>
             </div>
@@ -536,12 +536,16 @@
                     try {
                         const decoded = JSON.parse(saved);
                         if (decoded.placedItems) {
-                            placedItems.value = decoded.placedItems.map(item => ({
-                                ...item,
-                                placedDate: new Date(item.placedDate),
-                                isSuspended: item.isSuspended || false,
-                                genre: item.genre || ''
-                            }));
+                            placedItems.value = decoded.placedItems.map(item => {
+                                const { genre, genres, ...rest } = item;
+                                return {
+                                    ...rest,
+                                    placedDate: new Date(item.placedDate),
+                                    isSuspended: item.isSuspended || false,
+                                    // 旧データ(単一ジャンル)は配列に変換して引き継ぐ
+                                    genres: genres || (genre ? [genre] : [])
+                                };
+                            });
                         }
                     } catch (e) {
                         placedItems.value = [];
@@ -572,7 +576,7 @@
                 return expiry.toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' });
             };
 
-            // 🏷️ ジャンル選択・絞り込み
+            // 🏷️ ジャンル選択(複数選択可)・絞り込み
             const genreOptions = [
                 { value: '', label: '未選択', color: '#8e8e93' },
                 { value: 'ボート', label: '⛵ ボート', color: '#007aff' },
@@ -582,14 +586,32 @@
             const filterOptions = [{ value: 'all', label: 'すべて', color: '#8e8e93' }, ...genreOptions];
             const activeFilter = ref('all');
 
-            const setItemGenre = (id, genre) => {
+            const isGenreActive = (item, value) => {
+                if (value === '') return !item.genres || item.genres.length === 0;
+                return !!(item.genres && item.genres.includes(value));
+            };
+
+            const toggleItemGenre = (id, genre) => {
                 const item = placedItems.value.find(i => i.id === id);
-                if (item) item.genre = genre;
+                if (!item) return;
+                if (genre === '') {
+                    // 「未選択」ボタン: ジャンルをすべて解除
+                    item.genres = [];
+                    return;
+                }
+                if (!item.genres) item.genres = [];
+                const idx = item.genres.indexOf(genre);
+                if (idx === -1) {
+                    item.genres.push(genre);
+                } else {
+                    item.genres.splice(idx, 1);
+                }
             };
 
             const filteredPlacedItems = computed(() => {
                 if (activeFilter.value === 'all') return placedItems.value;
-                return placedItems.value.filter(item => (item.genre || '') === activeFilter.value);
+                if (activeFilter.value === '') return placedItems.value.filter(item => !item.genres || item.genres.length === 0);
+                return placedItems.value.filter(item => item.genres && item.genres.includes(activeFilter.value));
             });
 
             const sortedPlacedItems = computed(() => {
@@ -626,7 +648,7 @@
                 if (item) { item.placedDate = new Date(dateString); item.isSuspended = false; }
             };
 
-            const addItem = () => { placedItems.value.push({ id: uuid(), memo: "", placedDate: new Date(), isSuspended: false, genre: '' }); };
+            const addItem = () => { placedItems.value.push({ id: uuid(), memo: "", placedDate: new Date(), isSuspended: false, genres: [] }); };
             const removeItem = (id) => { const idx = placedItems.value.findIndex(i => i.id === id); if (idx !== -1) placedItems.value.splice(idx, 1); };
             const rePlaceItem = (id) => { const item = placedItems.value.find(i => i.id === id); if (item) { item.placedDate = new Date(); item.isSuspended = false; } };
             const suspendItem = (id) => { const item = placedItems.value.find(i => i.id === id); if (item) item.isSuspended = true; };
@@ -651,14 +673,14 @@
                 isDarkMode, toggleTheme, showSidebar,
                 placedItems, sortedPlacedItems, stats, getDaysLeft, getExpiryDateString, formatDateForInput,
                 updateItemDate, addItem, removeItem, rePlaceItem, suspendItem,
-                genreOptions, filterOptions, activeFilter, setItemGenre
+                genreOptions, filterOptions, activeFilter, isGenreActive, toggleItemGenre
             };
         }
     }).mount('#app');
 </script>
 
 <footer style="text-align: center; padding: 24px 16px; color: var(--text-gray); font-size: 13px; border-top: 1px solid var(--border-color); margin-top: 40px; line-height: 1.6;">
-    © 2026 創作物期限管理<br>
+    このサイトはSky 星を紡ぐ子どもたちの非公式ファンサイトです。thatgamecompanyは一切関与していません。<br>
     作成・ご意見: <a href="https://x.com/Skyzztai" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: none; font-weight: bold;">@Skyzztai</a>
 </footer>
 
