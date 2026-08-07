@@ -504,13 +504,15 @@
             .sidebar-toggle-btn { display: none; }
             .sidebar-close-btn  { display: none; }
         }
+
+        [v-cloak] { display: none; }
     </style>
 </head>
 <body>
 
 <div class="pf-tint-overlay" aria-hidden="true"></div>
 
-<div class="container" id="app">
+<div class="container" id="app" v-cloak>
     <header>
         <h1>創作物期限管理 (14日間)</h1>
         <div style="display: flex; gap: 8px; align-items: center;">
