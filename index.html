@@ -162,7 +162,9 @@
         .pf-row-btn-ok { background: var(--accent-blue); color: #fff; border: none; }
         .pf-row-btn-danger { background: var(--accent-red); color: #fff; border: none; }
         .pf-currency-section { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-color); }
-        .pf-currency-title { font-size: 12px; font-weight: 700; color: var(--text-gray); margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.4px; }
+        .pf-currency-title { font-size: 12px; font-weight: 700; color: var(--text-gray); margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.4px;
+          display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
+        .pf-currency-toggle-label { font-size: 11px; font-weight: 700; text-transform: none; letter-spacing: 0; }
         .pf-currency-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 2px; }
         .pf-currency-label { font-size: 13px; color: var(--text-color); }
         .pf-currency-input { width: 90px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px;
@@ -528,7 +530,10 @@
             </div>
             <p class="pf-hint">プロフィールを切り替えると、登録した創作物の一覧がそのプロフィール専用の保存内容に切り替わります。サブアカウントなど複数アカウントをお持ちの方にご利用いただけます。</p>
             <div class="pf-currency-section">
-                <div class="pf-currency-title">💰 所持通貨</div>
+                <div class="pf-currency-title" onclick="pfToggleCurrency()">
+                    <span>💰 所持通貨</span>
+                    <span class="pf-currency-toggle-label" id="pfCurrencyToggleLabel">閉じる ▲</span>
+                </div>
                 <div id="pfCurrencyBody"></div>
             </div>
             <button type="button" class="pf-close-btn" onclick="pfCloseModal()">閉じる</button>
@@ -908,7 +913,7 @@
         var PF_CURRENCY_FIELDS = [
             { key: 'candle',         icon: '🕯️', label: 'キャンドル' },
             { key: 'heart',          icon: '💗', label: 'ハート' },
-            { key: 'ascendedCandle', icon: '🕯️✨', label: '昇華キャンドル' },
+            { key: 'ascendedCandle', icon: '🕯️✨', label: '星のキャンドル' },
             { key: 'seasonCandle',   icon: '🕯️🍂', label: 'シーズンキャンドル' },
             { key: 'seasonHeart',    icon: '💗🍂', label: 'シーズンハート' },
             { key: 'eventCurrency',  icon: '🎫', label: 'イベント通貨' }
@@ -964,6 +969,19 @@
                     'onchange="pfSaveCurrencyField(\'' + f.key + '\', this.value)">' +
                     '</div>';
             }).join('');
+            pfSyncCurrencyToggleUI();
+        }
+
+        var pfCurrencyOpen = true;
+        function pfToggleCurrency() {
+            pfCurrencyOpen = !pfCurrencyOpen;
+            pfSyncCurrencyToggleUI();
+        }
+        function pfSyncCurrencyToggleUI() {
+            var body = document.getElementById('pfCurrencyBody');
+            var label = document.getElementById('pfCurrencyToggleLabel');
+            if (body) body.style.display = pfCurrencyOpen ? '' : 'none';
+            if (label) label.textContent = pfCurrencyOpen ? '閉じる ▲' : '開く ▼';
         }
 
         function pfOpenModal() {
@@ -991,6 +1009,7 @@
         window.pfConfirmDeleteInline = pfConfirmDeleteInline;
         window.pfAddProfile = pfAddProfile;
         window.pfSaveCurrencyField = pfSaveCurrencyField;
+        window.pfToggleCurrency = pfToggleCurrency;
         window.pfSetProfileColor = pfSetProfileColor;
         window.pfClearProfileColor = pfClearProfileColor;
 
