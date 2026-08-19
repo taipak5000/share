@@ -652,6 +652,35 @@
         </div>
     </div>
 
+    <!-- ▸ ⚙️ 表示設定モーダル（ダークモード・キーボードショートカット） -->
+    <div class="pf-modal-overlay" id="settingsModalOverlay">
+        <div class="pf-modal-card">
+            <h3 data-i18n="settings.title">⚙️ 表示設定</h3>
+
+            <div class="pf-row">
+                <span class="pf-row-name" data-i18n="settings.darkModeLabel">ダークモード</span>
+                <button type="button" class="pf-icon-btn" id="settingsThemeBtn" onclick="window.toggleTheme && window.toggleTheme()">🌙 ダーク</button>
+            </div>
+
+            <div class="pf-currency-section">
+                <p class="pf-currency-title" style="cursor:default;">
+                    <span data-i18n="settings.shortcutsSection">⌨️ キーボードショートカット</span>
+                </p>
+                <div class="pf-row">
+                    <span class="pf-row-name" data-i18n="settings.shortcutsEnableLabel">ショートカットを有効にする</span>
+                    <button type="button" class="pf-icon-btn" id="settingsShortcutsBtn" onclick="settingsToggleShortcuts()">✅ 有効</button>
+                </div>
+                <p class="pf-hint" style="line-height:1.9;">
+                    <b>?</b> — <span data-i18n="settings.shortcutHelpOpen">この設定を開く</span><br>
+                    <b>D</b> — <span data-i18n="settings.shortcutHelpTheme">ダークモード切替</span><br>
+                    <b>Esc</b> — <span data-i18n="settings.shortcutHelpClose">開いているウィンドウを閉じる</span>
+                </p>
+            </div>
+
+            <button type="button" class="pf-close-btn" data-i18n="common.close" onclick="settingsCloseModal()">閉じる</button>
+        </div>
+    </div>
+
     <!-- サイドバーオーバーレイ（モバイル） -->
     <div v-if="showSidebar" class="sidebar-overlay" @click="showSidebar = false"></div>
 
@@ -699,6 +728,10 @@
             <div style="margin-top:18px; padding-top:14px; border-top:0.5px solid var(--border-color);">
                 <div class="sidebar-section-label" style="margin-bottom:8px;">📱 {{ t('sidebar.homeIcon') }}</div>
                 <button type="button" class="sidebar-nav-link" style="width:100%; box-sizing:border-box; border:1px solid var(--border-color); background:var(--input-bg); cursor:pointer; justify-content:center;" onclick="pfIconOpenModal()">🎨 {{ t('sidebar.customizeIcon') }}</button>
+            </div>
+            <div style="margin-top:18px; padding-top:14px; border-top:0.5px solid var(--border-color);">
+                <div class="sidebar-section-label" style="margin-bottom:8px;">⚙️ {{ t('sidebar.settingsLabel') }}</div>
+                <button type="button" class="sidebar-nav-link" style="width:100%; box-sizing:border-box; border:1px solid var(--border-color); background:var(--input-bg); cursor:pointer; justify-content:center;" onclick="settingsOpenModal()">⚙️ {{ t('sidebar.openSettings') }}</button>
             </div>
         </aside>
 
@@ -805,6 +838,15 @@
         // IIFEはVueの管理下に無い(innerHTMLで構築する)ため、lang変更時に pfApplyLang()
         // を呼んで再描画する方式をとる（テーマの data-theme 属性適用と同じ考え方）。
         var LANG_KEY = 'sky_app_lang';
+
+        // ═══ ⚙️ 表示設定: キーボードショートカット有効/無効 (taipak5000.github.io 配下の各ツール共通キー) ═══
+        var SHORTCUTS_KEY = 'sky_shortcuts_enabled';
+        function skyShortcutsEnabled() {
+            try {
+                var v = localStorage.getItem(SHORTCUTS_KEY);
+                return v === null ? true : v === '1'; // 未設定時はデフォルトで有効
+            } catch (e) { return true; }
+        }
         function pfGetLang() {
             try { return localStorage.getItem(LANG_KEY) === 'en' ? 'en' : 'ja'; } catch (e) { return 'ja'; }
         }
@@ -894,7 +936,18 @@
                 'common.openArrow': '開く ▼',
                 'footer.disclaimer': 'このサイトはSky 星を紡ぐ子どもたちの非公式ファンサイトです。thatgamecompanyは一切関与していません。',
                 'footer.createdBy': '作成・ご意見:',
-                'footer.settingsLink': '⚙️ 設定・更新情報・クレジット・プライバシーポリシー'
+                'footer.settingsLink': '⚙️ 設定・更新情報・クレジット・プライバシーポリシー',
+                'settings.title': '⚙️ 表示設定',
+                'settings.darkModeLabel': 'ダークモード',
+                'theme.dark': 'ダーク',
+                'theme.light': 'ライト',
+                'settings.shortcutsSection': '⌨️ キーボードショートカット',
+                'settings.shortcutsEnableLabel': 'ショートカットを有効にする',
+                'settings.shortcutsOn': '✅ 有効',
+                'settings.shortcutsOff': '⛔ 無効',
+                'settings.shortcutHelpOpen': 'この設定を開く',
+                'settings.shortcutHelpTheme': 'ダークモード切替',
+                'settings.shortcutHelpClose': '開いているウィンドウを閉じる'
             },
             en: {
                 'pf.defaultName': 'Main',
@@ -981,7 +1034,18 @@
                 'common.openArrow': 'Open ▼',
                 'footer.disclaimer': 'This is an unofficial fan site for Sky: Children of the Light. thatgamecompany is not involved in any way.',
                 'footer.createdBy': 'Created by / feedback:',
-                'footer.settingsLink': '⚙️ Settings / What\'s New / Credits / Privacy Policy'
+                'footer.settingsLink': '⚙️ Settings / What\'s New / Credits / Privacy Policy',
+                'settings.title': '⚙️ Display Settings',
+                'settings.darkModeLabel': 'Dark Mode',
+                'theme.dark': 'Dark',
+                'theme.light': 'Light',
+                'settings.shortcutsSection': '⌨️ Keyboard Shortcuts',
+                'settings.shortcutsEnableLabel': 'Enable keyboard shortcuts',
+                'settings.shortcutsOn': '✅ On',
+                'settings.shortcutsOff': '⛔ Off',
+                'settings.shortcutHelpOpen': 'Open this settings panel',
+                'settings.shortcutHelpTheme': 'Toggle dark mode',
+                'settings.shortcutHelpClose': 'Close the open window'
             }
         };
         function t(key, params) {
@@ -1011,6 +1075,7 @@
                 var dashBodyEl = document.getElementById('dashBody');
                 if (dashBodyEl) dashBodyEl.innerHTML = pfDashCache ? pfDashBuildHtml(pfDashCache) : '<p class="pf-hint">' + t('dash.loading') + '</p>';
             }
+            if (window.settingsSyncUI) window.settingsSyncUI(); // ⚙️ 表示設定モーダルの動的ボタン文言（data-i18n非対応）を言語切替時にも再同期
         }
         window.pfApplyLang = pfApplyLang;
 
@@ -1484,7 +1549,7 @@
                 if (pfEditingId === p.id) {
                     html += '<div class="pf-row" style="flex-wrap: wrap;">' +
                         '<input type="text" class="pf-row-input" id="pfEditInput" value="' + pfEscapeHtml(p.name) + '" maxlength="20" ' +
-                        'onkeydown="if(event.key===\'Enter\') pfConfirmRenameInline(\'' + p.id + '\'); if(event.key===\'Escape\') pfCancelRowState();">' +
+                        'onkeydown="if(event.key===\'Enter\') pfConfirmRenameInline(\'' + p.id + '\'); if(event.key===\'Escape\') { event.stopPropagation(); pfCancelRowState(); }">' +
                         '<button type="button" class="pf-icon-btn pf-row-btn-ok" onclick="pfConfirmRenameInline(\'' + p.id + '\')">' + t('common.save') + '</button>' +
                         '<button type="button" class="pf-icon-btn" onclick="pfCancelRowState()">' + t('common.cancel') + '</button>' +
                         '</div>';
@@ -1924,6 +1989,82 @@
         pfIconApplyFromStorage();
         pfIconSetMode(pfIconMode);
 
+        // ═══ ⚙️ 表示設定モーダル（ダークモード・キーボードショートカット） ═══
+        // ダークモードの状態そのものはVue側(isDarkMode ref)が所有しているため、
+        // ここではトグル関数を window.toggleTheme 経由で呼び出す（pfApplyLang と同じ
+        // 「IIFE⇄Vue間はwindowに生やした関数で橋渡しする」既存の考え方に合わせている）。
+        function settingsSyncUI() {
+            var themeBtn = document.getElementById('settingsThemeBtn');
+            if (themeBtn) {
+                var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                themeBtn.textContent = isDark ? ('🌙 ' + t('theme.dark')) : ('☀️ ' + t('theme.light'));
+            }
+            var shortcutsBtn = document.getElementById('settingsShortcutsBtn');
+            if (shortcutsBtn) {
+                shortcutsBtn.textContent = skyShortcutsEnabled() ? t('settings.shortcutsOn') : t('settings.shortcutsOff');
+            }
+        }
+
+        function settingsToggleShortcuts() {
+            try { localStorage.setItem(SHORTCUTS_KEY, skyShortcutsEnabled() ? '0' : '1'); } catch (e) {}
+            settingsSyncUI();
+        }
+
+        function settingsOpenModal() {
+            settingsSyncUI();
+            var overlay = document.getElementById('settingsModalOverlay');
+            if (overlay) overlay.classList.add('is-visible');
+        }
+        function settingsCloseModal() {
+            var overlay = document.getElementById('settingsModalOverlay');
+            if (overlay) overlay.classList.remove('is-visible');
+        }
+
+        // Escapeで閉じるべき「今開いているモーダル」を判定する。このページのモーダルは
+        // すべて同じ .pf-modal-overlay/.is-visible の仕組みで、かつ互いを閉じずに重ねて
+        // 開ける（例: プロフィールモーダルを開いたままバックアップモーダルを開ける）ため、
+        // DOM順で最後（＝見た目上いちばん手前）の表示中モーダルだけを閉じる。
+        var SETTINGS_MODAL_CLOSE_FUNCS = {
+            pfModalOverlay: pfCloseModal,
+            dashModalOverlay: pfDashClose,
+            dmModalOverlay: dmCloseModal,
+            iconCustomModal: pfIconCloseModal,
+            settingsModalOverlay: settingsCloseModal
+        };
+        function closeTopmostOpenModal() {
+            var overlays = document.querySelectorAll('.pf-modal-overlay.is-visible');
+            if (!overlays.length) return;
+            var topmost = overlays[overlays.length - 1];
+            var closeFn = SETTINGS_MODAL_CLOSE_FUNCS[topmost.id];
+            if (closeFn) closeFn(); else topmost.classList.remove('is-visible');
+        }
+
+        // ═══ ⌨️ グローバルキーボードショートカット（? / D / Esc） ═══
+        // ・Escapeは sky_shortcuts_enabled の設定に関わらず常に有効（モーダルの基本UX）。
+        // ・? と D はテキスト入力中は無効化し、有効/無効設定もチェックする。
+        document.addEventListener('keydown', function (e) {
+            if (e.repeat) return;
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+            var tgt = e.target;
+            var isTyping = tgt && (tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA' || tgt.tagName === 'SELECT' || tgt.isContentEditable);
+
+            if (e.key === 'Escape') {
+                closeTopmostOpenModal();
+                return;
+            }
+
+            if (isTyping) return;
+            if (!skyShortcutsEnabled()) return;
+
+            if (e.key === '?') { e.preventDefault(); settingsOpenModal(); return; }
+            if (e.key === 'd' || e.key === 'D') { e.preventDefault(); if (window.toggleTheme) window.toggleTheme(); return; }
+        });
+
+        window.settingsOpenModal = settingsOpenModal;
+        window.settingsCloseModal = settingsCloseModal;
+        window.settingsToggleShortcuts = settingsToggleShortcuts;
+        window.settingsSyncUI = settingsSyncUI;
+
         window.pfIconOpenModal = pfIconOpenModal;
         window.pfIconCloseModal = pfIconCloseModal;
         window.pfIconSetMode = pfIconSetMode;
@@ -1976,9 +2117,18 @@
 
             const applyThemeToDOM = () => {
                 document.documentElement.setAttribute('data-theme', isDarkMode.value ? 'dark' : 'light');
+                // ⚙️ 表示設定モーダル（Vue管理外のプレーンJS）のダークモード表示ボタンを同期する。
+                // toggleLang() → window.pfApplyLang() と同じ「IIFE⇄Vue間はwindowに生やした
+                // 関数で橋渡しする」考え方。
+                if (window.settingsSyncUI) window.settingsSyncUI();
             };
 
             watch(isDarkMode, () => { applyThemeToDOM(); });
+
+            // ⌨️ グローバルショートカットの 'D' キーや ⚙️ 表示設定モーダルの
+            // ダークモードボタンは、このIIFE管理外のプレーンJSから呼ばれるため、
+            // toggleTheme を window に公開しておく。
+            window.toggleTheme = toggleTheme;
 
             // 🌐 日本語・英語 UI切り替え(taipak5000.github.io 配下の各ツール共通)
             // isDarkMode/toggleTheme と同じ「ref + 関数」方式: lang は Vue の ref なので
@@ -2003,6 +2153,8 @@
                     'sidebar.transfer': 'データ引継ぎ',
                     'sidebar.homeIcon': 'ホーム画面アイコン',
                     'sidebar.customizeIcon': 'アイコンをカスタマイズ',
+                    'sidebar.settingsLabel': '表示設定',
+                    'sidebar.openSettings': '表示設定を開く',
                     'stats.header': '現在の状態',
                     'stats.active': '設置中',
                     'stats.warning': '期限間近',
@@ -2038,6 +2190,8 @@
                     'sidebar.transfer': 'Data Transfer',
                     'sidebar.homeIcon': 'Home Screen Icon',
                     'sidebar.customizeIcon': 'Customize Icon',
+                    'sidebar.settingsLabel': 'Display Settings',
+                    'sidebar.openSettings': 'Open Display Settings',
                     'stats.header': 'Current Status',
                     'stats.active': 'Active',
                     'stats.warning': 'Expiring Soon',
