@@ -536,12 +536,16 @@
 
 <div class="container" id="app" v-cloak>
     <header>
-        <h1>創作物期限管理 (14日間)</h1>
+        <h1>{{ t('header.title') }}</h1>
         <div style="display: flex; gap: 8px; align-items: center;">
-            <button class="sidebar-toggle-btn" @click="showSidebar = !showSidebar">☰ ツール</button>
+            <button class="sidebar-toggle-btn" @click="showSidebar = !showSidebar">☰ {{ t('sidebar.toggleBtn') }}</button>
+            <button class="theme-toggle-btn" @click="toggleLang">
+                <span v-if="lang === 'ja'">🇯🇵 日本語</span>
+                <span v-else>🇺🇸 English</span>
+            </button>
             <button class="theme-toggle-btn" @click="toggleTheme">
-                <span v-if="isDarkMode">🌙 ダーク</span>
-                <span v-else>☀️ ライト</span>
+                <span v-if="isDarkMode">🌙 {{ t('theme.dark') }}</span>
+                <span v-else>☀️ {{ t('theme.light') }}</span>
             </button>
         </div>
     </header>
@@ -550,70 +554,70 @@
 
     <div class="pf-modal-overlay" id="pfModalOverlay">
         <div class="pf-modal-card">
-            <h3>🗂️ プロフィール（保存枠）</h3>
+            <h3 data-i18n="pf.title">🗂️ プロフィール（保存枠）</h3>
             <div id="pfModalBody"></div>
             <div class="pf-add-row">
-                <input type="text" id="pfNewProfileInput" class="pf-input" placeholder="新しいプロフィール名" maxlength="20">
-                <button type="button" class="pf-add-btn" onclick="pfAddProfile()">追加</button>
+                <input type="text" id="pfNewProfileInput" class="pf-input" data-i18n-placeholder="pf.newPlaceholder" placeholder="新しいプロフィール名" maxlength="20">
+                <button type="button" class="pf-add-btn" data-i18n="pf.addBtn" onclick="pfAddProfile()">追加</button>
             </div>
-            <p class="pf-hint">プロフィールを切り替えると、登録した創作物の一覧がそのプロフィール専用の保存内容に切り替わります。サブアカウントなど複数アカウントをお持ちの方にご利用いただけます。</p>
+            <p class="pf-hint" data-i18n="pf.hint">プロフィールを切り替えると、登録した創作物の一覧がそのプロフィール専用の保存内容に切り替わります。サブアカウントなど複数アカウントをお持ちの方にご利用いただけます。</p>
             <div class="pf-currency-section">
                 <div class="pf-currency-title" onclick="pfToggleCurrency()">
-                    <span>💰 所持通貨</span>
+                    <span data-i18n="pf.currencyTitle">💰 所持通貨</span>
                     <span class="pf-currency-toggle-label" id="pfCurrencyToggleLabel">閉じる ▲</span>
                 </div>
                 <div id="pfCurrencyBody"></div>
             </div>
-            <button type="button" class="pf-icon-btn" style="width:100%; margin-top:10px; padding:8px;" onclick="dmOpenModal()">💾 データのバックアップ・復元・削除</button>
-            <button type="button" class="pf-close-btn" onclick="pfCloseModal()">閉じる</button>
+            <button type="button" class="pf-icon-btn" style="width:100%; margin-top:10px; padding:8px;" data-i18n="pf.backupBtn" onclick="dmOpenModal()">💾 データのバックアップ・復元・削除</button>
+            <button type="button" class="pf-close-btn" data-i18n="common.close" onclick="pfCloseModal()">閉じる</button>
         </div>
     </div>
 
     <div class="pf-modal-overlay" id="dashModalOverlay">
         <div class="pf-modal-card">
-            <h3>🗓️ 今日・今週・今月</h3>
-            <div id="dashBody"><p class="pf-hint">読み込み中…</p></div>
-            <button type="button" class="pf-close-btn" onclick="pfDashClose()">閉じる</button>
+            <h3 data-i18n="dash.title">🗓️ 今日・今週・今月</h3>
+            <div id="dashBody"><p class="pf-hint" data-i18n="dash.loading">読み込み中…</p></div>
+            <button type="button" class="pf-close-btn" data-i18n="common.close" onclick="pfDashClose()">閉じる</button>
         </div>
     </div>
 
     <!-- ▸ データのバックアップ・復元・削除モーダル -->
     <div class="pf-modal-overlay" id="dmModalOverlay">
         <div class="pf-modal-card">
-            <h3>💾 データのバックアップ・復元・削除</h3>
-            <p class="pf-hint" style="margin-top:0;">このブラウザに保存されている taipak5000.github.io 系ツール（item・wings・companion・spirit-catalog 等）のデータをまとめて書き出し・読み込み・削除できます。全プロフィール分がまとめて対象になります。</p>
-            <button type="button" class="pf-add-btn" style="width:100%; margin-bottom:8px;" onclick="dmExport()">⬇️ データをエクスポート（ファイルに保存）</button>
+            <h3 data-i18n="dm.title">💾 データのバックアップ・復元・削除</h3>
+            <p class="pf-hint" style="margin-top:0;" data-i18n="dm.hint">このブラウザに保存されている taipak5000.github.io 系ツール（item・wings・companion・spirit-catalog 等）のデータをまとめて書き出し・読み込み・削除できます。全プロフィール分がまとめて対象になります。</p>
+            <button type="button" class="pf-add-btn" style="width:100%; margin-bottom:8px;" data-i18n="dm.exportBtn" onclick="dmExport()">⬇️ データをエクスポート（ファイルに保存）</button>
             <input type="file" id="dmImportFile" accept="application/json" style="display:none" onchange="dmImportFileSelected(event)">
-            <button type="button" class="pf-icon-btn" style="width:100%; margin-bottom:8px; padding:8px;" onclick="document.getElementById('dmImportFile').click()">⬆️ ファイルからインポート</button>
+            <button type="button" class="pf-icon-btn" style="width:100%; margin-bottom:8px; padding:8px;" data-i18n="dm.importBtn" onclick="document.getElementById('dmImportFile').click()">⬆️ ファイルからインポート</button>
             <div id="dmImportConfirmArea"></div>
             <div id="dmWipeArea">
-                <button type="button" class="pf-icon-btn pf-row-btn-danger" style="width:100%; padding:8px;" onclick="dmStartWipe()">🗑️ 全データを削除</button>
+                <button type="button" class="pf-icon-btn pf-row-btn-danger" style="width:100%; padding:8px;" data-i18n="dm.wipeBtn" onclick="dmStartWipe()">🗑️ 全データを削除</button>
             </div>
             <div id="dmStatus" class="pf-hint"></div>
-            <button type="button" class="pf-close-btn" onclick="dmCloseModal()">閉じる</button>
+            <button type="button" class="pf-close-btn" data-i18n="common.close" onclick="dmCloseModal()">閉じる</button>
         </div>
     </div>
 
     <!-- ▸ ホーム画面アイコンカスタマイズモーダル -->
     <div class="pf-modal-overlay" id="iconCustomModal">
         <div class="pf-modal-card">
-            <h3>🎨 ホーム画面アイコンをカスタマイズ</h3>
+            <h3 data-i18n="icon.title">🎨 ホーム画面アイコンをカスタマイズ</h3>
 
-            <p class="pf-hint" style="margin-top:0;">
+            <p class="pf-hint" style="margin-top:0;" data-i18n-html="icon.hint">
                 スマホの「ホーム画面に追加」をしたときのアイコンを、好きな絵文字や画像に変更できます。<br>
                 <b>追加する前に</b>設定してください。追加した後に変更しても、既に追加済みのアイコンは自動更新されません（変更したい場合は一度削除して追加し直してください）。
             </p>
 
             <div style="display:flex; gap:8px; margin:14px 0;">
-                <button type="button" class="pf-icon-btn" id="iconModeEmojiBtn" onclick="pfIconSetMode('emoji')" style="flex:1; padding:8px;">😀 絵文字</button>
-                <button type="button" class="pf-icon-btn" id="iconModeImageBtn" onclick="pfIconSetMode('image')" style="flex:1; padding:8px;">🖼️ 画像</button>
+                <button type="button" class="pf-icon-btn" id="iconModeEmojiBtn" onclick="pfIconSetMode('emoji')" style="flex:1; padding:8px;" data-i18n="icon.modeEmoji">😀 絵文字</button>
+                <button type="button" class="pf-icon-btn" id="iconModeImageBtn" onclick="pfIconSetMode('image')" style="flex:1; padding:8px;" data-i18n="icon.modeImage">🖼️ 画像</button>
             </div>
 
             <div id="iconEmojiPanel">
-                <p style="font-size:12px; font-weight:700; color:var(--text-gray); margin:0 0 6px;">絵文字</p>
+                <p style="font-size:12px; font-weight:700; color:var(--text-gray); margin:0 0 6px;" data-i18n="icon.emojiLabel">絵文字</p>
                 <input type="text" id="iconEmojiInput" maxlength="8" value="📍" oninput="pfIconUpdatePreview()"
                     style="font-size:28px; text-align:center; width:100%; padding:10px; border-radius:10px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-color); box-sizing:border-box;">
-                <p style="font-size:12px; font-weight:700; color:var(--text-gray); margin:10px 0 6px;">背景色</p>
+                <p style="font-size:12px; font-weight:700; color:var(--text-gray); margin:10px 0 6px;" data-i18n="icon.bgColorLabel">背景色</p>
                 <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
                     <button type="button" onclick="pfIconPickSwatch('#007AFF')" style="width:32px; height:32px; border-radius:50%; background:#007AFF; border:2px solid transparent;"></button>
                     <button type="button" onclick="pfIconPickSwatch('#FF9500')" style="width:32px; height:32px; border-radius:50%; background:#FF9500; border:2px solid transparent;"></button>
@@ -628,22 +632,22 @@
                     <button type="button" onclick="pfIconPickSwatch('#32ADE6')" style="width:32px; height:32px; border-radius:50%; background:#32ADE6; border:2px solid transparent;"></button>
                     <button type="button" onclick="pfIconPickSwatch('#48484A')" style="width:32px; height:32px; border-radius:50%; background:#48484A; border:2px solid transparent;"></button>
                 </div>
-                <p style="font-size:11.5px; color:var(--text-gray); margin:0 0 6px;">🎨 タップして好きな色を自由に選ぶこともできます</p>
+                <p style="font-size:11.5px; color:var(--text-gray); margin:0 0 6px;" data-i18n="icon.swatchHint">🎨 タップして好きな色を自由に選ぶこともできます</p>
                 <input type="color" id="iconBgColorInput" value="#007AFF" oninput="pfIconUpdatePreview()" style="width:100%; height:40px; border:none; border-radius:10px; background:none;">
             </div>
 
             <div id="iconImagePanel" style="display:none;">
-                <p style="font-size:12px; font-weight:700; color:var(--text-gray); margin:0 0 6px;">画像をアップロード</p>
+                <p style="font-size:12px; font-weight:700; color:var(--text-gray); margin:0 0 6px;" data-i18n="icon.uploadLabel">画像をアップロード</p>
                 <input type="file" id="iconImageInput" accept="image/*" onchange="pfIconHandleFile(event)">
             </div>
 
             <div style="display:flex; flex-direction:column; align-items:center; margin:18px 0;">
-                <p style="font-size:12px; font-weight:700; color:var(--text-gray); margin:0 0 6px;">プレビュー</p>
+                <p style="font-size:12px; font-weight:700; color:var(--text-gray); margin:0 0 6px;" data-i18n="icon.previewLabel">プレビュー</p>
                 <canvas id="iconPreviewCanvas" width="96" height="96" style="border-radius:22px; box-shadow:0 2px 8px rgba(0,0,0,0.15);"></canvas>
             </div>
 
-            <button type="button" class="pf-add-btn" style="width:100%; box-sizing:border-box; padding:10px;" onclick="pfIconSave()">保存して適用</button>
-            <button type="button" class="pf-close-btn" onclick="pfIconReset()">デフォルトに戻す</button>
+            <button type="button" class="pf-add-btn" style="width:100%; box-sizing:border-box; padding:10px;" data-i18n="icon.saveBtn" onclick="pfIconSave()">保存して適用</button>
+            <button type="button" class="pf-close-btn" data-i18n="icon.resetBtn" onclick="pfIconReset()">デフォルトに戻す</button>
             <p id="iconSaveStatus" style="text-align:center; font-size:12px; color:var(--text-gray); margin-top:10px;"></p>
         </div>
     </div>
@@ -656,7 +660,7 @@
         <!-- ═══ サイドバー ═══ -->
         <aside class="sidebar section-card" :class="{ 'sidebar-open': showSidebar }">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
-                <div class="sidebar-section-label" style="margin-bottom: 0;">🔗 関連ツール</div>
+                <div class="sidebar-section-label" style="margin-bottom: 0;">🔗 {{ t('sidebar.relatedTools') }}</div>
                 <button class="sidebar-close-btn" @click="showSidebar = false">×</button>
             </div>
             <nav>
@@ -667,34 +671,34 @@
                 -->
 
                 <a href="https://taipak5000.github.io/tai-item/" class="sidebar-nav-link">
-                    📁 アイテム所持管理
+                    📁 {{ t('sidebar.item') }}
                 </a>
                 <a href="https://taipak5000.github.io/tai-emote/" class="sidebar-nav-link">
-                    🎭 エモート所持率管理
+                    🎭 {{ t('sidebar.emote') }}
                 </a>
                 <a href="https://taipak5000.github.io/share/" class="sidebar-nav-link current-tool">
-                    📍 創作物管理ツール
+                    📍 {{ t('sidebar.share') }}
                 </a>
                 <a href="https://taipak5000.github.io/tai-nomacan/" class="sidebar-nav-link">
-                    🕯️ ノマキャン計算機
+                    🕯️ {{ t('sidebar.nomacan') }}
                 </a>
                 <a href="https://taipak5000.github.io/star-candle/" class="sidebar-nav-link">
-                    🕯️ 星のキャンドル計算機
+                    🕯️ {{ t('sidebar.starCandle') }}
                 </a>
                 <a href="https://taipak5000.github.io/companion/" class="sidebar-nav-link">
-                    ✨ 精霊同行ツール
+                    ✨ {{ t('sidebar.companion') }}
                 </a>
                 <a href="https://taipak5000.github.io/wings/" class="sidebar-nav-link">
-                    🪽 羽トラッカー
+                    🪽 {{ t('sidebar.wings') }}
                 </a>
                 <a href="https://taipak5000.github.io/tai-transfer/" class="sidebar-nav-link">
-                    🔄 データ引継ぎ
+                    🔄 {{ t('sidebar.transfer') }}
                 </a>
 
             </nav>
             <div style="margin-top:18px; padding-top:14px; border-top:0.5px solid var(--border-color);">
-                <div class="sidebar-section-label" style="margin-bottom:8px;">📱 ホーム画面アイコン</div>
-                <button type="button" class="sidebar-nav-link" style="width:100%; box-sizing:border-box; border:1px solid var(--border-color); background:var(--input-bg); cursor:pointer; justify-content:center;" onclick="pfIconOpenModal()">🎨 アイコンを<br>カスタマイズ</button>
+                <div class="sidebar-section-label" style="margin-bottom:8px;">📱 {{ t('sidebar.homeIcon') }}</div>
+                <button type="button" class="sidebar-nav-link" style="width:100%; box-sizing:border-box; border:1px solid var(--border-color); background:var(--input-bg); cursor:pointer; justify-content:center;" onclick="pfIconOpenModal()">🎨 {{ t('sidebar.customizeIcon') }}</button>
             </div>
         </aside>
 
@@ -702,49 +706,48 @@
         <div class="main-content-wrapper">
 
         <div class="section-card">
-        <div class="section-header">📈 現在の状態</div>
+        <div class="section-header">📈 {{ t('stats.header') }}</div>
         <div class="stats-grid">
             <div class="stat-box">
-                <div style="font-size: 11px; color: var(--text-gray);">設置中</div>
+                <div style="font-size: 11px; color: var(--text-gray);">{{ t('stats.active') }}</div>
                 <div class="stat-val" style="color: var(--accent-green);">{{ stats.active }}</div>
             </div>
             <div class="stat-box">
-                <div style="font-size: 11px; color: var(--text-gray);">期限間近</div>
+                <div style="font-size: 11px; color: var(--text-gray);">{{ t('stats.warning') }}</div>
                 <div class="stat-val" style="color: var(--accent-orange);">{{ stats.warning }}</div>
             </div>
             <div class="stat-box">
-                <div style="font-size: 11px; color: var(--text-gray);">保留・消滅</div>
+                <div style="font-size: 11px; color: var(--text-gray);">{{ t('stats.alert') }}</div>
                 <div class="stat-val" style="color: var(--accent-red);">{{ stats.alert }}</div>
             </div>
         </div>
     </div>
 
     <div class="section-card">
-        <div class="section-header">📍 設置した創作物一覧</div>
+        <div class="section-header">📍 {{ t('list.header') }}</div>
 
         <div class="filter-row">
             <button v-for="f in filterOptions" :key="f.value" class="filter-btn"
                     :class="{ active: activeFilter === f.value }"
                     :style="activeFilter === f.value ? { background: f.color } : {}"
                     @click="activeFilter = f.value">
-                {{ f.label }}
+                {{ optLabel(f) }}
             </button>
         </div>
 
-        <div v-if="placedItems.length === 0" style="text-align: center; color: var(--text-gray); padding: 30px 0; font-size: 13px;">
-            現在管理している創作物は記憶されていません。<br>下のボタンから追加してください！
+        <div v-if="placedItems.length === 0" style="text-align: center; color: var(--text-gray); padding: 30px 0; font-size: 13px;" v-html="t('list.emptyAll')">
         </div>
         <div v-else-if="sortedPlacedItems.length === 0" style="text-align: center; color: var(--text-gray); padding: 30px 0; font-size: 13px;">
-            選択したジャンルに該当する設置物はありません。
+            {{ t('list.emptyFiltered') }}
         </div>
 
         <div v-for="item in sortedPlacedItems" :key="item.id" class="item-card">
             <div class="row-flex">
-                <input type="text" v-model="item.memo" placeholder="設置場所や内容 (例: 花鳥郷 魔法のお店前)">
-                
-                <span v-if="item.isSuspended" class="badge badge-gray">📦 保留中</span>
+                <input type="text" v-model="item.memo" :placeholder="t('item.memoPlaceholder')">
+
+                <span v-if="item.isSuspended" class="badge badge-gray">📦 {{ t('badge.suspended') }}</span>
                 <span v-else :class="['badge', getDaysLeft(item.placedDate) < 0 ? 'badge-red' : (getDaysLeft(item.placedDate) <= 3 ? 'badge-yellow' : 'badge-green')]">
-                    {{ getDaysLeft(item.placedDate) < 0 ? '⚠️ 消滅' : (getDaysLeft(item.placedDate) === 0 ? '⏰ 今日まで' : 'あと ' + getDaysLeft(item.placedDate) + '日') }}
+                    {{ getDaysLeft(item.placedDate) < 0 ? t('badge.expired') : (getDaysLeft(item.placedDate) === 0 ? t('badge.dueToday') : t('badge.daysLeft', { n: getDaysLeft(item.placedDate) })) }}
                 </span>
             </div>
 
@@ -753,17 +756,17 @@
                         :class="{ active: isGenreActive(item, g.value) }"
                         :style="isGenreActive(item, g.value) ? { background: g.color } : {}"
                         @click="toggleItemGenre(item.id, g.value)">
-                    {{ g.label }}
+                    {{ optLabel(g) }}
                 </button>
             </div>
 
             <div class="date-inputs">
                 <div class="date-box">
-                    <span style="font-size: 11px;">設置日</span>
+                    <span style="font-size: 11px;">{{ t('item.placedDate') }}</span>
                     <input type="date" :value="formatDateForInput(item.placedDate)" @input="updateItemDate(item.id, $event.target.value)">
                 </div>
                 <div class="date-box" style="text-align: right;">
-                    <span style="font-size: 11px;">自動消滅日</span>
+                    <span style="font-size: 11px;">{{ t('item.expiryDate') }}</span>
                     <div style="font-weight: bold; margin-top: 8px; color: var(--text-color); font-size: 14px;">
                         {{ getExpiryDateString(item.placedDate) }}
                     </div>
@@ -771,13 +774,13 @@
             </div>
 
             <div class="action-links">
-                <button class="action-btn btn-renew" @click="rePlaceItem(item.id)">♻️ 今日再設置</button>
-                <button v-if="!item.isSuspended" class="action-btn btn-susp" @click="suspendItem(item.id)">📦 保留</button>
-                <button class="action-btn btn-del" @click="removeItem(item.id)">🗑️ 削除</button>
+                <button class="action-btn btn-renew" @click="rePlaceItem(item.id)">♻️ {{ t('actions.replace') }}</button>
+                <button v-if="!item.isSuspended" class="action-btn btn-susp" @click="suspendItem(item.id)">📦 {{ t('actions.suspend') }}</button>
+                <button class="action-btn btn-del" @click="removeItem(item.id)">🗑️ {{ t('actions.delete') }}</button>
             </div>
         </div>
 
-        <button class="btn-blue" @click="addItem">➕ 新しい設置物を追加</button>
+        <button class="btn-blue" @click="addItem">➕ {{ t('actions.addNew') }}</button>
     </div>
 
         </div> <!-- /.main-content-wrapper -->
@@ -796,6 +799,220 @@
         var PROFILES_KEY = 'skyProfiles_v1';
         var ACTIVE_PROFILE_KEY = 'skyActiveProfile_v1';
         var DEFAULT_PROFILE_ID = 'default';
+
+        // ═══ 🌐 日本語・英語 UI切り替え: taipak5000.github.io 配下の各ツール共通 ═══
+        // Vue側は isDarkMode/toggleTheme と同じ「ref + t()」方式で反応するが、この
+        // IIFEはVueの管理下に無い(innerHTMLで構築する)ため、lang変更時に pfApplyLang()
+        // を呼んで再描画する方式をとる（テーマの data-theme 属性適用と同じ考え方）。
+        var LANG_KEY = 'sky_app_lang';
+        function pfGetLang() {
+            try { return localStorage.getItem(LANG_KEY) === 'en' ? 'en' : 'ja'; } catch (e) { return 'ja'; }
+        }
+        var I18N = {
+            ja: {
+                'pf.defaultName': 'メイン',
+                'pf.barSuffix': '&nbsp;に切替中（タップで切替）',
+                'pf.title': '🗂️ プロフィール（保存枠）',
+                'pf.newPlaceholder': '新しいプロフィール名',
+                'pf.addBtn': '追加',
+                'pf.hint': 'プロフィールを切り替えると、登録した創作物の一覧がそのプロフィール専用の保存内容に切り替わります。サブアカウントなど複数アカウントをお持ちの方にご利用いただけます。',
+                'pf.currencyTitle': '💰 所持通貨',
+                'pf.backupBtn': '💾 データのバックアップ・復元・削除',
+                'pf.colorTitle': 'アカウントカラー',
+                'pf.colorReset': 'カラーを初期値に戻す',
+                'pf.deleteConfirm': '「{name}」を削除しますか？このプロフィールの保存データも削除されます。',
+                'pf.currency.candle': 'キャンドル',
+                'pf.currency.heart': 'ハート',
+                'pf.currency.ascendedCandle': '星のキャンドル',
+                'pf.currency.seasonCandle': 'シーズンキャンドル',
+                'pf.currency.giftPass': 'ギフトパス',
+                'dash.title': '🗓️ 今日・今週・今月',
+                'dash.tooltip': '今日・今週・今月ダッシュボード',
+                'dash.redShard': '赤闇',
+                'dash.blackShard': '黒闇',
+                'dash.shardRow': '{color}（<b>{realm}・{location}</b>）が出現：',
+                'dash.noShardToday': '本日は闇の破片の出現はありません',
+                'dash.untilNext': '次まで ',
+                'dash.untilNextTime': '次回まで ',
+                'dash.untilEnd': '終了まで ',
+                'dash.untilChange': '次の変更まで ',
+                'dash.grandCandle': '大キャンドル：',
+                'dash.questSeasonCandle': 'クエスト・シーズンキャンドル：',
+                'dash.geyser': 'ウニ焼き',
+                'dash.grandma': 'パン焼き',
+                'dash.turtle': '亀闇',
+                'dash.eventActive': '<b>{name}</b> が開催中',
+                'dash.revisitActive': '再訪精霊 「<b>{name}</b>」が来訪中',
+                'dash.revisitUpcoming': '再訪精霊 「<b>{name}</b>」の次回来訪まで',
+                'dash.noActiveEvents': '現在開催中の季節・イベントはありません',
+                'dash.edenReset': '原罪：週間リセットまで',
+                'dash.edenNote': '毎週日曜0時・太平洋時間',
+                'dash.nextUpdate': '次回アップデート予定',
+                'dash.seasonEndsIn': '「<b>{name}</b>」終了まで',
+                'dash.seasonFetchFailed': 'シーズン情報が取得できませんでした',
+                'dash.daily': 'デイリー',
+                'dash.today': '今日',
+                'dash.thisWeek': '今週',
+                'dash.thisMonth': '今月',
+                'dash.loading': '読み込み中…',
+                'dash.loadFailed': '読み込みに失敗しました',
+                'dash.daySuffix': '日 ',
+                'dm.title': '💾 データのバックアップ・復元・削除',
+                'dm.hint': 'このブラウザに保存されている taipak5000.github.io 系ツール（item・wings・companion・spirit-catalog 等）のデータをまとめて書き出し・読み込み・削除できます。全プロフィール分がまとめて対象になります。',
+                'dm.exportBtn': '⬇️ データをエクスポート（ファイルに保存）',
+                'dm.importBtn': '⬆️ ファイルからインポート',
+                'dm.wipeBtn': '🗑️ 全データを削除',
+                'dm.exportDone': '書き出しました（{count}件のキー）。',
+                'dm.importParseError': 'ファイルの読み込みに失敗しました（JSON形式ではありません）。',
+                'dm.importFormatError': 'このツールで書き出したファイルではないようです。',
+                'dm.importConfirm': '{count}件のキーをインポートします。現在保存されているデータは上書きされます（インポートするファイルに無いキーはそのまま残ります）。よろしいですか？',
+                'dm.importExecBtn': 'インポート実行',
+                'dm.importDone': 'インポートしました。ページを再読み込みします…',
+                'dm.wipeConfirm': 'すべてのプロフィール・所持アイテム・お気に入り・精霊ツリーの進捗など、このブラウザに保存されている全データを削除します。この操作は取り消せません。先にエクスポートしておくことをおすすめします。本当に削除しますか？',
+                'dm.wipeExecBtn': '完全に削除する',
+                'dm.wipeDone': '削除しました。ページを再読み込みします…',
+                'icon.title': '🎨 ホーム画面アイコンをカスタマイズ',
+                'icon.hint': 'スマホの「ホーム画面に追加」をしたときのアイコンを、好きな絵文字や画像に変更できます。<br><b>追加する前に</b>設定してください。追加した後に変更しても、既に追加済みのアイコンは自動更新されません（変更したい場合は一度削除して追加し直してください）。',
+                'icon.modeEmoji': '😀 絵文字',
+                'icon.modeImage': '🖼️ 画像',
+                'icon.emojiLabel': '絵文字',
+                'icon.bgColorLabel': '背景色',
+                'icon.swatchHint': '🎨 タップして好きな色を自由に選ぶこともできます',
+                'icon.uploadLabel': '画像をアップロード',
+                'icon.previewLabel': 'プレビュー',
+                'icon.saveBtn': '保存して適用',
+                'icon.resetBtn': 'デフォルトに戻す',
+                'icon.selectImageFirst': '画像を選択してください',
+                'icon.saveFailed': '保存に失敗しました(容量オーバーの可能性があります)',
+                'icon.saveDone': '✅ 保存しました。これでホーム画面に追加すると反映されます',
+                'icon.resetDone': 'デフォルトのアイコンに戻しました',
+                'common.close': '閉じる',
+                'common.save': '保存',
+                'common.cancel': '取消',
+                'common.delete': '削除',
+                'common.closeArrow': '閉じる ▲',
+                'common.openArrow': '開く ▼',
+                'footer.disclaimer': 'このサイトはSky 星を紡ぐ子どもたちの非公式ファンサイトです。thatgamecompanyは一切関与していません。',
+                'footer.createdBy': '作成・ご意見:',
+                'footer.settingsLink': '⚙️ 設定・更新情報・クレジット・プライバシーポリシー'
+            },
+            en: {
+                'pf.defaultName': 'Main',
+                'pf.barSuffix': ' active (tap to switch)',
+                'pf.title': '🗂️ Profiles',
+                'pf.newPlaceholder': 'New profile name',
+                'pf.addBtn': 'Add',
+                'pf.hint': 'Switching profiles swaps the whole list of registered creations for that profile’s own saved data. Handy if you have a sub-account or multiple accounts.',
+                'pf.currencyTitle': '💰 Owned Currency',
+                'pf.backupBtn': 'Backup / restore / erase data',
+                'pf.colorTitle': 'Account color',
+                'pf.colorReset': 'Reset color to default',
+                'pf.deleteConfirm': 'Delete "{name}"? This profile’s saved data will be deleted too.',
+                'pf.currency.candle': 'Candles',
+                'pf.currency.heart': 'Hearts',
+                'pf.currency.ascendedCandle': 'Star Candles',
+                'pf.currency.seasonCandle': 'Season Candles',
+                'pf.currency.giftPass': 'Gift Pass',
+                'dash.title': '🗓️ Today / This Week / This Month',
+                'dash.tooltip': 'Today / this week / this month',
+                'dash.redShard': 'Red Shard',
+                'dash.blackShard': 'Black Shard',
+                'dash.shardRow': '{color} (<b>{realm} · {location}</b>) erupts: ',
+                'dash.noShardToday': 'No shard eruptions today',
+                'dash.untilNext': 'Next in ',
+                'dash.untilNextTime': 'Next in ',
+                'dash.untilEnd': 'Ends in ',
+                'dash.untilChange': 'Changes in ',
+                'dash.grandCandle': 'Grand Candle: ',
+                'dash.questSeasonCandle': 'Quest & Season Candle: ',
+                'dash.geyser': 'Geyser',
+                'dash.grandma': 'Bread Baking',
+                'dash.turtle': 'Turtle Darkness',
+                'dash.eventActive': '<b>{name}</b> is currently active',
+                'dash.revisitActive': 'Revisit Spirit 「<b>{name}</b>」 is here now',
+                'dash.revisitUpcoming': 'Revisit Spirit 「<b>{name}</b>」 returns in',
+                'dash.noActiveEvents': 'No current seasons or events',
+                'dash.edenReset': 'Eye of Eden: Weekly reset in',
+                'dash.edenNote': 'Every Sunday 00:00 Pacific Time',
+                'dash.nextUpdate': 'Next Update',
+                'dash.seasonEndsIn': '「<b>{name}</b>」 ends in',
+                'dash.seasonFetchFailed': 'Could not load season info',
+                'dash.daily': 'Daily',
+                'dash.today': 'Today',
+                'dash.thisWeek': 'This Week',
+                'dash.thisMonth': 'This Month',
+                'dash.loading': 'Loading…',
+                'dash.loadFailed': 'Failed to load',
+                'dash.daySuffix': 'd ',
+                'dm.title': '💾 Backup / Restore / Erase Data',
+                'dm.hint': 'Back up, restore, or erase all locally-stored data for the taipak5000.github.io tool suite (item, wings, companion, spirit-catalog, etc.) at once. This covers all profiles together.',
+                'dm.exportBtn': '⬇️ Export data (save to file)',
+                'dm.importBtn': '⬆️ Import from file',
+                'dm.wipeBtn': '🗑️ Erase all data',
+                'dm.exportDone': 'Exported ({count} keys).',
+                'dm.importParseError': 'Failed to read file (not valid JSON).',
+                'dm.importFormatError': 'This doesn\'t look like a file exported from this tool.',
+                'dm.importConfirm': 'Import {count} keys? Currently stored data will be overwritten for matching keys (keys not present in the file are left as-is). Continue?',
+                'dm.importExecBtn': 'Import',
+                'dm.importDone': 'Imported. Reloading…',
+                'dm.wipeConfirm': 'This will erase ALL locally stored data (profiles, owned items, favorites, spirit tree progress, etc.) across the whole tool suite. This cannot be undone. Exporting a backup first is recommended. Really erase everything?',
+                'dm.wipeExecBtn': 'Erase everything',
+                'dm.wipeDone': 'Erased. Reloading…',
+                'icon.title': '🎨 Customize Home Screen Icon',
+                'icon.hint': 'You can change the icon used when adding this site to your phone\'s home screen. Set this up before adding it — changing it afterward won\'t update an icon that\'s already been added (remove and re-add it if you want to change it later).',
+                'icon.modeEmoji': '😀 Emoji',
+                'icon.modeImage': '🖼️ Image',
+                'icon.emojiLabel': 'Emoji',
+                'icon.bgColorLabel': 'Background Color',
+                'icon.swatchHint': '🎨 Or tap below to pick any color freely',
+                'icon.uploadLabel': 'Upload Image',
+                'icon.previewLabel': 'Preview',
+                'icon.saveBtn': 'Save & Apply',
+                'icon.resetBtn': 'Reset to Default',
+                'icon.selectImageFirst': 'Please select an image',
+                'icon.saveFailed': 'Failed to save (storage may be full)',
+                'icon.saveDone': '✅ Saved. This will apply the next time you add this to your home screen',
+                'icon.resetDone': 'Reset to the default icon',
+                'common.close': 'Close',
+                'common.save': 'Save',
+                'common.cancel': 'Cancel',
+                'common.delete': 'Delete',
+                'common.closeArrow': 'Close ▲',
+                'common.openArrow': 'Open ▼',
+                'footer.disclaimer': 'This is an unofficial fan site for Sky: Children of the Light. thatgamecompany is not involved in any way.',
+                'footer.createdBy': 'Created by / feedback:',
+                'footer.settingsLink': '⚙️ Settings / What\'s New / Credits / Privacy Policy'
+            }
+        };
+        function t(key, params) {
+            var lang = pfGetLang();
+            var str = (I18N[lang] && I18N[lang][key] !== undefined) ? I18N[lang][key] : (I18N.ja[key] !== undefined ? I18N.ja[key] : key);
+            if (params) {
+                Object.keys(params).forEach(function (k) { str = str.split('{' + k + '}').join(params[k]); });
+            }
+            return str;
+        }
+        function pfApplyStaticI18n() {
+            document.documentElement.setAttribute('lang', pfGetLang());
+            document.querySelectorAll('[data-i18n]').forEach(function (el) { el.textContent = t(el.getAttribute('data-i18n')); });
+            document.querySelectorAll('[data-i18n-html]').forEach(function (el) { el.innerHTML = t(el.getAttribute('data-i18n-html')); });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) { el.placeholder = t(el.getAttribute('data-i18n-placeholder')); });
+        }
+        // Vue側の toggleLang() から呼ばれ、Vue管理外(このIIFEがinnerHTMLで構築した)の
+        // 各パーツを現在の言語で再描画する。開いているモーダルがあればその場で更新する。
+        function pfApplyLang() {
+            pfApplyStaticI18n();
+            pfRenderBar();
+            var pfOverlay = document.getElementById('pfModalOverlay');
+            if (pfOverlay && pfOverlay.classList.contains('is-visible')) { pfRenderModal(); pfRenderCurrency(); }
+            dmRenderWipeArea();
+            var dashOverlay = document.getElementById('dashModalOverlay');
+            if (dashOverlay && dashOverlay.classList.contains('is-visible')) {
+                var dashBodyEl = document.getElementById('dashBody');
+                if (dashBodyEl) dashBodyEl.innerHTML = pfDashCache ? pfDashBuildHtml(pfDashCache) : '<p class="pf-hint">' + t('dash.loading') + '</p>';
+            }
+        }
+        window.pfApplyLang = pfApplyLang;
 
         // id はこのファイル内で常に「英数字・アンダースコア・ハイフンのみ」で生成しているため、
         // それ以外の形式は不正な値（データ引継ぎ/バックアップの改ざん等）とみなして除外する。
@@ -829,7 +1046,7 @@
         function pfEnsureInit() {
             var list = pfLoadProfiles();
             if (!list) {
-                list = [{ id: DEFAULT_PROFILE_ID, name: 'メイン' }];
+                list = [{ id: DEFAULT_PROFILE_ID, name: t('pf.defaultName') }];
                 pfSaveProfiles(list);
             }
             try {
@@ -841,7 +1058,7 @@
             try { return localStorage.getItem(ACTIVE_PROFILE_KEY) || DEFAULT_PROFILE_ID; } catch (e) { return DEFAULT_PROFILE_ID; }
         }
         function pfGetActiveProfile() {
-            var list = pfLoadProfiles() || [{ id: DEFAULT_PROFILE_ID, name: 'メイン' }];
+            var list = pfLoadProfiles() || [{ id: DEFAULT_PROFILE_ID, name: t('pf.defaultName') }];
             var id = pfGetActiveId();
             var found = null;
             for (var i = 0; i < list.length; i++) { if (list[i].id === id) { found = list[i]; break; } }
@@ -942,8 +1159,8 @@
             pfApplyThemeColor(active.color);
             var bar = document.getElementById('pfBar');
             if (!bar) return;
-            bar.innerHTML = '<span class="pf-bar-text" onclick="pfOpenModal()">🗂️ <b>' + pfEscapeHtml(active.name) + '</b>&nbsp;に切替中（タップで切替）</span>' +
-                '<button type="button" class="pf-dash-btn" onclick="pfDashOpen()" title="今日・今週・今月ダッシュボード">🗓️</button>';
+            bar.innerHTML = '<span class="pf-bar-text" onclick="pfOpenModal()">🗂️ <b>' + pfEscapeHtml(active.name) + '</b>' + t('pf.barSuffix') + '</span>' +
+                '<button type="button" class="pf-dash-btn" onclick="pfDashOpen()" title="' + t('dash.tooltip') + '">🗓️</button>';
         }
 
         /* ================================================================
@@ -976,16 +1193,28 @@
         // https://github.com/PlutoyDev/sky-shards （src/data/shard.ts）のアルゴリズムを
         // 忠実に移植したもの。月の日付・曜日だけから決定論的に計算できるため手動更新データは不要。
         var SHARD_REALM_JA = { prairie: '草原', forest: '雨林', valley: '峡谷', wasteland: '捨てられた地', vault: '書庫' };
+        var SHARD_REALM_EN = { prairie: 'Prairie', forest: 'Forest', valley: 'Valley', wasteland: 'Wasteland', vault: 'Vault' };
+        function dashRealmName(key) { return pfGetLang() === 'en' ? SHARD_REALM_EN[key] : SHARD_REALM_JA[key]; }
         var SHARD_REALMS = ['prairie', 'forest', 'valley', 'wasteland', 'vault'];
         // 各出現グループごとの、レルム内の具体的な出現エリア名（9-bit.jpの闇の破片場所一覧と
-        // PlutoyDev/sky-shardsのshardsInfo.mapsを突き合わせて確認したもの）
+        // PlutoyDev/sky-shardsのshardsInfo.mapsを突き合わせて確認したもの）。英語名は
+        // taipak5000.github.io系ツール共通の辞書（wings等）の表記に合わせている。
         var SHARD_LOCATIONS = [
-            { prairie: '蝶々の住処', forest: '小川', valley: 'スケートリンク', wasteland: '最初のエリア', vault: '星月夜の砂漠' },
-            { prairie: '神殿エリア', forest: '神殿前', valley: 'スケートリンク', wasteland: '戦場', vault: '星月夜の砂漠' },
-            { prairie: '洞窟', forest: '神殿奥', valley: '夢見の町', wasteland: '墓所', vault: '海月の入り江' },
-            { prairie: '鳥の巣', forest: 'ツリーハウス', valley: '夢見の町', wasteland: '座礁船', vault: '海月の入り江' },
-            { prairie: '楽園の島々', forest: '晴れ間', valley: '隠者の峠', wasteland: '忘れられた方舟', vault: '海月の入り江' },
+            { ja: { prairie: '蝶々の住処', forest: '小川', valley: 'スケートリンク', wasteland: '最初のエリア', vault: '星月夜の砂漠' },
+              en: { prairie: 'Butterfly Fields', forest: 'Brook', valley: 'Ice Rink', wasteland: 'First Area', vault: 'Starlight Desert' } },
+            { ja: { prairie: '神殿エリア', forest: '神殿前', valley: 'スケートリンク', wasteland: '戦場', vault: '星月夜の砂漠' },
+              en: { prairie: 'Temple Area', forest: 'Temple Approach', valley: 'Ice Rink', wasteland: 'Battlefield', vault: 'Starlight Desert' } },
+            { ja: { prairie: '洞窟', forest: '神殿奥', valley: '夢見の町', wasteland: '墓所', vault: '海月の入り江' },
+              en: { prairie: 'Caves', forest: 'Behind the Temple', valley: 'Village of Dreams', wasteland: 'Graveyard', vault: 'Jellyfish Cove' } },
+            { ja: { prairie: '鳥の巣', forest: 'ツリーハウス', valley: '夢見の町', wasteland: '座礁船', vault: '海月の入り江' },
+              en: { prairie: 'Bird Nest', forest: 'Treehouse', valley: 'Village of Dreams', wasteland: 'Shipwreck', vault: 'Jellyfish Cove' } },
+            { ja: { prairie: '楽園の島々', forest: '晴れ間', valley: '隠者の峠', wasteland: '忘れられた方舟', vault: '海月の入り江' },
+              en: { prairie: 'Sanctuary Islands', forest: 'Clearing', valley: 'Hermit Valley', wasteland: 'Forgotten Ark', vault: 'Jellyfish Cove' } },
         ];
+        function shardLocationName(groupIdx, realm) {
+            var entry = SHARD_LOCATIONS[groupIdx];
+            return (pfGetLang() === 'en' ? entry.en : entry.ja)[realm];
+        }
         var SHARD_GROUPS = [
             { noShardWkDay: [6, 0], intervalH: 8, offsetH: 1, offsetM: 50 },
             { noShardWkDay: [0, 1], intervalH: 8, offsetH: 2, offsetM: 10 },
@@ -1005,7 +1234,7 @@
             var group = SHARD_GROUPS[groupIdx];
             var hasShard = group.noShardWkDay.indexOf(dayOfWk) === -1;
             var realm = SHARD_REALMS[realmIdx];
-            var location = SHARD_LOCATIONS[groupIdx][realm];
+            var location = shardLocationName(groupIdx, realm);
             var realOffsetMs = Date.now() - pacNow.getTime();
             var firstStartFake = new Date(today);
             firstStartFake.setHours(group.offsetH, group.offsetM, 0, 0);
@@ -1093,7 +1322,7 @@
             var hh = String(Math.floor((totalSec % 86400) / 3600)).padStart(2, '0');
             var mm = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
             var ss = String(totalSec % 60).padStart(2, '0');
-            return days > 0 ? (days + '日 ' + hh + ':' + mm + ':' + ss) : (hh + ':' + mm + ':' + ss);
+            return days > 0 ? (days + t('dash.daySuffix') + hh + ':' + mm + ':' + ss) : (hh + ':' + mm + ':' + ss);
         }
         // 複数の未来時刻候補から一番近いものを選ぶ（全て過去なら null）
         function pfDashSoonestFuture(dates) {
@@ -1142,8 +1371,8 @@
             var shard = pfDashShardInfo();
             if (shard.hasShard) {
                 var shardIcon = shard.isRed ? '🔴' : '⚫';
-                var shardColorLabel = shard.isRed ? '赤闇' : '黒闇';
-                var shardRealmLabel = SHARD_REALM_JA[shard.realm];
+                var shardColorLabel = shard.isRed ? t('dash.redShard') : t('dash.blackShard');
+                var shardRealmLabel = dashRealmName(shard.realm);
                 var shardLocationLabel = shard.location;
                 var shardNow = new Date();
                 var shardTimes = shard.occurrences.map(function (occ) {
@@ -1151,58 +1380,58 @@
                     return '<span class="dash-shard-time' + (past ? ' past' : '') + '">' + pfDashFormatShardTime(occ) + '</span>';
                 }).join(' / ');
                 var shardSoon = pfDashSoonestFuture(shard.occurrences) || pfDashNextShardTime();
-                var shardCountdownHtml = shardSoon ? ('<span class="dash-countdown">次まで ' + pfDashCountdown(shardSoon) + '</span>') : '';
-                dailyRows.push(pfDashRow(shardIcon, shardColorLabel + '（<b>' + shardRealmLabel + '・' + shardLocationLabel + '</b>）が出現：<span class="dash-shard-times">' + shardTimes + '</span>' + shardCountdownHtml));
+                var shardCountdownHtml = shardSoon ? ('<span class="dash-countdown">' + t('dash.untilNext') + pfDashCountdown(shardSoon) + '</span>') : '';
+                dailyRows.push(pfDashRow(shardIcon, t('dash.shardRow', { color: shardColorLabel, realm: shardRealmLabel, location: shardLocationLabel }) + '<span class="dash-shard-times">' + shardTimes + '</span>' + shardCountdownHtml));
             } else {
                 var nextShard = pfDashNextShardTime();
-                var nextShardHtml = nextShard ? ('<span class="dash-countdown">次まで ' + pfDashCountdown(nextShard) + '</span>') : '';
-                dailyRows.push(pfDashRow('🌑', '本日は闇の破片の出現はありません' + nextShardHtml));
+                var nextShardHtml = nextShard ? ('<span class="dash-countdown">' + t('dash.untilNext') + pfDashCountdown(nextShard) + '</span>') : '';
+                dailyRows.push(pfDashRow('🌑', t('dash.noShardToday') + nextShardHtml));
             }
             var candleRealm = pfDashGrandCandleRealm();
-            dailyRows.push(pfDashRow('🕯️', '大キャンドル：<b>' + SHARD_REALM_JA[candleRealm] + '</b><span class="dash-countdown">次の変更まで ' + pfDashCountdown(pfDashNextPacificMidnight()) + '</span>'));
+            dailyRows.push(pfDashRow('🕯️', t('dash.grandCandle') + '<b>' + dashRealmName(candleRealm) + '</b><span class="dash-countdown">' + t('dash.untilChange') + pfDashCountdown(pfDashNextPacificMidnight()) + '</span>'));
             var questCandleRealm = pfDashGrandCandleRealm(-1);
-            dailyRows.push(pfDashRow('📜', 'クエスト・シーズンキャンドル：<b>' + SHARD_REALM_JA[questCandleRealm] + '</b><span class="dash-countdown">次の変更まで ' + pfDashCountdown(pfDashNextPacificMidnight()) + '</span>'));
-            dailyRows.push(pfDashRow('🌋', 'ウニ焼き<span class="dash-countdown">次回まで ' + pfDashCountdown(pfDashNextEvenHourEvent(5)) + '</span>'));
-            dailyRows.push(pfDashRow('🍞', 'パン焼き<span class="dash-countdown">次回まで ' + pfDashCountdown(pfDashNextEvenHourEvent(35)) + '</span>'));
-            dailyRows.push(pfDashRow('🐢', '亀闇<span class="dash-countdown">次回まで ' + pfDashCountdown(pfDashNextEvenHourEvent(50)) + '</span>'));
+            dailyRows.push(pfDashRow('📜', t('dash.questSeasonCandle') + '<b>' + dashRealmName(questCandleRealm) + '</b><span class="dash-countdown">' + t('dash.untilChange') + pfDashCountdown(pfDashNextPacificMidnight()) + '</span>'));
+            dailyRows.push(pfDashRow('🌋', t('dash.geyser') + '<span class="dash-countdown">' + t('dash.untilNextTime') + pfDashCountdown(pfDashNextEvenHourEvent(5)) + '</span>'));
+            dailyRows.push(pfDashRow('🍞', t('dash.grandma') + '<span class="dash-countdown">' + t('dash.untilNextTime') + pfDashCountdown(pfDashNextEvenHourEvent(35)) + '</span>'));
+            dailyRows.push(pfDashRow('🐢', t('dash.turtle') + '<span class="dash-countdown">' + t('dash.untilNextTime') + pfDashCountdown(pfDashNextEvenHourEvent(50)) + '</span>'));
             var dailyHtml = dailyRows.join('');
 
             var todayRows = [];
             if (data.season && data.season.name && data.season.endDate && new Date() < new Date(data.season.endDate)) {
-                todayRows.push(pfDashRow('🌟', '<b>' + pfEscapeHtml(data.season.name) + '</b> が開催中'));
+                todayRows.push(pfDashRow('🌟', t('dash.eventActive', { name: pfEscapeHtml(data.season.name) })));
             }
             pfDashActiveScheduledEvents(data.eventSchedule).forEach(function (ev) {
-                todayRows.push(pfDashRow('🌟', '<b>' + pfEscapeHtml(ev.name) + '</b> が開催中<span class="dash-countdown">終了まで ' + pfDashCountdown(new Date(ev.end)) + '</span>'));
+                todayRows.push(pfDashRow('🌟', t('dash.eventActive', { name: pfEscapeHtml(ev.name) }) + '<span class="dash-countdown">' + t('dash.untilEnd') + pfDashCountdown(new Date(ev.end)) + '</span>'));
             });
             var rv = pfDashRevisitStatus(data.revisit);
             if (rv && data.revisit) {
                 var revisitLabel = rv.active
-                    ? '再訪精霊 「<b>' + pfEscapeHtml(data.revisit.name) + '</b>」が来訪中'
-                    : '再訪精霊 「<b>' + pfEscapeHtml(data.revisit.name) + '</b>」の次回来訪まで';
+                    ? t('dash.revisitActive', { name: pfEscapeHtml(data.revisit.name) })
+                    : t('dash.revisitUpcoming', { name: pfEscapeHtml(data.revisit.name) });
                 todayRows.push(pfDashRow('🕊️', revisitLabel + '<span class="dash-countdown">' + pfDashCountdown(rv.target) + '</span>'));
             }
-            var todayHtml = todayRows.length ? todayRows.join('') : '<div class="dash-empty">現在開催中の季節・イベントはありません</div>';
+            var todayHtml = todayRows.length ? todayRows.join('') : '<div class="dash-empty">' + t('dash.noActiveEvents') + '</div>';
 
-            var weekHtml = pfDashRow('🌩️', '原罪：週間リセットまで<span class="dash-countdown">' + pfDashCountdown(pfDashNextEdenResetTarget()) + '</span><span class="dash-note">毎週日曜0時・太平洋時間</span>');
+            var weekHtml = pfDashRow('🌩️', t('dash.edenReset') + '<span class="dash-countdown">' + pfDashCountdown(pfDashNextEdenResetTarget()) + '</span><span class="dash-note">' + t('dash.edenNote') + '</span>');
             if (data.nextUpdate && data.nextUpdate.date) {
                 var updateTarget = new Date(data.nextUpdate.date);
                 if (new Date() < updateTarget) {
-                    weekHtml += pfDashRow('🔧', '次回アップデート予定<span class="dash-countdown">' + pfDashCountdown(updateTarget) + '</span>');
+                    weekHtml += pfDashRow('🔧', t('dash.nextUpdate') + '<span class="dash-countdown">' + pfDashCountdown(updateTarget) + '</span>');
                 }
             }
 
             var monthHtml;
             if (data.season && data.season.endDate) {
                 var end = new Date(data.season.endDate);
-                monthHtml = pfDashRow('🎨', '「<b>' + pfEscapeHtml(data.season.name) + '</b>」終了まで<span class="dash-countdown">' + pfDashCountdown(end) + '</span>');
+                monthHtml = pfDashRow('🎨', t('dash.seasonEndsIn', { name: pfEscapeHtml(data.season.name) }) + '<span class="dash-countdown">' + pfDashCountdown(end) + '</span>');
             } else {
-                monthHtml = '<div class="dash-empty">シーズン情報が取得できませんでした</div>';
+                monthHtml = '<div class="dash-empty">' + t('dash.seasonFetchFailed') + '</div>';
             }
 
-            return '<div class="dash-section"><p class="dash-section-label">デイリー</p>' + dailyHtml + '</div>' +
-                '<div class="dash-section"><p class="dash-section-label">今日</p>' + todayHtml + '</div>' +
-                '<div class="dash-section"><p class="dash-section-label">今週</p>' + weekHtml + '</div>' +
-                '<div class="dash-section"><p class="dash-section-label">今月</p>' + monthHtml + '</div>';
+            return '<div class="dash-section"><p class="dash-section-label">' + t('dash.daily') + '</p>' + dailyHtml + '</div>' +
+                '<div class="dash-section"><p class="dash-section-label">' + t('dash.today') + '</p>' + todayHtml + '</div>' +
+                '<div class="dash-section"><p class="dash-section-label">' + t('dash.thisWeek') + '</p>' + weekHtml + '</div>' +
+                '<div class="dash-section"><p class="dash-section-label">' + t('dash.thisMonth') + '</p>' + monthHtml + '</div>';
         }
         var pfDashCache = null;
         var pfDashLoading = null;
@@ -1223,7 +1452,7 @@
             if (overlay) overlay.classList.add('is-visible');
             var body = document.getElementById('dashBody');
             if (pfDashCache) { body.innerHTML = pfDashBuildHtml(pfDashCache); pfDashStartTimer(); return; }
-            body.innerHTML = '<p class="pf-hint">読み込み中…</p>';
+            body.innerHTML = '<p class="pf-hint">' + t('dash.loading') + '</p>';
             if (!pfDashLoading) pfDashLoading = pfDashLoadData();
             pfDashLoading.then(function (data) {
                 pfDashCache = data;
@@ -1231,7 +1460,7 @@
                 pfDashStartTimer();
             }).catch(function (e) {
                 console.error('pfDashOpen', e);
-                body.innerHTML = '<div class="dash-empty">読み込みに失敗しました</div>';
+                body.innerHTML = '<div class="dash-empty">' + t('dash.loadFailed') + '</div>';
             });
         }
         function pfDashClose() {
@@ -1256,24 +1485,24 @@
                     html += '<div class="pf-row" style="flex-wrap: wrap;">' +
                         '<input type="text" class="pf-row-input" id="pfEditInput" value="' + pfEscapeHtml(p.name) + '" maxlength="20" ' +
                         'onkeydown="if(event.key===\'Enter\') pfConfirmRenameInline(\'' + p.id + '\'); if(event.key===\'Escape\') pfCancelRowState();">' +
-                        '<button type="button" class="pf-icon-btn pf-row-btn-ok" onclick="pfConfirmRenameInline(\'' + p.id + '\')">保存</button>' +
-                        '<button type="button" class="pf-icon-btn" onclick="pfCancelRowState()">取消</button>' +
+                        '<button type="button" class="pf-icon-btn pf-row-btn-ok" onclick="pfConfirmRenameInline(\'' + p.id + '\')">' + t('common.save') + '</button>' +
+                        '<button type="button" class="pf-icon-btn" onclick="pfCancelRowState()">' + t('common.cancel') + '</button>' +
                         '</div>';
                     return;
                 }
                 if (pfDeletingId === p.id) {
                     html += '<div class="pf-row" style="flex-wrap: wrap;">' +
-                        '<span class="pf-row-confirm-text">「' + pfEscapeHtml(p.name) + '」を削除しますか？このプロフィールの保存データも削除されます。</span>' +
-                        '<button type="button" class="pf-icon-btn pf-row-btn-danger" onclick="pfConfirmDeleteInline(\'' + p.id + '\')">削除</button>' +
-                        '<button type="button" class="pf-icon-btn" onclick="pfCancelRowState()">取消</button>' +
+                        '<span class="pf-row-confirm-text">' + t('pf.deleteConfirm', { name: pfEscapeHtml(p.name) }) + '</span>' +
+                        '<button type="button" class="pf-icon-btn pf-row-btn-danger" onclick="pfConfirmDeleteInline(\'' + p.id + '\')">' + t('common.delete') + '</button>' +
+                        '<button type="button" class="pf-icon-btn" onclick="pfCancelRowState()">' + t('common.cancel') + '</button>' +
                         '</div>';
                     return;
                 }
                 var colorVal = pfIsSafeColor(p.color) ? p.color : '#007AFF';
                 html += '<div class="pf-row' + (p.id === activeId ? ' active' : '') + '">' +
-                    '<input type="color" class="pf-color-input" value="' + colorVal + '" title="アカウントカラー" onchange="pfSetProfileColor(\'' + p.id + '\', this.value)">' +
+                    '<input type="color" class="pf-color-input" value="' + colorVal + '" title="' + t('pf.colorTitle') + '" onchange="pfSetProfileColor(\'' + p.id + '\', this.value)">' +
                     '<span class="pf-row-name" onclick="pfSwitchProfile(\'' + p.id + '\')">' + (p.id === activeId ? '✅ ' : '') + pfEscapeHtml(p.name) + '</span>' +
-                    (p.color ? '<button type="button" class="pf-icon-btn pf-color-clear-btn" title="カラーを初期値に戻す" onclick="pfClearProfileColor(\'' + p.id + '\')">↺</button>' : '') +
+                    (p.color ? '<button type="button" class="pf-icon-btn pf-color-clear-btn" title="' + t('pf.colorReset') + '" onclick="pfClearProfileColor(\'' + p.id + '\')">↺</button>' : '') +
                     '<button type="button" class="pf-icon-btn" onclick="pfStartRename(\'' + p.id + '\')">✏️</button>' +
                     (list.length > 1 ? '<button type="button" class="pf-icon-btn" onclick="pfStartDelete(\'' + p.id + '\')">🗑️</button>' : '') +
                     '</div>';
@@ -1331,11 +1560,11 @@
         // データを直接読み書きし、二重管理を避ける。昇華キャンドル・シーズン
         // ハート・イベント通貨はどのサイトにも記録先が無いため新規キーで管理する。
         var PF_CURRENCY_FIELDS = [
-            { key: 'candle',         icon: '🕯️', label: 'キャンドル' },
-            { key: 'heart',          icon: '💗', label: 'ハート' },
-            { key: 'ascendedCandle', icon: '🕯️✨', label: '星のキャンドル' },
-            { key: 'seasonCandle',   icon: '🕯️🍂', label: 'シーズンキャンドル' },
-            { key: 'giftPass',       icon: '🎟️', label: 'ギフトパス' }
+            { key: 'candle',         icon: '🕯️' },
+            { key: 'heart',          icon: '💗' },
+            { key: 'ascendedCandle', icon: '🕯️✨' },
+            { key: 'seasonCandle',   icon: '🕯️🍂' },
+            { key: 'giftPass',       icon: '🎟️' }
         ];
         function pfCompanionDataKey() {
             var id = pfGetActiveId();
@@ -1389,7 +1618,7 @@
             var c = pfLoadCurrency();
             body.innerHTML = PF_CURRENCY_FIELDS.map(function (f) {
                 return '<div class="pf-currency-row">' +
-                    '<span class="pf-currency-label">' + f.icon + ' ' + f.label + '</span>' +
+                    '<span class="pf-currency-label">' + f.icon + ' ' + t('pf.currency.' + f.key) + '</span>' +
                     '<input type="number" min="0" class="pf-currency-input" value="' + c[f.key] + '" ' +
                     'onchange="pfSaveCurrencyField(\'' + f.key + '\', this.value)">' +
                     '</div>';
@@ -1406,7 +1635,7 @@
             var body = document.getElementById('pfCurrencyBody');
             var label = document.getElementById('pfCurrencyToggleLabel');
             if (body) body.style.display = pfCurrencyOpen ? '' : 'none';
-            if (label) label.textContent = pfCurrencyOpen ? '閉じる ▲' : '開く ▼';
+            if (label) label.textContent = pfCurrencyOpen ? t('common.closeArrow') : t('common.openArrow');
         }
 
         function pfOpenModal() {
@@ -1462,7 +1691,7 @@
             a.click();
             a.remove();
             URL.revokeObjectURL(url);
-            document.getElementById('dmStatus').textContent = '書き出しました（' + Object.keys(dump).length + '件のキー）。';
+            document.getElementById('dmStatus').textContent = t('dm.exportDone', { count: Object.keys(dump).length });
         }
 
         var dmPendingImport = null;
@@ -1474,21 +1703,21 @@
             reader.onload = function () {
                 var parsed;
                 try { parsed = JSON.parse(reader.result); } catch (e) {
-                    document.getElementById('dmStatus').textContent = 'ファイルの読み込みに失敗しました（JSON形式ではありません）。';
+                    document.getElementById('dmStatus').textContent = t('dm.importParseError');
                     return;
                 }
                 var data = parsed && parsed.data && typeof parsed.data === 'object' ? parsed.data : null;
                 if (!data) {
-                    document.getElementById('dmStatus').textContent = 'このツールで書き出したファイルではないようです。';
+                    document.getElementById('dmStatus').textContent = t('dm.importFormatError');
                     return;
                 }
                 dmPendingImport = data;
                 var count = Object.keys(data).length;
                 document.getElementById('dmImportConfirmArea').innerHTML =
                     '<div class="pf-row" style="flex-wrap: wrap;">' +
-                    '<span class="pf-row-confirm-text">' + count + '件のキーをインポートします。現在保存されているデータは上書きされます（インポートするファイルに無いキーはそのまま残ります）。よろしいですか？</span>' +
-                    '<button type="button" class="pf-icon-btn pf-row-btn-ok" onclick="dmConfirmImport()">インポート実行</button>' +
-                    '<button type="button" class="pf-icon-btn" onclick="dmCancelImport()">取消</button>' +
+                    '<span class="pf-row-confirm-text">' + t('dm.importConfirm', { count: count }) + '</span>' +
+                    '<button type="button" class="pf-icon-btn pf-row-btn-ok" onclick="dmConfirmImport()">' + t('dm.importExecBtn') + '</button>' +
+                    '<button type="button" class="pf-icon-btn" onclick="dmCancelImport()">' + t('common.cancel') + '</button>' +
                     '</div>';
             };
             reader.readAsText(file);
@@ -1504,7 +1733,7 @@
             });
             dmPendingImport = null;
             document.getElementById('dmImportConfirmArea').innerHTML = '';
-            document.getElementById('dmStatus').textContent = 'インポートしました。ページを再読み込みします…';
+            document.getElementById('dmStatus').textContent = t('dm.importDone');
             setTimeout(function () { location.reload(); }, 800);
         }
 
@@ -1512,21 +1741,21 @@
         function dmRenderWipeArea() {
             var area = document.getElementById('dmWipeArea');
             if (!dmWipeConfirming) {
-                area.innerHTML = '<button type="button" class="pf-icon-btn pf-row-btn-danger" style="width:100%; padding:8px;" onclick="dmStartWipe()">🗑️ 全データを削除</button>';
+                area.innerHTML = '<button type="button" class="pf-icon-btn pf-row-btn-danger" style="width:100%; padding:8px;" onclick="dmStartWipe()">' + t('dm.wipeBtn') + '</button>';
                 return;
             }
             area.innerHTML =
                 '<div class="pf-row" style="flex-wrap: wrap;">' +
-                '<span class="pf-row-confirm-text">すべてのプロフィール・所持アイテム・お気に入り・精霊ツリーの進捗など、このブラウザに保存されている全データを削除します。この操作は取り消せません。先にエクスポートしておくことをおすすめします。本当に削除しますか？</span>' +
-                '<button type="button" class="pf-icon-btn pf-row-btn-danger" onclick="dmConfirmWipe()">完全に削除する</button>' +
-                '<button type="button" class="pf-icon-btn" onclick="dmCancelWipe()">取消</button>' +
+                '<span class="pf-row-confirm-text">' + t('dm.wipeConfirm') + '</span>' +
+                '<button type="button" class="pf-icon-btn pf-row-btn-danger" onclick="dmConfirmWipe()">' + t('dm.wipeExecBtn') + '</button>' +
+                '<button type="button" class="pf-icon-btn" onclick="dmCancelWipe()">' + t('common.cancel') + '</button>' +
                 '</div>';
         }
         function dmStartWipe() { dmWipeConfirming = true; dmRenderWipeArea(); }
         function dmCancelWipe() { dmWipeConfirming = false; dmRenderWipeArea(); }
         function dmConfirmWipe() {
             localStorage.clear();
-            document.getElementById('dmStatus').textContent = '削除しました。ページを再読み込みします…';
+            document.getElementById('dmStatus').textContent = t('dm.wipeDone');
             setTimeout(function () { location.reload(); }, 800);
         }
 
@@ -1638,7 +1867,7 @@
 
         function pfIconSave() {
             if (pfIconMode === 'image' && !pfIconUploadedImg) {
-                document.getElementById('iconSaveStatus').textContent = '画像を選択してください';
+                document.getElementById('iconSaveStatus').textContent = t('icon.selectImageFirst');
                 return;
             }
             var dataUrl = pfIconGenerateDataUrl(512);
@@ -1650,11 +1879,11 @@
             try {
                 localStorage.setItem(PF_ICON_STORAGE_KEY, JSON.stringify(state));
             } catch (e) {
-                document.getElementById('iconSaveStatus').textContent = '保存に失敗しました(容量オーバーの可能性があります)';
+                document.getElementById('iconSaveStatus').textContent = t('icon.saveFailed');
                 return;
             }
             pfIconApply(dataUrl);
-            document.getElementById('iconSaveStatus').textContent = '✅ 保存しました。これでホーム画面に追加すると反映されます';
+            document.getElementById('iconSaveStatus').textContent = t('icon.saveDone');
         }
 
         function pfIconReset() {
@@ -1667,7 +1896,7 @@
             document.getElementById('iconEmojiInput').value = '📍';
             document.getElementById('iconBgColorInput').value = '#007AFF';
             pfIconSetMode('emoji');
-            document.getElementById('iconSaveStatus').textContent = 'デフォルトのアイコンに戻しました';
+            document.getElementById('iconSaveStatus').textContent = t('icon.resetDone');
         }
 
         function pfIconApplyFromStorage() {
@@ -1729,7 +1958,7 @@
         window.pfSetProfileColor = pfSetProfileColor;
         window.pfClearProfileColor = pfClearProfileColor;
 
-        document.addEventListener('DOMContentLoaded', pfRenderBar);
+        document.addEventListener('DOMContentLoaded', function () { pfApplyStaticI18n(); pfRenderBar(); });
     })();
 
     const { createApp, ref, computed, onMounted, watch } = Vue;
@@ -1750,6 +1979,106 @@
             };
 
             watch(isDarkMode, () => { applyThemeToDOM(); });
+
+            // 🌐 日本語・英語 UI切り替え(taipak5000.github.io 配下の各ツール共通)
+            // isDarkMode/toggleTheme と同じ「ref + 関数」方式: lang は Vue の ref なので
+            // template の {{ }} からも、setup() 内のプレーンな関数からも t() で参照でき、
+            // 値が変わればテンプレートはVueが自動で再描画する(手動でのDOM操作は不要)。
+            const lang = ref(localStorage.getItem('sky_app_lang') === 'en' ? 'en' : 'ja');
+
+            const TRANSLATIONS = {
+                ja: {
+                    'header.title': '創作物期限管理 (14日間)',
+                    'sidebar.toggleBtn': 'ツール',
+                    'theme.dark': 'ダーク',
+                    'theme.light': 'ライト',
+                    'sidebar.relatedTools': '関連ツール',
+                    'sidebar.item': 'アイテム所持管理',
+                    'sidebar.emote': 'エモート所持率管理',
+                    'sidebar.share': '創作物管理ツール',
+                    'sidebar.nomacan': 'ノマキャン計算機',
+                    'sidebar.starCandle': '星のキャンドル計算機',
+                    'sidebar.companion': '精霊同行ツール',
+                    'sidebar.wings': '羽トラッカー',
+                    'sidebar.transfer': 'データ引継ぎ',
+                    'sidebar.homeIcon': 'ホーム画面アイコン',
+                    'sidebar.customizeIcon': 'アイコンをカスタマイズ',
+                    'stats.header': '現在の状態',
+                    'stats.active': '設置中',
+                    'stats.warning': '期限間近',
+                    'stats.alert': '保留・消滅',
+                    'list.header': '設置した創作物一覧',
+                    'list.emptyAll': '現在管理している創作物は記憶されていません。<br>下のボタンから追加してください！',
+                    'list.emptyFiltered': '選択したジャンルに該当する設置物はありません。',
+                    'item.memoPlaceholder': '設置場所や内容 (例: 花鳥郷 魔法のお店前)',
+                    'item.placedDate': '設置日',
+                    'item.expiryDate': '自動消滅日',
+                    'badge.suspended': '保留中',
+                    'badge.expired': '⚠️ 消滅',
+                    'badge.dueToday': '⏰ 今日まで',
+                    'badge.daysLeft': 'あと {n}日',
+                    'actions.replace': '今日再設置',
+                    'actions.suspend': '保留',
+                    'actions.delete': '削除',
+                    'actions.addNew': '新しい設置物を追加'
+                },
+                en: {
+                    'header.title': 'Creation Expiry Manager (14-Day)',
+                    'sidebar.toggleBtn': 'Tools',
+                    'theme.dark': 'Dark',
+                    'theme.light': 'Light',
+                    'sidebar.relatedTools': 'Related Tools',
+                    'sidebar.item': 'Item Collection',
+                    'sidebar.emote': 'Emote Collection',
+                    'sidebar.share': 'Creation Manager',
+                    'sidebar.nomacan': 'Nomacan Calculator',
+                    'sidebar.starCandle': 'Star Candle Calculator',
+                    'sidebar.companion': 'Spirit Companion Tool',
+                    'sidebar.wings': 'Wing Tracker',
+                    'sidebar.transfer': 'Data Transfer',
+                    'sidebar.homeIcon': 'Home Screen Icon',
+                    'sidebar.customizeIcon': 'Customize Icon',
+                    'stats.header': 'Current Status',
+                    'stats.active': 'Active',
+                    'stats.warning': 'Expiring Soon',
+                    'stats.alert': 'Suspended / Expired',
+                    'list.header': 'Placed Creations',
+                    'list.emptyAll': 'No creations are being tracked yet.<br>Add one with the button below!',
+                    'list.emptyFiltered': 'No placed items match the selected genre.',
+                    'item.memoPlaceholder': 'Where you placed it (e.g. Hidden Forest, in front of the magic shop)',
+                    'item.placedDate': 'Placed on',
+                    'item.expiryDate': 'Auto-expires',
+                    'badge.suspended': 'Suspended',
+                    'badge.expired': '⚠️ Expired',
+                    'badge.dueToday': '⏰ Due today',
+                    'badge.daysLeft': '{n} day(s) left',
+                    'actions.replace': 'Re-place today',
+                    'actions.suspend': 'Suspend',
+                    'actions.delete': 'Delete',
+                    'actions.addNew': 'Add New Placement'
+                }
+            };
+
+            const t = (key, params) => {
+                let str = (TRANSLATIONS[lang.value] && TRANSLATIONS[lang.value][key] !== undefined)
+                    ? TRANSLATIONS[lang.value][key]
+                    : (TRANSLATIONS.ja[key] !== undefined ? TRANSLATIONS.ja[key] : key);
+                if (params) {
+                    Object.keys(params).forEach((k) => { str = str.split('{' + k + '}').join(params[k]); });
+                }
+                return str;
+            };
+
+            const optLabel = (o) => lang.value === 'en' ? o.labelEn : o.label;
+
+            const toggleLang = () => {
+                lang.value = lang.value === 'ja' ? 'en' : 'ja';
+                localStorage.setItem('sky_app_lang', lang.value);
+                // プロフィール切替バー・各種モーダル(プロフィール/ダッシュボード/バックアップ/
+                // アイコンカスタマイズ)はVue管理外のプレーンJSでinnerHTML構築されているため、
+                // 同じ言語切り替えを反映させるIIFE側のフックを呼ぶ。
+                if (window.pfApplyLang) window.pfApplyLang();
+            };
 
             // 既存の設定
             const placedItems = ref([]);
@@ -1804,12 +2133,12 @@
 
             // 🏷️ ジャンル選択(複数選択可)・絞り込み
             const genreOptions = [
-                { value: '', label: '未選択', color: '#8e8e93' },
-                { value: 'ボート', label: '⛵ ボート', color: '#007aff' },
-                { value: 'メモリー', label: '💭 メモリー', color: '#af52de' },
-                { value: 'スペース', label: '🌌 スペース', color: '#5e5ce6' }
+                { value: '', label: '未選択', labelEn: 'None', color: '#8e8e93' },
+                { value: 'ボート', label: '⛵ ボート', labelEn: '⛵ Boat', color: '#007aff' },
+                { value: 'メモリー', label: '💭 メモリー', labelEn: '💭 Memory', color: '#af52de' },
+                { value: 'スペース', label: '🌌 スペース', labelEn: '🌌 Space', color: '#5e5ce6' }
             ];
-            const filterOptions = [{ value: 'all', label: 'すべて', color: '#8e8e93' }, ...genreOptions];
+            const filterOptions = [{ value: 'all', label: 'すべて', labelEn: 'All', color: '#8e8e93' }, ...genreOptions];
             const activeFilter = ref('all');
 
             const isGenreActive = (item, value) => {
@@ -1897,6 +2226,7 @@
 
             return {
                 isDarkMode, toggleTheme, showSidebar,
+                lang, t, optLabel, toggleLang,
                 placedItems, sortedPlacedItems, stats, getDaysLeft, getExpiryDateString, formatDateForInput,
                 updateItemDate, addItem, removeItem, rePlaceItem, suspendItem,
                 genreOptions, filterOptions, activeFilter, isGenreActive, toggleItemGenre
@@ -1906,10 +2236,10 @@
 </script>
 
 <footer style="text-align: center; padding: 24px 16px; color: var(--text-gray); font-size: 13px; border-top: 1px solid var(--border-color); margin-top: 40px; line-height: 1.6;">
-    このサイトはSky 星を紡ぐ子どもたちの非公式ファンサイトです。thatgamecompanyは一切関与していません。<br>
-    作成・ご意見: <a href="https://x.com/Skyzztai" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: none; font-weight: bold;">@Skyzztai</a><br>
+    <span data-i18n="footer.disclaimer">このサイトはSky 星を紡ぐ子どもたちの非公式ファンサイトです。thatgamecompanyは一切関与していません。</span><br>
+    <span data-i18n="footer.createdBy">作成・ご意見:</span> <a href="https://x.com/Skyzztai" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: none; font-weight: bold;">@Skyzztai</a><br>
     <span style="color: var(--text-gray); font-size: 12px; margin-top: 4px; display: inline-block;">
-        <a href="https://taipak5000.github.io/tai-info/" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">⚙️ 設定・更新情報・クレジット・プライバシーポリシー</a>
+        <a href="https://taipak5000.github.io/tai-info/" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);" data-i18n="footer.settingsLink">⚙️ 設定・更新情報・クレジット・プライバシーポリシー</a>
     </span>
 </footer>
 
