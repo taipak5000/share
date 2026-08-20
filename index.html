@@ -695,22 +695,14 @@
         <div class="pf-modal-card">
             <h3 data-i18n="settings.title">⚙️ 表示設定</h3>
 
-            <div class="pf-row">
-                <span class="pf-row-name" data-i18n="settings.langLabel">言語</span>
-                <div style="display:flex; gap:6px;">
-                    <button type="button" class="pf-icon-btn" id="settingsLangJaBtn" onclick="window.setLang && window.setLang('ja')">🇯🇵 日本語</button>
-                    <button type="button" class="pf-icon-btn" id="settingsLangEnBtn" onclick="window.setLang && window.setLang('en')">🇺🇸 English</button>
+            <div class="pf-currency-section" style="margin-top:0; padding-top:0; border-top:none;">
+                <p class="pf-currency-title" style="cursor:default;">
+                    <span data-i18n="settings.themeSection">🌙 表示</span>
+                </p>
+                <div class="pf-row">
+                    <span class="pf-row-name" data-i18n="settings.darkModeLabel">ダークモード</span>
+                    <button type="button" class="pf-icon-btn" id="settingsThemeBtn" onclick="window.toggleTheme && window.toggleTheme()">🌙 ダーク</button>
                 </div>
-            </div>
-
-            <div class="pf-row">
-                <span class="pf-row-name" data-i18n="settings.darkModeLabel">ダークモード</span>
-                <button type="button" class="pf-icon-btn" id="settingsThemeBtn" onclick="window.toggleTheme && window.toggleTheme()">🌙 ダーク</button>
-            </div>
-
-            <div class="pf-row">
-                <span class="pf-row-name" data-i18n="settings.customizeIconLabel">ホーム画面アイコン</span>
-                <button type="button" class="pf-icon-btn" data-i18n="settings.customizeIconBtn" onclick="settingsCloseModal(); pfIconOpenModal();">🎨 カスタマイズ</button>
             </div>
 
             <div class="pf-currency-section">
@@ -726,6 +718,29 @@
                     <b>D</b> — <span data-i18n="settings.shortcutHelpTheme">ダークモード切替</span><br>
                     <b>Esc</b> — <span data-i18n="settings.shortcutHelpClose">開いているウィンドウを閉じる</span>
                 </p>
+            </div>
+
+            <div class="pf-currency-section">
+                <p class="pf-currency-title" style="cursor:default;">
+                    <span data-i18n="settings.iconSection">📱 ホーム画面アイコン</span>
+                </p>
+                <div class="pf-row">
+                    <span class="pf-row-name" data-i18n="settings.customizeIconLabel">ホーム画面アイコン</span>
+                    <button type="button" class="pf-icon-btn" data-i18n="settings.customizeIconBtn" onclick="settingsCloseModal(); pfIconOpenModal();">🎨 カスタマイズ</button>
+                </div>
+            </div>
+
+            <div class="pf-currency-section">
+                <p class="pf-currency-title" style="cursor:default;">
+                    <span data-i18n="settings.langSection">🌐 言語 / Language</span>
+                </p>
+                <div class="pf-row">
+                    <span class="pf-row-name" data-i18n="settings.langLabel">言語</span>
+                    <div style="display:flex; gap:6px;">
+                        <button type="button" class="pf-icon-btn" id="settingsLangJaBtn" onclick="window.setLang && window.setLang('ja')">🇯🇵 日本語</button>
+                        <button type="button" class="pf-icon-btn" id="settingsLangEnBtn" onclick="window.setLang && window.setLang('en')">🇺🇸 English</button>
+                    </div>
+                </div>
             </div>
 
             <button type="button" class="pf-close-btn" data-i18n="common.close" onclick="settingsCloseModal()">閉じる</button>
@@ -1015,10 +1030,13 @@
                 'footer.createdBy': '作成・ご意見:',
                 'footer.settingsLink': '⚙️ 設定・更新情報・クレジット・プライバシーポリシー',
                 'settings.title': '⚙️ 表示設定',
+                'settings.themeSection': '🌙 表示',
                 'settings.langLabel': '言語',
+                'settings.langSection': '🌐 言語 / Language',
                 'settings.darkModeLabel': 'ダークモード',
                 'theme.dark': 'ダーク',
                 'theme.light': 'ライト',
+                'settings.iconSection': '📱 ホーム画面アイコン',
                 'settings.customizeIconLabel': 'ホーム画面アイコン',
                 'settings.customizeIconBtn': '🎨 カスタマイズ',
                 'settings.shortcutsSection': '⌨️ キーボードショートカット',
@@ -1116,10 +1134,13 @@
                 'footer.createdBy': 'Created by / feedback:',
                 'footer.settingsLink': '⚙️ Settings / What\'s New / Credits / Privacy Policy',
                 'settings.title': '⚙️ Display Settings',
+                'settings.themeSection': '🌙 Display',
                 'settings.langLabel': 'Language',
+                'settings.langSection': '🌐 言語 / Language',
                 'settings.darkModeLabel': 'Dark Mode',
                 'theme.dark': 'Dark',
                 'theme.light': 'Light',
+                'settings.iconSection': '📱 Home Screen Icon',
                 'settings.customizeIconLabel': 'Home Screen Icon',
                 'settings.customizeIconBtn': '🎨 Customize',
                 'settings.shortcutsSection': '⌨️ Keyboard Shortcuts',
