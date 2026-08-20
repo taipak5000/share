@@ -563,7 +563,7 @@
         }
         .site-dock button:active { background: var(--border-color); }
         .site-dock .site-dock-icon { font-size: 20px; line-height: 1; }
-        .site-dock .site-dock-label { font-size: 10px; font-weight: 700; color: var(--text-gray); }
+        .site-dock .site-dock-label { font-size: 10px; font-weight: 700; color: var(--text-gray); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         [v-cloak] { display: none; }
     </style>
@@ -694,6 +694,14 @@
     <div class="pf-modal-overlay" id="settingsModalOverlay">
         <div class="pf-modal-card">
             <h3 data-i18n="settings.title">⚙️ 表示設定</h3>
+
+            <div class="pf-row">
+                <span class="pf-row-name" data-i18n="settings.langLabel">言語</span>
+                <div style="display:flex; gap:6px;">
+                    <button type="button" class="pf-icon-btn" id="settingsLangJaBtn" onclick="window.setLang && window.setLang('ja')">🇯🇵 日本語</button>
+                    <button type="button" class="pf-icon-btn" id="settingsLangEnBtn" onclick="window.setLang && window.setLang('en')">🇺🇸 English</button>
+                </div>
+            </div>
 
             <div class="pf-row">
                 <span class="pf-row-name" data-i18n="settings.darkModeLabel">ダークモード</span>
@@ -872,7 +880,7 @@
     <nav class="site-dock" :aria-label="t('dock.ariaLabel')">
         <button type="button" onclick="pfOpenModal()">
             <span class="site-dock-icon">🗂️</span>
-            <span class="site-dock-label">{{ t('dock.profile') }}</span>
+            <span class="site-dock-label">{{ activeProfileName }}</span>
         </button>
         <button type="button" onclick="pfDashOpen()">
             <span class="site-dock-icon">🗓️</span>
@@ -1007,6 +1015,7 @@
                 'footer.createdBy': '作成・ご意見:',
                 'footer.settingsLink': '⚙️ 設定・更新情報・クレジット・プライバシーポリシー',
                 'settings.title': '⚙️ 表示設定',
+                'settings.langLabel': '言語',
                 'settings.darkModeLabel': 'ダークモード',
                 'theme.dark': 'ダーク',
                 'theme.light': 'ライト',
@@ -1107,6 +1116,7 @@
                 'footer.createdBy': 'Created by / feedback:',
                 'footer.settingsLink': '⚙️ Settings / What\'s New / Credits / Privacy Policy',
                 'settings.title': '⚙️ Display Settings',
+                'settings.langLabel': 'Language',
                 'settings.darkModeLabel': 'Dark Mode',
                 'theme.dark': 'Dark',
                 'theme.light': 'Light',
@@ -1296,9 +1306,16 @@
             var active = pfGetActiveProfile();
             pfApplyThemeColor(active.color);
             var bar = document.getElementById('pfBar');
-            if (!bar) return;
-            bar.innerHTML = '<span class="pf-bar-text" onclick="pfOpenModal()">🗂️ <b>' + pfEscapeHtml(active.name) + '</b>' + t('pf.barSuffix') + '</span>' +
-                '<button type="button" class="pf-dash-btn" onclick="pfDashOpen()" title="' + t('dash.tooltip') + '">🗓️</button>';
+            if (bar) {
+                bar.innerHTML = '<span class="pf-bar-text" onclick="pfOpenModal()">🗂️ <b>' + pfEscapeHtml(active.name) + '</b>' + t('pf.barSuffix') + '</span>' +
+                    '<button type="button" class="pf-dash-btn" onclick="pfDashOpen()" title="' + t('dash.tooltip') + '">🗓️</button>';
+            }
+            // 🗂️ サイトドックの「プロフィール」ボタンのラベルは Vue が管理する reactive な
+            // ref(activeProfileName) にバインドしているため、この非Vue IIFE側から更新する時は
+            // window.pfApplyLang / window.settingsSyncUI と同じ「windowに生やした関数で橋渡し」
+            // 方式で同期する。pfRenderBar() は init・switchProfile後・rename後・言語切替後の
+            // すべてで呼ばれるため、ここに乗せておけば同期漏れが起きない。
+            if (window.pfSyncDockProfile) window.pfSyncDockProfile();
         }
 
         /* ================================================================
@@ -2076,6 +2093,17 @@
             if (shortcutsBtn) {
                 shortcutsBtn.textContent = skyShortcutsEnabled() ? t('settings.shortcutsOn') : t('settings.shortcutsOff');
             }
+            // 🌐 言語セレクター：現在アクティブな言語のボタンをハイライトする
+            // （ホーム画面アイコンのモード切替ボタンと同じ「選択中はアクセントカラー」方式）。
+            var curLang = pfGetLang();
+            var jaBtn = document.getElementById('settingsLangJaBtn');
+            var enBtn = document.getElementById('settingsLangEnBtn');
+            if (jaBtn && enBtn) {
+                jaBtn.style.background = curLang === 'ja' ? 'var(--accent-blue)' : 'var(--input-bg)';
+                jaBtn.style.color = curLang === 'ja' ? '#fff' : 'var(--text-gray)';
+                enBtn.style.background = curLang === 'en' ? 'var(--accent-blue)' : 'var(--input-bg)';
+                enBtn.style.color = curLang === 'en' ? '#fff' : 'var(--text-gray)';
+            }
         }
 
         function settingsToggleShortcuts() {
@@ -2158,6 +2186,7 @@
         window.dmConfirmWipe = dmConfirmWipe;
         window.pfOpenModal = pfOpenModal;
         window.pfCloseModal = pfCloseModal;
+        window.pfGetActiveProfile = pfGetActiveProfile;
         window.pfDashOpen = pfDashOpen;
         window.pfDashClose = pfDashClose;
         window.pfSwitchProfile = pfSwitchProfile;
@@ -2317,6 +2346,31 @@
                 if (window.pfApplyLang) window.pfApplyLang();
             };
 
+            // ⚙️ 表示設定モーダルの言語セレクター用: toggleLang() と同じ副作用(localStorage保存
+            // ＋IIFE側フック呼び出し)を、2択トグルではなく「指定した言語に直接切り替える」形で
+            // 行う。既にその言語がアクティブな場合は何もしない(無駄な再描画を避ける安全な no-op)。
+            // 非Vueの設定モーダル(onclick属性)から呼べるよう window に公開する
+            // (window.toggleTheme / window.pfApplyLang と同じ橋渡しの考え方)。
+            const setLang = (newLang) => {
+                if (lang.value === newLang) return;
+                lang.value = newLang;
+                localStorage.setItem('sky_app_lang', lang.value);
+                if (window.pfApplyLang) window.pfApplyLang();
+            };
+            window.setLang = setLang;
+
+            // 🗂️ サイトドックの「プロフィール」ボタンに、固定ラベルの代わりに現在アクティブな
+            // プロフィール名を表示する。プロフィールの実データ(切替・名前変更)はVue管理外の
+            // IIFEが持っているため、isDarkMode/lang と同じ「ref + windowに生やした橋渡し関数」
+            // 方式で同期する。初期値はマウント時点で既にIIFE側の初期化(pfEnsureInit()等)が
+            // 完了している前提で window.pfGetActiveProfile() から直接取得し、以降は
+            // window.pfSyncDockProfile() 経由(pfRenderBar()内から呼ばれる。initやswitchProfile
+            // 後の他、renameProfile後もリロード無しで呼ばれるため、そこに乗せておけば十分)。
+            const activeProfileName = ref(window.pfGetActiveProfile ? window.pfGetActiveProfile().name : t('dock.profile'));
+            window.pfSyncDockProfile = () => {
+                activeProfileName.value = window.pfGetActiveProfile ? window.pfGetActiveProfile().name : t('dock.profile');
+            };
+
             // 既存の設定
             const placedItems = ref([]);
             const uuid = () => crypto.randomUUID();
@@ -2463,7 +2517,7 @@
 
             return {
                 isDarkMode, toggleTheme, showSidebar,
-                lang, t, optLabel, toggleLang,
+                lang, t, optLabel, toggleLang, activeProfileName,
                 placedItems, sortedPlacedItems, stats, getDaysLeft, getExpiryDateString, formatDateForInput,
                 updateItemDate, addItem, removeItem, rePlaceItem, suspendItem,
                 genreOptions, filterOptions, activeFilter, isGenreActive, toggleItemGenre
