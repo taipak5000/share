@@ -700,6 +700,11 @@
                 <button type="button" class="pf-icon-btn" id="settingsThemeBtn" onclick="window.toggleTheme && window.toggleTheme()">🌙 ダーク</button>
             </div>
 
+            <div class="pf-row">
+                <span class="pf-row-name" data-i18n="settings.customizeIconLabel">ホーム画面アイコン</span>
+                <button type="button" class="pf-icon-btn" data-i18n="settings.customizeIconBtn" onclick="settingsCloseModal(); pfIconOpenModal();">🎨 カスタマイズ</button>
+            </div>
+
             <div class="pf-currency-section">
                 <p class="pf-currency-title" style="cursor:default;">
                     <span data-i18n="settings.shortcutsSection">⌨️ キーボードショートカット</span>
@@ -859,18 +864,19 @@
 
     <!-- ═══ サイトドック（クイックアクセス） ═══ -->
     <!-- ハンバーガーサイドバー(.sidebar/showSidebar)とは別の常設ショートカット行。
-         サイドバー本体やそのトグルボタンは置き換えない。プロフィール/アイコン/表示設定は
+         サイドバー本体やそのトグルボタンは置き換えない。プロフィール/ダッシュボード/表示設定は
          Vue管理外のIIFEが window に公開している既存関数をそのまま呼び出し(既存のサイドバー
          内ボタンと同じ onclick 方式)、「他のツール」だけは Vue が持つ showSidebar を
-         @click でトグルする(ヘッダーの ☰ ボタンと同じ挙動)。 -->
+         @click でトグルする(ヘッダーの ☰ ボタンと同じ挙動)。アイコンカスタマイズは
+         ⚙️ 表示設定モーダル内の行に移設した(settingsCloseModal(); pfIconOpenModal();)。 -->
     <nav class="site-dock" :aria-label="t('dock.ariaLabel')">
         <button type="button" onclick="pfOpenModal()">
             <span class="site-dock-icon">🗂️</span>
             <span class="site-dock-label">{{ t('dock.profile') }}</span>
         </button>
-        <button type="button" onclick="pfIconOpenModal()">
-            <span class="site-dock-icon">🎨</span>
-            <span class="site-dock-label">{{ t('dock.customize') }}</span>
+        <button type="button" onclick="pfDashOpen()">
+            <span class="site-dock-icon">🗓️</span>
+            <span class="site-dock-label">{{ t('dock.dashboard') }}</span>
         </button>
         <button type="button" @click="showSidebar = !showSidebar">
             <span class="site-dock-icon">☰</span>
@@ -1004,6 +1010,8 @@
                 'settings.darkModeLabel': 'ダークモード',
                 'theme.dark': 'ダーク',
                 'theme.light': 'ライト',
+                'settings.customizeIconLabel': 'ホーム画面アイコン',
+                'settings.customizeIconBtn': '🎨 カスタマイズ',
                 'settings.shortcutsSection': '⌨️ キーボードショートカット',
                 'settings.shortcutsEnableLabel': 'ショートカットを有効にする',
                 'settings.shortcutsOn': '✅ 有効',
@@ -1102,6 +1110,8 @@
                 'settings.darkModeLabel': 'Dark Mode',
                 'theme.dark': 'Dark',
                 'theme.light': 'Light',
+                'settings.customizeIconLabel': 'Home Screen Icon',
+                'settings.customizeIconBtn': '🎨 Customize',
                 'settings.shortcutsSection': '⌨️ Keyboard Shortcuts',
                 'settings.shortcutsEnableLabel': 'Enable keyboard shortcuts',
                 'settings.shortcutsOn': '✅ On',
@@ -2238,7 +2248,7 @@
                     'actions.addNew': '新しい設置物を追加',
                     'dock.ariaLabel': 'クイックメニュー',
                     'dock.profile': 'プロフィール',
-                    'dock.customize': 'カスタマイズ',
+                    'dock.dashboard': 'ダッシュボード',
                     'dock.otherTools': '他のツール',
                     'dock.settings': '表示設定'
                 },
@@ -2280,7 +2290,7 @@
                     'actions.addNew': 'Add New Placement',
                     'dock.ariaLabel': 'Quick menu',
                     'dock.profile': 'Profile',
-                    'dock.customize': 'Customize',
+                    'dock.dashboard': 'Dashboard',
                     'dock.otherTools': 'Other Tools',
                     'dock.settings': 'Settings'
                 }
