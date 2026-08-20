@@ -961,8 +961,8 @@
                 'dash.grandma': 'パン焼き',
                 'dash.turtle': '亀闇',
                 'dash.eventActive': '<b>{name}</b> が開催中',
-                'dash.revisitActive': '再訪精霊 「<b>{name}</b>」が来訪中',
-                'dash.revisitUpcoming': '再訪精霊 「<b>{name}</b>」の次回来訪まで',
+                'dash.revisitActive': '再訪精霊が来訪中',
+                'dash.revisitUpcoming': '再訪精霊の次回来訪まで',
                 'dash.noActiveEvents': '現在開催中の季節・イベントはありません',
                 'dash.edenReset': '原罪：週間リセットまで',
                 'dash.edenNote': '毎週日曜0時・太平洋時間',
@@ -1062,8 +1062,8 @@
                 'dash.grandma': 'Bread Baking',
                 'dash.turtle': 'Turtle Darkness',
                 'dash.eventActive': '<b>{name}</b> is currently active',
-                'dash.revisitActive': 'Revisit Spirit 「<b>{name}</b>」 is here now',
-                'dash.revisitUpcoming': 'Revisit Spirit 「<b>{name}</b>」 returns in',
+                'dash.revisitActive': 'Revisit Spirit is here now',
+                'dash.revisitUpcoming': 'Revisit Spirit returns in',
                 'dash.noActiveEvents': 'No current seasons or events',
                 'dash.edenReset': 'Eye of Eden: Weekly reset in',
                 'dash.edenNote': 'Every Sunday 00:00 Pacific Time',
@@ -1561,8 +1561,8 @@
             var rv = pfDashRevisitStatus(data.revisit);
             if (rv && data.revisit) {
                 var revisitLabel = rv.active
-                    ? t('dash.revisitActive', { name: pfEscapeHtml(data.revisit.name) })
-                    : t('dash.revisitUpcoming', { name: pfEscapeHtml(data.revisit.name) });
+                    ? t('dash.revisitActive')
+                    : t('dash.revisitUpcoming');
                 todayRows.push(pfDashRow('🕊️', revisitLabel + '<span class="dash-countdown">' + pfDashCountdown(rv.target) + '</span>'));
             }
             var todayHtml = todayRows.length ? todayRows.join('') : '<div class="dash-empty">' + t('dash.noActiveEvents') + '</div>';
