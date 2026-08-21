@@ -36,6 +36,18 @@
             --badge-yellow-text: #965600;
             --badge-green-text: #1c7332;
             --badge-gray-text: #636368;
+
+            /* 🎯 ジャンル/絞り込みピル(.filter-btn.active/.genre-btn.active)と主要CTAボタン
+               (.btn-blue/.pf-add-btn)の塗り色。どちらも不透明な単色背景+白文字(#fff)固定の
+               組み合わせのため、元のアクセントカラーのままだと白文字とのコントラストが
+               WCAG AA(4.5:1)未達になる(#8e8e93は3.26:1、#007affは4.02:1、#af52deは4.13:1で
+               実測未達)。色相・彩度は保ったまま明度だけを落とした専用トークンに差し替える。
+               不透明背景なので実測コントラストはテーマの影響を受けず、ダークモード側での
+               再定義は不要(--accent-indigoは元の#5e5ce6のまま実測5.06:1でAA達成済みのため
+               対象外・新トークンなし)。 */
+            --accent-gray-solid: #757579;
+            --accent-blue-solid: #0071ec;
+            --accent-purple-solid: #a44dd0;
         }
 
         /* 🌙 ダークモード用の共通色 */
@@ -162,7 +174,7 @@
             font-family: inherit;
         }
         .pf-add-btn {
-            background: var(--accent-blue);
+            background: var(--accent-blue-solid);
             border: none;
             color: #fff;
             font-weight: 700;
@@ -341,7 +353,7 @@
         }
 
         .btn-blue {
-            background-color: var(--accent-blue);
+            background-color: var(--accent-blue-solid);
             color: white;
             border: none;
             width: 100%;
@@ -1225,6 +1237,18 @@
                     }
                     return p;
                 });
+                // 旧データ互換: isDefaultNameフラグ導入前に作成された「メイン」プロフィールは
+                // nameに翻訳済みの初期名がそのまま保存されている。まだ一度もリネームされて
+                // いない(＝pfConfirmRenameInline()がisDefaultName:falseを明示していない)ものだけを
+                // 対象に、保存名が日本語・英語どちらかの初期名と一致する場合に限りフラグを補う。
+                // 明示的にリネームされた(isDefaultNameがfalseの)プロフィールはここで対象外になる
+                // ため、ユーザーが偶然「メイン」/「Main」と入力し直した場合でも上書きされない。
+                list = list.map(function (p) {
+                    if (p.id === DEFAULT_PROFILE_ID && p.isDefaultName === undefined && (p.name === 'メイン' || p.name === 'Main')) {
+                        var withFlag = {}; for (var k in p) { withFlag[k] = p[k]; } withFlag.isDefaultName = true; return withFlag;
+                    }
+                    return p;
+                });
                 if (list.length > 0) return list;
             } catch (e) { /* noop */ }
             return null;
@@ -1232,10 +1256,20 @@
         function pfSaveProfiles(list) {
             try { localStorage.setItem(PROFILES_KEY, JSON.stringify(list)); } catch (e) { /* noop */ }
         }
+        // 「メイン」プロフィール(初期作成・未リネーム)は、作成時点の言語で翻訳した文字列を
+        // そのままnameに焼き込むと、後から言語を切り替えても表示が追従しない(プロフィールバー・
+        // ドックラベル・切替モーダルの3箇所すべてで保存時の言語のまま固定されてしまう)。その
+        // ためnameには翻訳結果を入れず、isDefaultNameフラグだけを立てておき、表示のたびに
+        // pfDisplayName()で現在の言語へ翻訳する。ユーザーが明示的にリネームすると
+        // pfConfirmRenameInline()がこのフラグをfalseにするため、以降は入力した文字列が
+        // そのまま(無加工で)表示される。
+        function pfDisplayName(p) {
+            return p.isDefaultName ? t('pf.defaultName') : p.name;
+        }
         function pfEnsureInit() {
             var list = pfLoadProfiles();
             if (!list) {
-                list = [{ id: DEFAULT_PROFILE_ID, name: t('pf.defaultName') }];
+                list = [{ id: DEFAULT_PROFILE_ID, name: '', isDefaultName: true }];
                 pfSaveProfiles(list);
             }
             try {
@@ -1247,7 +1281,7 @@
             try { return localStorage.getItem(ACTIVE_PROFILE_KEY) || DEFAULT_PROFILE_ID; } catch (e) { return DEFAULT_PROFILE_ID; }
         }
         function pfGetActiveProfile() {
-            var list = pfLoadProfiles() || [{ id: DEFAULT_PROFILE_ID, name: t('pf.defaultName') }];
+            var list = pfLoadProfiles() || [{ id: DEFAULT_PROFILE_ID, name: '', isDefaultName: true }];
             var id = pfGetActiveId();
             var found = null;
             for (var i = 0; i < list.length; i++) { if (list[i].id === id) { found = list[i]; break; } }
@@ -1348,7 +1382,7 @@
             pfApplyThemeColor(active.color);
             var bar = document.getElementById('pfBar');
             if (bar) {
-                bar.innerHTML = '<span class="pf-bar-text" onclick="pfOpenModal()">🗂️ <b>' + pfEscapeHtml(active.name) + '</b>' + t('pf.barSuffix') + '</span>' +
+                bar.innerHTML = '<span class="pf-bar-text" onclick="pfOpenModal()">🗂️ <b>' + pfEscapeHtml(pfDisplayName(active)) + '</b>' + t('pf.barSuffix') + '</span>' +
                     '<button type="button" class="pf-dash-btn" onclick="pfDashOpen()" title="' + t('dash.tooltip') + '">🗓️</button>';
             }
             // 🗂️ サイトドックの「プロフィール」ボタンのラベルは Vue が管理する reactive な
@@ -1679,7 +1713,7 @@
             list.forEach(function (p) {
                 if (pfEditingId === p.id) {
                     html += '<div class="pf-row" style="flex-wrap: wrap;">' +
-                        '<input type="text" class="pf-row-input" id="pfEditInput" value="' + pfEscapeHtml(p.name) + '" maxlength="20" ' +
+                        '<input type="text" class="pf-row-input" id="pfEditInput" value="' + pfEscapeHtml(pfDisplayName(p)) + '" maxlength="20" ' +
                         'onkeydown="if(event.key===\'Enter\') pfConfirmRenameInline(\'' + p.id + '\'); if(event.key===\'Escape\') { event.stopPropagation(); pfCancelRowState(); }">' +
                         '<button type="button" class="pf-icon-btn pf-row-btn-ok" onclick="pfConfirmRenameInline(\'' + p.id + '\')">' + t('common.save') + '</button>' +
                         '<button type="button" class="pf-icon-btn" onclick="pfCancelRowState()">' + t('common.cancel') + '</button>' +
@@ -1688,7 +1722,7 @@
                 }
                 if (pfDeletingId === p.id) {
                     html += '<div class="pf-row" style="flex-wrap: wrap;">' +
-                        '<span class="pf-row-confirm-text">' + t('pf.deleteConfirm', { name: pfEscapeHtml(p.name) }) + '</span>' +
+                        '<span class="pf-row-confirm-text">' + t('pf.deleteConfirm', { name: pfEscapeHtml(pfDisplayName(p)) }) + '</span>' +
                         '<button type="button" class="pf-icon-btn pf-row-btn-danger" onclick="pfConfirmDeleteInline(\'' + p.id + '\')">' + t('common.delete') + '</button>' +
                         '<button type="button" class="pf-icon-btn" onclick="pfCancelRowState()">' + t('common.cancel') + '</button>' +
                         '</div>';
@@ -1697,7 +1731,7 @@
                 var colorVal = pfIsSafeColor(p.color) ? p.color : '#007AFF';
                 html += '<div class="pf-row' + (p.id === activeId ? ' active' : '') + '">' +
                     '<input type="color" class="pf-color-input" value="' + colorVal + '" title="' + t('pf.colorTitle') + '" onchange="pfSetProfileColor(\'' + p.id + '\', this.value)">' +
-                    '<span class="pf-row-name" onclick="pfSwitchProfile(\'' + p.id + '\')">' + (p.id === activeId ? '✅ ' : '') + pfEscapeHtml(p.name) + '</span>' +
+                    '<span class="pf-row-name" onclick="pfSwitchProfile(\'' + p.id + '\')">' + (p.id === activeId ? '✅ ' : '') + pfEscapeHtml(pfDisplayName(p)) + '</span>' +
                     (p.color ? '<button type="button" class="pf-icon-btn pf-color-clear-btn" title="' + t('pf.colorReset') + '" onclick="pfClearProfileColor(\'' + p.id + '\')">↺</button>' : '') +
                     '<button type="button" class="pf-icon-btn" onclick="pfStartRename(\'' + p.id + '\')">✏️</button>' +
                     (list.length > 1 ? '<button type="button" class="pf-icon-btn" onclick="pfStartDelete(\'' + p.id + '\')">🗑️</button>' : '') +
@@ -1739,6 +1773,10 @@
                 for (var i = 0; i < list.length; i++) { if (list[i].id === id) { target = list[i]; break; } }
                 if (target) {
                     target.name = next.trim().slice(0, 20);
+                    // 明示的にリネームされたので、以後は翻訳せず入力した文字列をそのまま表示する
+                    // (undefinedではなくfalseにしておくことで、pfLoadProfiles()の旧データ移行処理が
+                    // 「メイン」への再リネームを誤ってデフォルト名扱いに戻すのを防ぐ)
+                    target.isDefaultName = false;
                     pfSaveProfiles(list);
                     pfRenderBar();
                 }
@@ -2181,6 +2219,21 @@
             if (closeFn) closeFn(); else topmost.classList.remove('is-visible');
         }
 
+        // 🖱️ 背景（オーバーレイ）クリックでモーダルを閉じる。この5つのモーダルは
+        // Vueがマウントする#app配下にあり、createApp().mount()はマウント時に配下の
+        // DOMを丸ごと作り直す（このスクリプトの実行時点＝マウント前のDOM要素に直接
+        // addEventListenerしても、マウント後には差し替えられて効かなくなる）ため、
+        // Escapeのキーボードショートカット（document.addEventListener('keydown',...)）
+        // と同じ「documentへの委任」方式にする。クリック先が.pf-modal-overlay自身の
+        // ときだけ（＝.pf-modal-cardなど中身からのクリックがバブリングしてきた場合は無視）
+        // Escapeと同じ閉じる関数を呼ぶ。一般的なモーダルの慣習に合わせたもの。
+        document.addEventListener('click', function (e) {
+            var target = e.target;
+            if (!target || !target.classList || !target.classList.contains('pf-modal-overlay')) return;
+            var closeFn = SETTINGS_MODAL_CLOSE_FUNCS[target.id];
+            if (closeFn) closeFn(); else target.classList.remove('is-visible');
+        });
+
         // ═══ ⌨️ グローバルキーボードショートカット（? / D / Esc） ═══
         // ・Escapeは sky_shortcuts_enabled の設定に関わらず常に有効（モーダルの基本UX）。
         // ・? と D はテキスト入力中は無効化し、有効/無効設定もチェックする。
@@ -2228,6 +2281,7 @@
         window.pfOpenModal = pfOpenModal;
         window.pfCloseModal = pfCloseModal;
         window.pfGetActiveProfile = pfGetActiveProfile;
+        window.pfDisplayName = pfDisplayName;
         window.pfDashOpen = pfDashOpen;
         window.pfDashClose = pfDashClose;
         window.pfSwitchProfile = pfSwitchProfile;
@@ -2407,9 +2461,14 @@
             // 完了している前提で window.pfGetActiveProfile() から直接取得し、以降は
             // window.pfSyncDockProfile() 経由(pfRenderBar()内から呼ばれる。initやswitchProfile
             // 後の他、renameProfile後もリロード無しで呼ばれるため、そこに乗せておけば十分)。
-            const activeProfileName = ref(window.pfGetActiveProfile ? window.pfGetActiveProfile().name : t('dock.profile'));
+            // 未リネームの「メイン」プロフィールは window.pfDisplayName() 経由で表示のたびに
+            // 現在の言語へ翻訳する(生のprofile.nameをそのまま使うと言語切替に追従しない)。
+            const pfDockProfileName = () => (window.pfGetActiveProfile && window.pfDisplayName)
+                ? window.pfDisplayName(window.pfGetActiveProfile())
+                : t('dock.profile');
+            const activeProfileName = ref(pfDockProfileName());
             window.pfSyncDockProfile = () => {
-                activeProfileName.value = window.pfGetActiveProfile ? window.pfGetActiveProfile().name : t('dock.profile');
+                activeProfileName.value = pfDockProfileName();
             };
 
             // 既存の設定
@@ -2460,17 +2519,17 @@
 
             const getExpiryDateString = (placedDate) => {
                 const expiry = new Date(placedDate); expiry.setDate(expiry.getDate() + 14);
-                return expiry.toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                return expiry.toLocaleDateString(lang.value === 'en' ? 'en-US' : 'ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' });
             };
 
             // 🏷️ ジャンル選択(複数選択可)・絞り込み
             const genreOptions = [
-                { value: '', label: '未選択', labelEn: 'None', color: '#8e8e93' },
-                { value: 'ボート', label: '⛵ ボート', labelEn: '⛵ Boat', color: '#007aff' },
-                { value: 'メモリー', label: '💭 メモリー', labelEn: '💭 Memory', color: '#af52de' },
+                { value: '', label: '未選択', labelEn: 'None', color: 'var(--accent-gray-solid)' },
+                { value: 'ボート', label: '⛵ ボート', labelEn: '⛵ Boat', color: 'var(--accent-blue-solid)' },
+                { value: 'メモリー', label: '💭 メモリー', labelEn: '💭 Memory', color: 'var(--accent-purple-solid)' },
                 { value: 'スペース', label: '🌌 スペース', labelEn: '🌌 Space', color: '#5e5ce6' }
             ];
-            const filterOptions = [{ value: 'all', label: 'すべて', labelEn: 'All', color: '#8e8e93' }, ...genreOptions];
+            const filterOptions = [{ value: 'all', label: 'すべて', labelEn: 'All', color: 'var(--accent-gray-solid)' }, ...genreOptions];
             const activeFilter = ref('all');
 
             const isGenreActive = (item, value) => {
