@@ -30,6 +30,12 @@
             --accent-green: #34c759;
             --accent-red: #ff3b30;
             --accent-indigo: #5e5ce6;
+
+            /* 🏷️ ステータスバッジの文字色（ライトモードはWCAG AA(4.5:1)確保のため濃色化） */
+            --badge-red-text: #c40a00;
+            --badge-yellow-text: #965600;
+            --badge-green-text: #1c7332;
+            --badge-gray-text: #636368;
         }
 
         /* 🌙 ダークモード用の共通色 */
@@ -43,6 +49,14 @@
             --tab-bg: rgba(255, 255, 255, 0.1);
             --tab-btn-active: rgba(255, 255, 255, 0.15);
             --stat-box-bg: rgba(255, 255, 255, 0.04);
+
+            /* ステータスバッジの文字色: ダークモードは元の彩度色のまま(既にコントラスト確保済み) */
+            /* ただし赤バッジのみ元のaccent-redだと合成背景に対し実測4.2:1でAA未達のため、
+               赤みを保ったまま明度を上げた専用色に差し替え(実測約5.1:1) */
+            --badge-red-text: #ff6259;
+            --badge-yellow-text: var(--accent-orange);
+            --badge-green-text: var(--accent-green);
+            --badge-gray-text: var(--text-gray);
         }
 
         /* 🗂️ プロフィール（保存枠）切り替え */
@@ -346,10 +360,10 @@
             border-radius: 4px;
             white-space: nowrap;
         }
-        .badge-red { background: rgba(255,59,48,0.15); color: var(--accent-red); }
-        .badge-yellow { background: rgba(255,149,0,0.15); color: var(--accent-orange); }
-        .badge-green { background: rgba(52,199,89,0.15); color: var(--accent-green); }
-        .badge-gray { background: rgba(142,142,147,0.15); color: var(--text-gray); }
+        .badge-red { background: rgba(255,59,48,0.15); color: var(--badge-red-text); }
+        .badge-yellow { background: rgba(255,149,0,0.15); color: var(--badge-yellow-text); }
+        .badge-green { background: rgba(52,199,89,0.15); color: var(--badge-green-text); }
+        .badge-gray { background: rgba(142,142,147,0.15); color: var(--badge-gray-text); }
 
         /* ═══ ジャンル選択・絞り込みボタン ═══ */
         .filter-row, .genre-selector {
@@ -2521,7 +2535,11 @@
             const updateItemDate = (id, dateString) => {
                 if (!dateString) return;
                 const item = placedItems.value.find(i => i.id === id);
-                if (item) { item.placedDate = new Date(dateString); item.isSuspended = false; }
+                if (item) {
+                    const [year, month, day] = dateString.split('-').map(Number);
+                    item.placedDate = new Date(year, month - 1, day);
+                    item.isSuspended = false;
+                }
             };
 
             const addItem = () => { placedItems.value.push({ id: uuid(), memo: "", placedDate: new Date(), isSuspended: false, genres: [] }); };
