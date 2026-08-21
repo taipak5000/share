@@ -435,7 +435,9 @@
             position: fixed;
             top: 0;
             left: 0;
-            height: 100%;
+            /* 下端はサイトドック（.site-dock、高さ約64-70px。本文の下パディングと同じ算出値）の
+               手前で止め、ドックのボタンが常に見える・押せる状態を保つ */
+            bottom: calc(76px + env(safe-area-inset-bottom));
             width: 240px;
             z-index: 500;
             overflow-y: auto;
@@ -445,7 +447,11 @@
 
         .sidebar-overlay {
             position: fixed;
-            inset: 0;
+            top: 0;
+            left: 0;
+            right: 0;
+            /* サイドバー本体と同様、サイトドックの手前で止めてドックを覆わない・暗くしない */
+            bottom: calc(76px + env(safe-area-inset-bottom));
             background: rgba(0,0,0,0.4);
             z-index: 499;
             animation: fadeIn 0.2s ease;
@@ -2506,7 +2512,10 @@
 
             const formatDateForInput = (date) => {
                 if (!date || isNaN(date.getTime())) return "";
-                return date.toISOString().split('T')[0];
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
             };
             
             const updateItemDate = (id, dateString) => {
