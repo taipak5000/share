@@ -365,6 +365,8 @@
             align-items: center;
         }
 
+        .btn-outline:disabled { opacity: 0.5; cursor: not-allowed; }
+
         .btn-blue {
             background-color: var(--accent-blue-solid);
             color: white;
@@ -916,6 +918,7 @@
                     @click="activeFilter = f.value">
                 {{ optLabel(f) }}
             </button>
+            <button type="button" class="btn-outline list-toolbar-btn" :disabled="!hasActiveFilters" @click="clearAllFilters">🧹 {{ t('list.clearFilters') }}</button>
         </div>
 
         <div v-if="placedItems.length === 0" style="text-align: center; color: var(--text-gray); padding: 30px 0; font-size: 13px;" v-html="t('list.emptyAll')">
@@ -2437,6 +2440,7 @@
                     'list.emptyAll': '現在管理している創作物は記憶されていません。<br>下のボタンから追加してください！',
                     'list.emptyFiltered': '選択したジャンル・検索条件に該当する設置物はありません。',
                     'list.searchPlaceholder': '🔍 メモを検索',
+                    'list.clearFilters': 'フィルターを全てクリア',
                     'item.memoPlaceholder': '設置場所や内容 (例: 花鳥郷 魔法のお店前)',
                     'item.placedDate': '設置日',
                     'item.expiryDate': '自動消滅日',
@@ -2499,6 +2503,7 @@
                     'list.emptyAll': 'No creations are being tracked yet.<br>Add one with the button below!',
                     'list.emptyFiltered': 'No placed items match the selected genre or search.',
                     'list.searchPlaceholder': '🔍 Search memo',
+                    'list.clearFilters': 'Clear all filters',
                     'item.memoPlaceholder': 'Where you placed it (e.g. Hidden Forest, in front of the magic shop)',
                     'item.placedDate': 'Placed on',
                     'item.expiryDate': 'Auto-expires',
@@ -2682,6 +2687,13 @@
                 if (q) list = list.filter(item => (item.memo || '').toLowerCase().includes(q));
                 return list;
             });
+
+            // 🧹 ジャンル絞り込み・メモ検索を一括で初期状態に戻す
+            const hasActiveFilters = computed(() => activeFilter.value !== 'all' || searchQuery.value.trim() !== '');
+            const clearAllFilters = () => {
+                activeFilter.value = 'all';
+                searchQuery.value = '';
+            };
 
             const sortedPlacedItems = computed(() => {
                 return [...filteredPlacedItems.value].sort((a, b) => {
@@ -2873,6 +2885,7 @@
                 placedItems, sortedPlacedItems, stats, getDaysLeft, getExpiryDateString, formatDateForInput,
                 updateItemDate, addItem, removeItem, rePlaceItem, suspendItem, confirmDeleteId,
                 genreOptions, filterOptions, activeFilter, isGenreActive, toggleItemGenre, searchQuery,
+                hasActiveFilters, clearAllFilters,
                 bulkMode, selectedIds, toggleBulkMode, isSelected, toggleSelected, allVisibleSelected, selectAllVisible, bulkRePlace,
                 exportItemIcs, exportListText
             };
