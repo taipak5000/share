@@ -651,9 +651,10 @@
                 <span v-if="lang === 'ja'">🇯🇵 日本語</span>
                 <span v-else>🇺🇸 English</span>
             </button>
-            <button class="theme-toggle-btn" @click="toggleTheme">
-                <span v-if="isDarkMode">🌙 {{ t('theme.dark') }}</span>
-                <span v-else>☀️ {{ t('theme.light') }}</span>
+            <button class="theme-toggle-btn" @click="toggleTheme" :aria-label="themeAriaLabel()">
+                <span v-if="themeMode === 'dark'">🌙 {{ t('theme.dark') }}</span>
+                <span v-else-if="themeMode === 'light'">☀️ {{ t('theme.light') }}</span>
+                <span v-else>🖥️ {{ t('theme.system') }}</span>
             </button>
         </div>
     </header>
@@ -1016,6 +1017,17 @@
     }
 </script>
 <script>
+    // ═══ 🌓 テーマ解決ヘルパー: taipak5000.github.io 配下の各ツール共通 ═══
+    // sky_app_theme の保存値('light'/'dark'/'system'/未設定)から、実際に適用する
+    // 'dark'/'light' を算出する。'system'または未設定時はOSの配色設定
+    // (prefers-color-scheme)に追従する。IIFE内（表示設定モーダル・storageイベント）と
+    // Vue側（初期化・トグル・OS配色変更の購読）の両方から、必ずこの関数を経由して
+    // light/darkを決定する（判定ロジックの二重実装を避けるため）。
+    function resolveEffectiveTheme(stored) {
+        if (stored === 'light' || stored === 'dark') return stored;
+        return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+
     // ═══ プロフィール（保存枠）管理: taipak5000.github.io 配下の各ツール共通 ═══
     (function () {
         var PROFILES_KEY = 'skyProfiles_v1';
@@ -1130,9 +1142,11 @@
                 'settings.themeSection': '🌙 表示',
                 'settings.langLabel': '言語',
                 'settings.langSection': '🌐 言語 / Language',
-                'settings.darkModeLabel': 'ダークモード',
+                'settings.darkModeLabel': 'テーマ',
                 'theme.dark': 'ダーク',
                 'theme.light': 'ライト',
+                'theme.system': 'システム',
+                'theme.ariaLabel': '現在のテーマ: {current}。クリックで{next}に切替',
                 'settings.iconSection': '📱 ホーム画面アイコン',
                 'settings.customizeIconLabel': 'ホーム画面アイコン',
                 'settings.customizeIconBtn': '🎨 カスタマイズ',
@@ -1141,7 +1155,7 @@
                 'settings.shortcutsOn': '✅ 有効',
                 'settings.shortcutsOff': '⛔ 無効',
                 'settings.shortcutHelpOpen': 'この設定を開く',
-                'settings.shortcutHelpTheme': 'ダークモード切替',
+                'settings.shortcutHelpTheme': 'テーマ切替（ライト→ダーク→システム）',
                 'settings.shortcutHelpClose': '開いているウィンドウを閉じる'
             },
             en: {
@@ -1234,9 +1248,11 @@
                 'settings.themeSection': '🌙 Display',
                 'settings.langLabel': 'Language',
                 'settings.langSection': '🌐 言語 / Language',
-                'settings.darkModeLabel': 'Dark Mode',
+                'settings.darkModeLabel': 'Theme',
                 'theme.dark': 'Dark',
                 'theme.light': 'Light',
+                'theme.system': 'System',
+                'theme.ariaLabel': 'Current theme: {current}. Click to switch to {next}.',
                 'settings.iconSection': '📱 Home Screen Icon',
                 'settings.customizeIconLabel': 'Home Screen Icon',
                 'settings.customizeIconBtn': '🎨 Customize',
@@ -1245,7 +1261,7 @@
                 'settings.shortcutsOn': '✅ On',
                 'settings.shortcutsOff': '⛔ Off',
                 'settings.shortcutHelpOpen': 'Open this settings panel',
-                'settings.shortcutHelpTheme': 'Toggle dark mode',
+                'settings.shortcutHelpTheme': 'Cycle theme (Light → Dark → System)',
                 'settings.shortcutHelpClose': 'Close the open window'
             }
         };
@@ -1368,6 +1384,13 @@
         }
         window.addEventListener('storage', function (e) {
             if (e.key === PROFILES_KEY) pfApplyThemeColor(pfGetActiveProfile().color);
+            // 🌓 他タブ・他サイト（同一オリジン共有）で sky_app_theme が変更された場合、
+            // このタブにも即座に反映する。light/dark/system(またはキー削除=未設定)の
+            // いずれであっても resolveEffectiveTheme() で一元的に解決する。
+            if (e.key === 'sky_app_theme') {
+                var newMode = (e.newValue === 'light' || e.newValue === 'dark') ? e.newValue : 'system';
+                if (window.pfSyncThemeMode) window.pfSyncThemeMode(newMode);
+            }
         });
         function pfSetProfileColor(id, color) {
             if (!pfIsSafeColor(color)) return;
@@ -2238,15 +2261,25 @@
         pfIconApplyFromStorage();
         pfIconSetMode(pfIconMode);
 
-        // ═══ ⚙️ 表示設定モーダル（ダークモード・キーボードショートカット） ═══
-        // ダークモードの状態そのものはVue側(isDarkMode ref)が所有しているため、
+        // ═══ ⚙️ 表示設定モーダル（テーマ・キーボードショートカット） ═══
+        // テーマの状態そのものはVue側(themeMode ref)が所有しているため、
         // ここではトグル関数を window.toggleTheme 経由で呼び出す（pfApplyLang と同じ
         // 「IIFE⇄Vue間はwindowに生やした関数で橋渡しする」既存の考え方に合わせている）。
         function settingsSyncUI() {
             var themeBtn = document.getElementById('settingsThemeBtn');
             if (themeBtn) {
-                var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                themeBtn.textContent = isDark ? ('🌙 ' + t('theme.dark')) : ('☀️ ' + t('theme.light'));
+                // 保存されているモード('light'/'dark'/'system'。未設定は'system'扱い)を
+                // そのままアイコン・ラベルに反映する。実際にdark/lightどちらで見えているか
+                // (data-theme属性)はsystem時のアイコン選択には使わない — system中は常に
+                // 🖥️ アイコン固定とし、「今どのモードか」を明確に示す。
+                var stored = localStorage.getItem('sky_app_theme');
+                var mode = (stored === 'light' || stored === 'dark') ? stored : 'system';
+                var icon = mode === 'dark' ? '🌙' : (mode === 'light' ? '☀️' : '🖥️');
+                var label = mode === 'dark' ? t('theme.dark') : (mode === 'light' ? t('theme.light') : t('theme.system'));
+                themeBtn.textContent = icon + ' ' + label;
+                var nextMode = mode === 'light' ? 'dark' : (mode === 'dark' ? 'system' : 'light');
+                var nextLabel = nextMode === 'dark' ? t('theme.dark') : (nextMode === 'light' ? t('theme.light') : t('theme.system'));
+                themeBtn.setAttribute('aria-label', t('theme.ariaLabel', { current: label, next: nextLabel }));
             }
             var shortcutsBtn = document.getElementById('settingsShortcutsBtn');
             if (shortcutsBtn) {
@@ -2383,16 +2416,30 @@
 
     createApp({
         setup() {
-            // 🌓 ダークモード用の設定
+            // 🌓 テーマ設定: light/dark/system の3状態をこの順でサイクルする。
+            // 保存値そのもの(themeMode: 'light'/'dark'/'system')を保持し、実際に画面へ
+            // 適用する実効テーマ(dark/light)は resolveEffectiveTheme() 経由で都度算出する
+            // (このヘルパーはこのファイル内の共通スクリプトブロック冒頭で定義済み。
+            // IIFE側の表示設定モーダル・storageイベントリスナーとも同じ関数を共有する)。
+            const THEME_CYCLE = ['light', 'dark', 'system'];
+            const themeMode = ref('system');
+            // 🐛 isDarkMode は computed ではなく ref にする。resolveEffectiveTheme() は内部で
+            // window.matchMedia(...).matches という非リアクティブな値を読むため、これを
+            // computed(() => resolveEffectiveTheme(themeMode.value) === 'dark') としてしまうと
+            // Vueは「追跡している依存関係(themeMode)」が変化しない限りキャッシュを返してしまい、
+            // themeMode==='system'のままOS側の配色設定だけが変化した場合に再評価されない
+            // (=ライブ更新が効かない)。applyThemeToDOM() 呼び出しの都度、明示的に再計算する。
             const isDarkMode = ref(false);
             const showSidebar = ref(false);
 
             const toggleTheme = () => {
-                isDarkMode.value = !isDarkMode.value;
-                localStorage.setItem('sky_app_theme', isDarkMode.value ? 'dark' : 'light');
+                const idx = THEME_CYCLE.indexOf(themeMode.value);
+                themeMode.value = THEME_CYCLE[(idx + 1) % THEME_CYCLE.length];
+                localStorage.setItem('sky_app_theme', themeMode.value);
             };
 
             const applyThemeToDOM = () => {
+                isDarkMode.value = resolveEffectiveTheme(themeMode.value) === 'dark';
                 document.documentElement.setAttribute('data-theme', isDarkMode.value ? 'dark' : 'light');
                 // ⚙️ 表示設定モーダル（Vue管理外のプレーンJS）のダークモード表示ボタンを同期する。
                 // toggleLang() → window.pfApplyLang() と同じ「IIFE⇄Vue間はwindowに生やした
@@ -2400,12 +2447,29 @@
                 if (window.settingsSyncUI) window.settingsSyncUI();
             };
 
-            watch(isDarkMode, () => { applyThemeToDOM(); });
+            watch(themeMode, () => { applyThemeToDOM(); });
+
+            // 🖥️ OS側の配色設定(prefers-color-scheme)がタブを開いたまま変化した場合、
+            // 保存モードが'system'であればリロード無しでその場に反映する。
+            const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            const handleSystemThemeChange = () => {
+                if (themeMode.value === 'system') applyThemeToDOM();
+            };
+            if (systemThemeQuery.addEventListener) systemThemeQuery.addEventListener('change', handleSystemThemeChange);
+            else if (systemThemeQuery.addListener) systemThemeQuery.addListener(handleSystemThemeChange); // Safari旧バージョン向けフォールバック
 
             // ⌨️ グローバルショートカットの 'D' キーや ⚙️ 表示設定モーダルの
-            // ダークモードボタンは、このIIFE管理外のプレーンJSから呼ばれるため、
+            // テーマ切替ボタンは、このIIFE管理外のプレーンJSから呼ばれるため、
             // toggleTheme を window に公開しておく。
             window.toggleTheme = toggleTheme;
+
+            // 🔄 他タブ・他サイト(同一オリジン共有localStorage)での sky_app_theme 変更
+            // (storageイベント)をこのタブのVue状態にも反映するための橋渡し関数。
+            // window.toggleTheme / window.pfApplyLang と同じ「IIFE⇄Vue間はwindowに
+            // 生やした関数で橋渡しする」考え方。
+            window.pfSyncThemeMode = function (mode) {
+                themeMode.value = (mode === 'light' || mode === 'dark' || mode === 'system') ? mode : 'system';
+            };
 
             // 🌐 日本語・英語 UI切り替え(taipak5000.github.io 配下の各ツール共通)
             // isDarkMode/toggleTheme と同じ「ref + 関数」方式: lang は Vue の ref なので
@@ -2419,6 +2483,8 @@
                     'sidebar.toggleBtn': 'ツール',
                     'theme.dark': 'ダーク',
                     'theme.light': 'ライト',
+                    'theme.system': 'システム',
+                    'theme.ariaLabel': '現在のテーマ: {current}。クリックで{next}に切替',
                     'sidebar.relatedTools': '関連ツール',
                     'sidebar.item': 'アイテム所持管理',
                     'sidebar.emote': 'エモート所持率管理',
@@ -2482,6 +2548,8 @@
                     'sidebar.toggleBtn': 'Tools',
                     'theme.dark': 'Dark',
                     'theme.light': 'Light',
+                    'theme.system': 'System',
+                    'theme.ariaLabel': 'Current theme: {current}. Click to switch to {next}.',
                     'sidebar.relatedTools': 'Related Tools',
                     'sidebar.item': 'Item Collection',
                     'sidebar.emote': 'Emote Collection',
@@ -2553,6 +2621,15 @@
             };
 
             const optLabel = (o) => lang.value === 'en' ? o.labelEn : o.label;
+
+            // 🌓 ヘッダーのテーマ切替ボタン用: 現在のモードと、クリックした場合に
+            // 次に切り替わる先を説明するaria-label。3状態を巡回するボタンはON/OFFの
+            // 二値ではないため、aria-pressedではなくこの説明的なaria-labelで表す。
+            const themeAriaLabel = () => {
+                const modeLabel = (m) => m === 'dark' ? t('theme.dark') : (m === 'light' ? t('theme.light') : t('theme.system'));
+                const nextMode = themeMode.value === 'light' ? 'dark' : (themeMode.value === 'dark' ? 'system' : 'light');
+                return t('theme.ariaLabel', { current: modeLabel(themeMode.value), next: modeLabel(nextMode) });
+            };
 
             const toggleLang = () => {
                 lang.value = lang.value === 'ja' ? 'en' : 'ja';
@@ -2855,13 +2932,9 @@
             };
 
             onMounted(() => {
-                // テーマの読み込み
+                // テーマの読み込み: 'light'/'dark'/'system'以外の値(未設定含む)は'system'扱い。
                 const savedTheme = localStorage.getItem('sky_app_theme');
-                if (savedTheme) {
-                    isDarkMode.value = (savedTheme === 'dark');
-                } else {
-                    isDarkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                }
+                themeMode.value = (savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'system') ? savedTheme : 'system';
                 applyThemeToDOM();
 
                 // 既存データの読み込み
@@ -2880,7 +2953,7 @@
             watch(placedItems, () => { save(); }, { deep: true });
 
             return {
-                isDarkMode, toggleTheme, showSidebar,
+                isDarkMode, themeMode, toggleTheme, themeAriaLabel, showSidebar,
                 lang, t, optLabel, toggleLang, activeProfileName,
                 placedItems, sortedPlacedItems, stats, getDaysLeft, getExpiryDateString, formatDateForInput,
                 updateItemDate, addItem, removeItem, rePlaceItem, suspendItem, confirmDeleteId,
