@@ -37,14 +37,23 @@
             --badge-green-text: #1c7332;
             --badge-gray-text: #636368;
 
-            /* 🎯 ジャンル/絞り込みピル(.filter-btn.active/.genre-btn.active)と主要CTAボタン
-               (.btn-blue/.pf-add-btn)の塗り色。どちらも不透明な単色背景+白文字(#fff)固定の
-               組み合わせのため、元のアクセントカラーのままだと白文字とのコントラストが
-               WCAG AA(4.5:1)未達になる(#8e8e93は3.26:1、#007affは4.02:1、#af52deは4.13:1で
-               実測未達)。色相・彩度は保ったまま明度だけを落とした専用トークンに差し替える。
-               不透明背景なので実測コントラストはテーマの影響を受けず、ダークモード側での
-               再定義は不要(--accent-indigoは元の#5e5ce6のまま実測5.06:1でAA達成済みのため
-               対象外・新トークンなし)。 */
+            /* 📅 .btn-ics（カレンダー登録ボタン）の文字色。カード背景(--card-bg)の上に乗る
+               テキスト色としての利用のため、上の「-solid」系トークン(不透明背景+白文字用)とは
+               別枠。ライトモードは--accent-indigoそのまま(白カード背景に対し実測5.06:1でAA
+               達成済み)だが、ダークモードのカード背景(#1b1535)に対しては同じ#5e5ce6だと
+               実測3.44:1でAA未達のため、色相を保ったまま明度を上げた専用色に差し替える
+               (実測約5.32:1)。 */
+            --accent-indigo-text: var(--accent-indigo);
+
+            /* 🎯 ジャンル/絞り込みピル(.filter-btn.active/.genre-btn.active)、主要CTAボタン
+               (.btn-blue/.pf-add-btn/.pf-row-btn-ok)、アイコンモード切替・言語切替の
+               選択中ボタン(pfIconSetMode/settingsSyncUI)の塗り色。いずれも不透明な単色背景+
+               白文字(#fff)固定の組み合わせのため、元のアクセントカラーのままだと白文字との
+               コントラストがWCAG AA(4.5:1)未達になる(#8e8e93は3.26:1、#007affは4.02:1、
+               #af52deは4.13:1で実測未達)。色相・彩度は保ったまま明度だけを落とした専用
+               トークンに差し替える。不透明背景なので実測コントラストはテーマの影響を受けず、
+               ダークモード側での再定義は不要(--accent-indigoは元の#5e5ce6のまま実測5.06:1で
+               AA達成済みのため対象外・新トークンなし)。 */
             --accent-gray-solid: #757579;
             --accent-blue-solid: #0071ec;
             --accent-purple-solid: #a44dd0;
@@ -66,6 +75,9 @@
             /* ただし赤バッジのみ元のaccent-redだと合成背景に対し実測4.2:1でAA未達のため、
                赤みを保ったまま明度を上げた専用色に差し替え(実測約5.1:1) */
             --badge-red-text: #ff6259;
+            /* .btn-icsの文字色も同じ理由でダークモードのカード背景(#1b1535)に対して
+               明度を上げた専用色に差し替え(実測約5.32:1) */
+            --accent-indigo-text: #8482ee;
             --badge-yellow-text: var(--accent-orange);
             --badge-green-text: var(--accent-green);
             --badge-gray-text: var(--text-gray);
@@ -183,6 +195,7 @@
             font-size: 14px;
             cursor: pointer;
         }
+        .pf-add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .pf-hint { margin: 12px 0 0; font-size: 11.5px; color: var(--text-gray); line-height: 1.5; }
         .pf-close-btn {
             display: block;
@@ -208,7 +221,7 @@
             min-width: 0;
         }
         .pf-row-confirm-text { flex: 1; font-size: 12.5px; color: var(--text-color); line-height: 1.4; }
-        .pf-row-btn-ok { background: var(--accent-blue); color: #fff; border: none; }
+        .pf-row-btn-ok { background: var(--accent-blue-solid); color: #fff; border: none; }
         .pf-row-btn-danger { background: var(--accent-red); color: #fff; border: none; }
         .pf-currency-section { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-color); }
         .pf-currency-title { font-size: 12px; font-weight: 700; color: var(--text-gray); margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.4px;
@@ -410,9 +423,31 @@
             color: #ffffff;
         }
 
+        /* ═══ 一覧ツールバー（テキスト書き出し・一括選択）・メモ検索・一括選択バー ═══ */
+        .list-toolbar { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+        .list-toolbar-btn { padding: 6px 12px; font-size: 12.5px; }
+        .list-toolbar-btn.active { background: var(--accent-blue-solid); color: #fff; border-color: transparent; }
+        .search-input { margin-bottom: 10px; }
+        .bulk-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 10px;
+            margin-bottom: 10px;
+            font-size: 13px;
+            color: var(--text-color);
+        }
+        .bulk-checkbox { width: 18px; height: 18px; flex-shrink: 0; cursor: pointer; }
+
         .action-links {
             display: flex;
             gap: 8px;
+            flex-wrap: wrap;
             margin-top: 10px;
             border-top: 1px dashed var(--border-color);
             padding-top: 8px;
@@ -430,6 +465,7 @@
         .btn-del { color: var(--accent-red); border: 1px solid rgba(255,59,48,0.2); }
         .btn-renew { color: var(--accent-blue); border: 1px solid rgba(0,122,255,0.2); }
         .btn-susp { color: var(--text-gray); border: 1px solid var(--border-color); }
+        .btn-ics { color: var(--accent-indigo-text); border: 1px solid rgba(94,92,230,0.2); }
 
         /* ═══ サイドバーレイアウト ═══ */
         @media (min-width: 850px) {
@@ -857,10 +893,26 @@
     <div class="section-card">
         <div class="section-header">📍 {{ t('list.header') }}</div>
 
+        <div class="list-toolbar">
+            <button type="button" class="btn-outline list-toolbar-btn" @click="exportListText">📤 {{ t('export.btn') }}</button>
+            <button type="button" class="btn-outline list-toolbar-btn" :class="{ active: bulkMode }" :aria-pressed="bulkMode" @click="toggleBulkMode">☑️ {{ bulkMode ? t('bulk.exit') : t('bulk.enter') }}</button>
+        </div>
+
+        <div v-if="bulkMode" class="bulk-bar">
+            <span>{{ t('bulk.selectedCount', { n: selectedIds.length }) }}</span>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button type="button" class="pf-icon-btn" @click="selectAllVisible">{{ allVisibleSelected ? t('bulk.deselectAll') : t('bulk.selectAll') }}</button>
+                <button type="button" class="pf-add-btn" :disabled="selectedIds.length === 0" @click="bulkRePlace">♻️ {{ t('bulk.rePlaceSelected') }}</button>
+            </div>
+        </div>
+
+        <input type="text" v-model="searchQuery" class="search-input" :placeholder="t('list.searchPlaceholder')" :aria-label="t('list.searchPlaceholder')">
+
         <div class="filter-row">
             <button v-for="f in filterOptions" :key="f.value" class="filter-btn"
                     :class="{ active: activeFilter === f.value }"
                     :style="activeFilter === f.value ? { background: f.color } : {}"
+                    :aria-pressed="activeFilter === f.value"
                     @click="activeFilter = f.value">
                 {{ optLabel(f) }}
             </button>
@@ -874,6 +926,7 @@
 
         <div v-for="item in sortedPlacedItems" :key="item.id" class="item-card">
             <div class="row-flex">
+                <input v-if="bulkMode" type="checkbox" class="bulk-checkbox" :checked="isSelected(item.id)" :aria-label="t('bulk.selectItem')" @change="toggleSelected(item.id)">
                 <input type="text" v-model="item.memo" :placeholder="t('item.memoPlaceholder')">
 
                 <span v-if="item.isSuspended" class="badge badge-gray">📦 {{ t('badge.suspended') }}</span>
@@ -886,6 +939,7 @@
                 <button v-for="g in genreOptions" :key="g.value" class="genre-btn"
                         :class="{ active: isGenreActive(item, g.value) }"
                         :style="isGenreActive(item, g.value) ? { background: g.color } : {}"
+                        :aria-pressed="isGenreActive(item, g.value)"
                         @click="toggleItemGenre(item.id, g.value)">
                     {{ optLabel(g) }}
                 </button>
@@ -905,9 +959,17 @@
             </div>
 
             <div class="action-links">
-                <button class="action-btn btn-renew" @click="rePlaceItem(item.id)">♻️ {{ t('actions.replace') }}</button>
-                <button v-if="!item.isSuspended" class="action-btn btn-susp" @click="suspendItem(item.id)">📦 {{ t('actions.suspend') }}</button>
-                <button class="action-btn btn-del" @click="removeItem(item.id)">🗑️ {{ t('actions.delete') }}</button>
+                <template v-if="confirmDeleteId === item.id">
+                    <span class="pf-row-confirm-text">{{ t('actions.deleteConfirm') }}</span>
+                    <button class="action-btn btn-del" @click="removeItem(item.id)">{{ t('actions.delete') }}</button>
+                    <button class="action-btn btn-susp" @click="confirmDeleteId = null">{{ t('actions.cancel') }}</button>
+                </template>
+                <template v-else>
+                    <button class="action-btn btn-ics" @click="exportItemIcs(item)">📅 {{ t('actions.exportIcs') }}</button>
+                    <button class="action-btn btn-renew" @click="rePlaceItem(item.id)">♻️ {{ t('actions.replace') }}</button>
+                    <button v-if="!item.isSuspended" class="action-btn btn-susp" @click="suspendItem(item.id)">📦 {{ t('actions.suspend') }}</button>
+                    <button class="action-btn btn-del" @click="confirmDeleteId = item.id">🗑️ {{ t('actions.delete') }}</button>
+                </template>
             </div>
         </div>
 
@@ -1596,6 +1658,21 @@
         function pfDashRow(icon, html) {
             return '<div class="dash-row"><span class="dash-row-icon">' + icon + '</span><span class="dash-row-text">' + html + '</span></div>';
         }
+        // 🌐 ダッシュボード（今日・今月）用の季節名・期間限定イベント名の英訳。
+        // item側のCURRENT_SEASON/EVENT_SCHEDULEは日本語表記のみのため、shareでもこの表を持ち、
+        // 日本語の完全一致で引く（item本体は対象外のため二重管理は避けられないが、件数は少ない。
+        // wings/companion/star-candleと同じ考え方）。未収録（未追加の新シーズン・新イベント）の
+        // 場合は日本語のまま表示してフォールバックする。
+        var DASH_EVENT_NAME_EN = {
+            '親愛なるファン・ゴッホへ': 'Dear Van Gogh',
+            '陽光の日々': 'Days of Sunlight',
+            '光に染まるイベント': 'Event of Radiant Light',
+            '来訪する精霊団': 'Traveling Spirit Troupe',
+            '夏のキャンプ': 'Summer Camp',
+        };
+        function dashEventName(name) {
+            return pfGetLang() === 'en' ? (DASH_EVENT_NAME_EN[name] || name) : name;
+        }
         function pfDashBuildHtml(data) {
             var dailyRows = [];
             var shard = pfDashShardInfo();
@@ -1628,10 +1705,10 @@
 
             var todayRows = [];
             if (data.season && data.season.name && data.season.endDate && new Date() < new Date(data.season.endDate)) {
-                todayRows.push(pfDashRow('🌟', t('dash.eventActive', { name: pfEscapeHtml(data.season.name) })));
+                todayRows.push(pfDashRow('🌟', t('dash.eventActive', { name: pfEscapeHtml(dashEventName(data.season.name)) })));
             }
             pfDashActiveScheduledEvents(data.eventSchedule).forEach(function (ev) {
-                todayRows.push(pfDashRow('🌟', t('dash.eventActive', { name: pfEscapeHtml(ev.name) }) + '<span class="dash-countdown">' + t('dash.untilEnd') + pfDashCountdown(new Date(ev.end)) + '</span>'));
+                todayRows.push(pfDashRow('🌟', t('dash.eventActive', { name: pfEscapeHtml(dashEventName(ev.name)) }) + '<span class="dash-countdown">' + t('dash.untilEnd') + pfDashCountdown(new Date(ev.end)) + '</span>'));
             });
             var rv = pfDashRevisitStatus(data.revisit);
             if (rv && data.revisit) {
@@ -1653,7 +1730,7 @@
             var monthHtml;
             if (data.season && data.season.endDate) {
                 var end = new Date(data.season.endDate);
-                monthHtml = pfDashRow('🎨', t('dash.seasonEndsIn', { name: pfEscapeHtml(data.season.name) }) + '<span class="dash-countdown">' + pfDashCountdown(end) + '</span>');
+                monthHtml = pfDashRow('🎨', t('dash.seasonEndsIn', { name: pfEscapeHtml(dashEventName(data.season.name)) }) + '<span class="dash-countdown">' + pfDashCountdown(end) + '</span>');
             } else {
                 monthHtml = '<div class="dash-empty">' + t('dash.seasonFetchFailed') + '</div>';
             }
@@ -2022,9 +2099,9 @@
             document.getElementById('iconImagePanel').style.display = mode === 'image' ? '' : 'none';
             var emojiBtn = document.getElementById('iconModeEmojiBtn');
             var imageBtn = document.getElementById('iconModeImageBtn');
-            emojiBtn.style.background = mode === 'emoji' ? 'var(--accent-blue)' : 'var(--input-bg)';
+            emojiBtn.style.background = mode === 'emoji' ? 'var(--accent-blue-solid)' : 'var(--input-bg)';
             emojiBtn.style.color = mode === 'emoji' ? '#fff' : 'var(--text-gray)';
-            imageBtn.style.background = mode === 'image' ? 'var(--accent-blue)' : 'var(--input-bg)';
+            imageBtn.style.background = mode === 'image' ? 'var(--accent-blue-solid)' : 'var(--input-bg)';
             imageBtn.style.color = mode === 'image' ? '#fff' : 'var(--text-gray)';
             pfIconUpdatePreview();
         }
@@ -2178,9 +2255,9 @@
             var jaBtn = document.getElementById('settingsLangJaBtn');
             var enBtn = document.getElementById('settingsLangEnBtn');
             if (jaBtn && enBtn) {
-                jaBtn.style.background = curLang === 'ja' ? 'var(--accent-blue)' : 'var(--input-bg)';
+                jaBtn.style.background = curLang === 'ja' ? 'var(--accent-blue-solid)' : 'var(--input-bg)';
                 jaBtn.style.color = curLang === 'ja' ? '#fff' : 'var(--text-gray)';
-                enBtn.style.background = curLang === 'en' ? 'var(--accent-blue)' : 'var(--input-bg)';
+                enBtn.style.background = curLang === 'en' ? 'var(--accent-blue-solid)' : 'var(--input-bg)';
                 enBtn.style.color = curLang === 'en' ? '#fff' : 'var(--text-gray)';
             }
         }
@@ -2358,7 +2435,8 @@
                     'stats.alert': '保留・消滅',
                     'list.header': '設置した創作物一覧',
                     'list.emptyAll': '現在管理している創作物は記憶されていません。<br>下のボタンから追加してください！',
-                    'list.emptyFiltered': '選択したジャンルに該当する設置物はありません。',
+                    'list.emptyFiltered': '選択したジャンル・検索条件に該当する設置物はありません。',
+                    'list.searchPlaceholder': '🔍 メモを検索',
                     'item.memoPlaceholder': '設置場所や内容 (例: 花鳥郷 魔法のお店前)',
                     'item.placedDate': '設置日',
                     'item.expiryDate': '自動消滅日',
@@ -2369,7 +2447,26 @@
                     'actions.replace': '今日再設置',
                     'actions.suspend': '保留',
                     'actions.delete': '削除',
+                    'actions.cancel': '取消',
+                    'actions.deleteConfirm': '削除しますか？メモ・ジャンル・日付もすべて削除されます。',
+                    'actions.exportIcs': 'カレンダー登録',
                     'actions.addNew': '新しい設置物を追加',
+                    'export.btn': 'テキスト書き出し',
+                    'export.header': '=== 創作物 設置リスト（このツールのみ） ===',
+                    'export.exportedAt': '書き出し日時',
+                    'export.noMemo': '(メモなし)',
+                    'export.genreLabel': 'ジャンル',
+                    'export.statusLabel': '状態',
+                    'bulk.enter': '選択して再設置',
+                    'bulk.exit': '選択解除',
+                    'bulk.selectedCount': '{n}件選択中',
+                    'bulk.rePlaceSelected': '選択項目を今日再設置',
+                    'bulk.selectAll': 'すべて選択',
+                    'bulk.deselectAll': '選択を解除',
+                    'bulk.selectItem': 'この項目を選択',
+                    'ics.summary': '{memo} の自動消滅',
+                    'ics.summaryFallback': '創作物',
+                    'ics.description': 'Sky 星を紡ぐ子どもたちの創作物（掲示期限14日間）の自動消滅日のリマインダーです。',
                     'dock.ariaLabel': 'クイックメニュー',
                     'dock.profile': 'プロフィール',
                     'dock.dashboard': 'ダッシュボード',
@@ -2400,7 +2497,8 @@
                     'stats.alert': 'Suspended / Expired',
                     'list.header': 'Placed Creations',
                     'list.emptyAll': 'No creations are being tracked yet.<br>Add one with the button below!',
-                    'list.emptyFiltered': 'No placed items match the selected genre.',
+                    'list.emptyFiltered': 'No placed items match the selected genre or search.',
+                    'list.searchPlaceholder': '🔍 Search memo',
                     'item.memoPlaceholder': 'Where you placed it (e.g. Hidden Forest, in front of the magic shop)',
                     'item.placedDate': 'Placed on',
                     'item.expiryDate': 'Auto-expires',
@@ -2411,7 +2509,26 @@
                     'actions.replace': 'Re-place today',
                     'actions.suspend': 'Suspend',
                     'actions.delete': 'Delete',
+                    'actions.cancel': 'Cancel',
+                    'actions.deleteConfirm': 'Delete this? The memo, genre, and dates will all be removed too.',
+                    'actions.exportIcs': 'Add to Calendar',
                     'actions.addNew': 'Add New Placement',
+                    'export.btn': 'Export as text',
+                    'export.header': '=== Placed Creations List (this tool only) ===',
+                    'export.exportedAt': 'Exported at',
+                    'export.noMemo': '(No memo)',
+                    'export.genreLabel': 'Genre',
+                    'export.statusLabel': 'Status',
+                    'bulk.enter': 'Select & Re-place',
+                    'bulk.exit': 'Cancel selection',
+                    'bulk.selectedCount': '{n} selected',
+                    'bulk.rePlaceSelected': 'Re-place selected today',
+                    'bulk.selectAll': 'Select all',
+                    'bulk.deselectAll': 'Deselect all',
+                    'bulk.selectItem': 'Select this item',
+                    'ics.summary': '{memo} auto-expires',
+                    'ics.summaryFallback': 'Placed creation',
+                    'ics.description': 'Reminder for the 14-day auto-expiry of a placed creation in Sky: Children of the Light.',
                     'dock.ariaLabel': 'Quick menu',
                     'dock.profile': 'Profile',
                     'dock.dashboard': 'Dashboard',
@@ -2532,6 +2649,9 @@
             const filterOptions = [{ value: 'all', label: 'すべて', labelEn: 'All', color: 'var(--accent-gray-solid)' }, ...genreOptions];
             const activeFilter = ref('all');
 
+            // 🔍 メモ欄のフリーテキスト検索(ジャンル絞り込みと併用可能)
+            const searchQuery = ref('');
+
             const isGenreActive = (item, value) => {
                 if (value === '') return !item.genres || item.genres.length === 0;
                 return !!(item.genres && item.genres.includes(value));
@@ -2555,9 +2675,12 @@
             };
 
             const filteredPlacedItems = computed(() => {
-                if (activeFilter.value === 'all') return placedItems.value;
-                if (activeFilter.value === '') return placedItems.value.filter(item => !item.genres || item.genres.length === 0);
-                return placedItems.value.filter(item => item.genres && item.genres.includes(activeFilter.value));
+                let list = placedItems.value;
+                if (activeFilter.value === '') list = list.filter(item => !item.genres || item.genres.length === 0);
+                else if (activeFilter.value !== 'all') list = list.filter(item => item.genres && item.genres.includes(activeFilter.value));
+                const q = searchQuery.value.trim().toLowerCase();
+                if (q) list = list.filter(item => (item.memo || '').toLowerCase().includes(q));
+                return list;
             });
 
             const sortedPlacedItems = computed(() => {
@@ -2602,9 +2725,122 @@
             };
 
             const addItem = () => { placedItems.value.push({ id: uuid(), memo: "", placedDate: new Date(), isSuspended: false, genres: [] }); };
-            const removeItem = (id) => { const idx = placedItems.value.findIndex(i => i.id === id); if (idx !== -1) placedItems.value.splice(idx, 1); };
+
+            // 🗑️ 削除は他の破壊的操作(プロフィール削除・全データ削除)と同じ、インラインの
+            // 確認・取消ステップを挟む。confirmDeleteIdは一度に1件だけ確認状態にする単純な
+            // 単一状態管理(IIFE側のpfEditingId/pfDeletingIdと同じ考え方)。
+            const confirmDeleteId = ref(null);
+            const removeItem = (id) => {
+                const idx = placedItems.value.findIndex(i => i.id === id);
+                if (idx !== -1) placedItems.value.splice(idx, 1);
+                if (confirmDeleteId.value === id) confirmDeleteId.value = null;
+                const selIdx = selectedIds.value.indexOf(id);
+                if (selIdx !== -1) selectedIds.value.splice(selIdx, 1);
+            };
+
             const rePlaceItem = (id) => { const item = placedItems.value.find(i => i.id === id); if (item) { item.placedDate = new Date(); item.isSuspended = false; } };
             const suspendItem = (id) => { const item = placedItems.value.find(i => i.id === id); if (item) item.isSuspended = true; };
+
+            // ☑️ 複数選択しての一括「今日再設置」。1件ずつしかできなかった再設置を、
+            // 選択モードに切り替えてチェックした項目だけまとめて実行できるようにする。
+            const bulkMode = ref(false);
+            const selectedIds = ref([]);
+            const toggleBulkMode = () => {
+                bulkMode.value = !bulkMode.value;
+                if (!bulkMode.value) selectedIds.value = [];
+            };
+            const isSelected = (id) => selectedIds.value.includes(id);
+            const toggleSelected = (id) => {
+                const idx = selectedIds.value.indexOf(id);
+                if (idx === -1) selectedIds.value.push(id);
+                else selectedIds.value.splice(idx, 1);
+            };
+            const allVisibleSelected = computed(() =>
+                sortedPlacedItems.value.length > 0 && sortedPlacedItems.value.every(i => selectedIds.value.includes(i.id))
+            );
+            const selectAllVisible = () => {
+                const visibleIds = sortedPlacedItems.value.map(i => i.id);
+                selectedIds.value = allVisibleSelected.value ? [] : visibleIds.slice();
+            };
+            const bulkRePlace = () => {
+                selectedIds.value.forEach(id => {
+                    const item = placedItems.value.find(i => i.id === id);
+                    if (item) { item.placedDate = new Date(); item.isSuspended = false; }
+                });
+                selectedIds.value = [];
+                bulkMode.value = false;
+            };
+
+            // 📅 個別の創作物の自動消滅日を、カレンダーアプリに登録できる .ics ファイルとして
+            // 書き出す(通知の許可を求めない、オプトインの代替手段。RFC5545準拠の最低限の
+            // フィールドのみ・終日イベントの前日を知らせる VALARM(TRIGGER:-P1D)を1件添える)。
+            const icsEscape = (s) => String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+            const icsDateStamp = (d) => d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+            const downloadTextFile = (filename, mime, content) => {
+                const blob = new Blob([content], { type: mime });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+            };
+            const exportItemIcs = (item) => {
+                const expiry = new Date(item.placedDate);
+                expiry.setDate(expiry.getDate() + 14);
+                expiry.setHours(0, 0, 0, 0);
+                const dtEnd = new Date(expiry);
+                dtEnd.setDate(dtEnd.getDate() + 1);
+                const now = new Date();
+                const dtStamp = now.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                const memo = item.memo && item.memo.trim() ? item.memo.trim() : t('ics.summaryFallback');
+                const lines = [
+                    'BEGIN:VCALENDAR',
+                    'VERSION:2.0',
+                    'PRODID:-//taipak5000.github.io//share//' + (lang.value === 'en' ? 'EN' : 'JA'),
+                    'CALSCALE:GREGORIAN',
+                    'BEGIN:VEVENT',
+                    'UID:' + item.id + '@share.taipak5000.github.io',
+                    'DTSTAMP:' + dtStamp,
+                    'DTSTART;VALUE=DATE:' + icsDateStamp(expiry),
+                    'DTEND;VALUE=DATE:' + icsDateStamp(dtEnd),
+                    'SUMMARY:' + icsEscape(t('ics.summary', { memo })),
+                    'DESCRIPTION:' + icsEscape(t('ics.description')),
+                    'BEGIN:VALARM',
+                    'ACTION:DISPLAY',
+                    'DESCRIPTION:' + icsEscape(t('ics.summary', { memo })),
+                    'TRIGGER:-P1D',
+                    'END:VALARM',
+                    'END:VEVENT',
+                    'END:VCALENDAR'
+                ];
+                downloadTextFile('sky-creation-expiry_' + icsDateStamp(expiry) + '.ics', 'text/calendar;charset=utf-8', lines.join('\r\n'));
+            };
+
+            // 📤 このツール(設置物一覧)だけを対象にした軽量なテキスト書き出し。全ツール共通の
+            // 技術的なJSONバックップ(dmExport)とは別に、この一覧だけをすぐ読めるプレーン
+            // テキストとして保存したい場合向け。
+            const exportListText = () => {
+                const lines = [t('export.header'), t('export.exportedAt') + ': ' + new Date().toLocaleString(lang.value === 'en' ? 'en-US' : 'ja-JP'), ''];
+                const list = [...placedItems.value].sort((a, b) => getDaysLeft(a.placedDate) - getDaysLeft(b.placedDate));
+                list.forEach((item, idx) => {
+                    const genreLabels = (item.genres && item.genres.length)
+                        ? item.genres.map(g => { const opt = genreOptions.find(o => o.value === g); return opt ? optLabel(opt) : g; }).join(', ')
+                        : optLabel(genreOptions[0]);
+                    const status = item.isSuspended
+                        ? t('badge.suspended')
+                        : (getDaysLeft(item.placedDate) < 0 ? t('badge.expired') : (getDaysLeft(item.placedDate) === 0 ? t('badge.dueToday') : t('badge.daysLeft', { n: getDaysLeft(item.placedDate) })));
+                    lines.push((idx + 1) + '. ' + (item.memo && item.memo.trim() ? item.memo.trim() : t('export.noMemo')));
+                    lines.push('   ' + t('export.genreLabel') + ': ' + genreLabels);
+                    lines.push('   ' + t('item.placedDate') + ': ' + formatDateForInput(item.placedDate));
+                    lines.push('   ' + t('item.expiryDate') + ': ' + getExpiryDateString(item.placedDate));
+                    lines.push('   ' + t('export.statusLabel') + ': ' + status);
+                    lines.push('');
+                });
+                downloadTextFile('sky-creation-list_' + icsDateStamp(new Date()) + '.txt', 'text/plain;charset=utf-8', lines.join('\n'));
+            };
 
             onMounted(() => {
                 // テーマの読み込み
@@ -2618,6 +2854,15 @@
 
                 // 既存データの読み込み
                 load();
+
+                // 🎨 ホーム画面アイコンのプレビューcanvas再描画。IIFE側は自身の評価時点
+                // （createApp().mount()より前）で一度 pfIconSetMode()→pfIconUpdatePreview()
+                // を呼んでcanvasに描画済みだが、mount()は#app配下のDOMを丸ごと作り直すため、
+                // その描画結果は反映されないまま新しいcanvas要素に差し替わってしまう
+                // （初回はプレビューが空白のまま、いずれかの操作で再描画されて初めて見える
+                // 不具合の原因）。mount完了後にも同じ関数をもう一度呼び、新しいcanvas要素に
+                // 対して描き直す。
+                if (window.pfIconUpdatePreview) window.pfIconUpdatePreview();
             });
 
             watch(placedItems, () => { save(); }, { deep: true });
@@ -2626,8 +2871,10 @@
                 isDarkMode, toggleTheme, showSidebar,
                 lang, t, optLabel, toggleLang, activeProfileName,
                 placedItems, sortedPlacedItems, stats, getDaysLeft, getExpiryDateString, formatDateForInput,
-                updateItemDate, addItem, removeItem, rePlaceItem, suspendItem,
-                genreOptions, filterOptions, activeFilter, isGenreActive, toggleItemGenre
+                updateItemDate, addItem, removeItem, rePlaceItem, suspendItem, confirmDeleteId,
+                genreOptions, filterOptions, activeFilter, isGenreActive, toggleItemGenre, searchQuery,
+                bulkMode, selectedIds, toggleBulkMode, isSelected, toggleSelected, allVisibleSelected, selectAllVisible, bulkRePlace,
+                exportItemIcs, exportListText
             };
         }
     }).mount('#app');
