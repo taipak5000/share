@@ -394,6 +394,7 @@
 
         /* 🏆 称号(実績)。.badge-yellowと同じ配色(コントラスト確認済み)を流用し、
            ステータスバッジ(角丸小さめ)とは違う錠剤型(pill)にして「実績」を視覚的に区別する。 */
+        .titles-count { font-size: 12px; font-weight: 700; color: var(--text-gray); text-transform: none; }
         .title-chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
         .title-chip {
             display: inline-flex; align-items: center; gap: 4px;
@@ -401,6 +402,9 @@
             font-size: 12.5px; font-weight: 700; padding: 6px 12px; border-radius: 20px;
             white-space: nowrap; cursor: default;
         }
+        /* 未獲得：badge-grayと同じ「非アクティブ」配色を流用し、名前を伏せていることが
+           一目でわかるよう獲得済み(オレンジ)とはっきり区別する。 */
+        .title-chip.locked { background: rgba(142,142,147,0.15); color: var(--badge-gray-text); }
 
         /* 🎉 称号を新規獲得した瞬間の通知。既存のモーダル(z-index:1000)より前面に出す。 */
         .title-toast-wrap {
@@ -931,13 +935,14 @@
     </div>
 
     <div class="section-card">
-        <div class="section-header">🏆 {{ t('titles.header') }}</div>
-        <div v-if="earnedTitleList.length === 0" style="text-align: center; color: var(--text-gray); padding: 10px 0; font-size: 13px;">
-            {{ t('titles.empty') }}
+        <div class="section-header" style="display: flex; align-items: center; justify-content: space-between;">
+            <span>🏆 {{ t('titles.header') }}</span>
+            <span class="titles-count">{{ t('titles.countTemplate', { earned: earnedTitleList.length, total: titleChipList.length }) }}</span>
         </div>
-        <div v-else class="title-chip-row">
-            <span v-for="ti in earnedTitleList" :key="ti.id" class="title-chip" :title="t('titles.' + ti.id + '.desc')">
-                {{ ti.icon }} {{ t('titles.' + ti.id + '.name') }}
+        <div class="title-chip-row">
+            <span v-for="ti in titleChipList" :key="ti.id" class="title-chip" :class="{ locked: !ti.earned }"
+                  :title="ti.earned ? t('titles.' + ti.id + '.desc') : t('titles.lockedHint')">
+                {{ ti.earned ? ti.icon : '🔒' }} {{ ti.earned ? t('titles.' + ti.id + '.name') : t('titles.lockedName') }}
             </span>
         </div>
     </div>
@@ -2592,7 +2597,9 @@
                     'dock.otherTools': '他のツール',
                     'dock.settings': '表示設定',
                     'titles.header': '称号',
-                    'titles.empty': 'まだ称号はありません。創作物を追加すると最初の称号が手に入ります！',
+                    'titles.countTemplate': '{earned} / {total} 個解除',
+                    'titles.lockedName': '？？？',
+                    'titles.lockedHint': '称号は条件を満たすと明らかになります',
                     'titles.unlocked': '称号を獲得しました！',
                     'titles.first.name': 'はじめての一歩',
                     'titles.first.desc': '創作物をはじめて追加した',
@@ -2670,7 +2677,9 @@
                     'dock.otherTools': 'Other Tools',
                     'dock.settings': 'Settings',
                     'titles.header': 'Titles',
-                    'titles.empty': "No titles yet. Add a creation to earn your first one!",
+                    'titles.countTemplate': '{earned} / {total} unlocked',
+                    'titles.lockedName': '？？？',
+                    'titles.lockedHint': 'Unlocks when you meet its condition',
                     'titles.unlocked': 'Title unlocked!',
                     'titles.first.name': 'First Steps',
                     'titles.first.desc': 'Added your first creation',
@@ -2923,6 +2932,12 @@
                 const earnedIds = new Set(titlesData.value.earned.map(e => e.id));
                 return TITLES.filter(ti => earnedIds.has(ti.id));
             });
+            // パネル表示用：未獲得分も含めた全件。未獲得の名前・条件はテンプレート側で
+            // 「？？？」に伏せて表示するため、ここではearnedフラグだけ付与する。
+            const titleChipList = computed(() => {
+                const earnedIds = new Set(titlesData.value.earned.map(e => e.id));
+                return TITLES.map(ti => ({ ...ti, earned: earnedIds.has(ti.id) }));
+            });
 
             const showTitleToast = (title) => {
                 const seq = ++titleToastSeq;
@@ -3116,7 +3131,7 @@
                 hasActiveFilters, clearAllFilters,
                 bulkMode, selectedIds, toggleBulkMode, isSelected, toggleSelected, allVisibleSelected, selectAllVisible, bulkRePlace,
                 exportItemIcs, exportListText,
-                earnedTitleList, titleToasts
+                earnedTitleList, titleChipList, titleToasts
             };
         }
     }).mount('#app');
