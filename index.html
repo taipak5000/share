@@ -392,6 +392,32 @@
         .badge-green { background: rgba(52,199,89,0.15); color: var(--badge-green-text); }
         .badge-gray { background: rgba(142,142,147,0.15); color: var(--badge-gray-text); }
 
+        /* 🏆 称号(実績)。.badge-yellowと同じ配色(コントラスト確認済み)を流用し、
+           ステータスバッジ(角丸小さめ)とは違う錠剤型(pill)にして「実績」を視覚的に区別する。 */
+        .title-chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .title-chip {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: rgba(255,149,0,0.15); color: var(--badge-yellow-text);
+            font-size: 12.5px; font-weight: 700; padding: 6px 12px; border-radius: 20px;
+            white-space: nowrap; cursor: default;
+        }
+
+        /* 🎉 称号を新規獲得した瞬間の通知。既存のモーダル(z-index:1000)より前面に出す。 */
+        .title-toast-wrap {
+            position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
+            z-index: 1100; width: 100%; max-width: 380px; padding: 0 14px; box-sizing: border-box;
+            display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+        }
+        .title-toast {
+            pointer-events: auto; background: var(--card-bg); border: 1px solid var(--border-color);
+            box-shadow: 0 4px 18px rgba(0,0,0,0.18); border-radius: 12px; padding: 10px 14px;
+            display: flex; align-items: center; gap: 10px; animation: titleToastIn 0.25s ease;
+        }
+        .title-toast-icon { font-size: 24px; line-height: 1; }
+        .title-toast-label { font-size: 11px; color: var(--text-gray); font-weight: 600; }
+        .title-toast-name { font-size: 14px; color: var(--badge-yellow-text); font-weight: 700; }
+        @keyframes titleToastIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
         /* ═══ ジャンル選択・絞り込みボタン ═══ */
         .filter-row, .genre-selector {
             display: flex;
@@ -643,6 +669,17 @@
 <div class="pf-tint-overlay" aria-hidden="true"></div>
 
 <div class="container" id="app" v-cloak>
+    <!-- 🎉 称号の新規獲得トースト -->
+    <div class="title-toast-wrap" aria-live="polite">
+        <div v-for="tt in titleToasts" :key="tt.seq" class="title-toast">
+            <span class="title-toast-icon">{{ tt.icon }}</span>
+            <div>
+                <div class="title-toast-label">{{ t('titles.unlocked') }}</div>
+                <div class="title-toast-name">{{ tt.name }}</div>
+            </div>
+        </div>
+    </div>
+
     <header>
         <h1>{{ t('header.title') }}</h1>
         <div style="display: flex; gap: 8px; align-items: center;">
@@ -890,6 +927,18 @@
                 <div style="font-size: 11px; color: var(--text-gray);">{{ t('stats.alert') }}</div>
                 <div class="stat-val" style="color: var(--accent-red);">{{ stats.alert }}</div>
             </div>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-header">🏆 {{ t('titles.header') }}</div>
+        <div v-if="earnedTitleList.length === 0" style="text-align: center; color: var(--text-gray); padding: 10px 0; font-size: 13px;">
+            {{ t('titles.empty') }}
+        </div>
+        <div v-else class="title-chip-row">
+            <span v-for="ti in earnedTitleList" :key="ti.id" class="title-chip" :title="t('titles.' + ti.id + '.desc')">
+                {{ ti.icon }} {{ t('titles.' + ti.id + '.name') }}
+            </span>
         </div>
     </div>
 
@@ -2541,7 +2590,20 @@
                     'dock.profile': 'プロフィール',
                     'dock.dashboard': 'ダッシュボード',
                     'dock.otherTools': '他のツール',
-                    'dock.settings': '表示設定'
+                    'dock.settings': '表示設定',
+                    'titles.header': '称号',
+                    'titles.empty': 'まだ称号はありません。創作物を追加すると最初の称号が手に入ります！',
+                    'titles.unlocked': '称号を獲得しました！',
+                    'titles.first.name': 'はじめての一歩',
+                    'titles.first.desc': '創作物をはじめて追加した',
+                    'titles.apprentice.name': '見習い設置職人',
+                    'titles.apprentice.desc': '累計5個の創作物を追加した',
+                    'titles.skilled.name': '熟練の設置職人',
+                    'titles.skilled.desc': '累計15個の創作物を追加した',
+                    'titles.master.name': '創作の匠',
+                    'titles.master.desc': '累計30個の創作物を追加した',
+                    'titles.legend.name': '伝説の創作者',
+                    'titles.legend.desc': '累計50個の創作物を追加した'
                 },
                 en: {
                     'header.title': 'Creation Expiry Manager (14-Day)',
@@ -2606,7 +2668,20 @@
                     'dock.profile': 'Profile',
                     'dock.dashboard': 'Dashboard',
                     'dock.otherTools': 'Other Tools',
-                    'dock.settings': 'Settings'
+                    'dock.settings': 'Settings',
+                    'titles.header': 'Titles',
+                    'titles.empty': "No titles yet. Add a creation to earn your first one!",
+                    'titles.unlocked': 'Title unlocked!',
+                    'titles.first.name': 'First Steps',
+                    'titles.first.desc': 'Added your first creation',
+                    'titles.apprentice.name': 'Apprentice Placer',
+                    'titles.apprentice.desc': '5 creations added (lifetime)',
+                    'titles.skilled.name': 'Skilled Placer',
+                    'titles.skilled.desc': '15 creations added (lifetime)',
+                    'titles.master.name': 'Master Craftsperson',
+                    'titles.master.desc': '30 creations added (lifetime)',
+                    'titles.legend.name': 'Legendary Creator',
+                    'titles.legend.desc': '50 creations added (lifetime)'
                 }
             };
 
@@ -2813,7 +2888,74 @@
                 }
             };
 
-            const addItem = () => { placedItems.value.push({ id: uuid(), memo: "", placedDate: new Date(), isSuspended: false, genres: [] }); };
+            // 🏆 称号(実績)システム。設置数(placedItems.length)は削除操作(removeItem)で
+            // 減りうるため、そのまま条件にすると「消滅済みの創作物を削除しただけ」で
+            // 一度獲得した称号の裏付けデータが失われかねない。そこで「累計で追加した回数」を
+            // 一方向にしか増えないハイウォーターマークとして専用キーに保持し、addItem()の
+            // たびに+1する(削除しても絶対に減らない)。保存キーは既存のsky_tracker_storageとは
+            // 別の専用キーで、このツール自身のプロフィール機構に合わせnsKey()で分離する。
+            const TITLES_KEY = 'shareTitles_v1';
+            const TITLES = [
+                { id: 'first', icon: '🌱', threshold: 1 },
+                { id: 'apprentice', icon: '🔨', threshold: 5 },
+                { id: 'skilled', icon: '🏗️', threshold: 15 },
+                { id: 'master', icon: '🏛️', threshold: 30 },
+                { id: 'legend', icon: '👑', threshold: 50 }
+            ];
+            const titlesData = ref({ lifetimeCreated: 0, earned: [] });
+            const titleToasts = ref([]);
+            let titleToastSeq = 0;
+
+            const loadTitles = () => {
+                try {
+                    const saved = JSON.parse(localStorage.getItem(nsKey(TITLES_KEY)));
+                    if (saved && typeof saved === 'object') {
+                        titlesData.value = {
+                            lifetimeCreated: Number(saved.lifetimeCreated) || 0,
+                            earned: Array.isArray(saved.earned) ? saved.earned : []
+                        };
+                    }
+                } catch (e) { /* noop */ }
+            };
+            const saveTitles = () => { localStorage.setItem(nsKey(TITLES_KEY), JSON.stringify(titlesData.value)); };
+
+            const earnedTitleList = computed(() => {
+                const earnedIds = new Set(titlesData.value.earned.map(e => e.id));
+                return TITLES.filter(ti => earnedIds.has(ti.id));
+            });
+
+            const showTitleToast = (title) => {
+                const seq = ++titleToastSeq;
+                titleToasts.value.push({ seq, icon: title.icon, name: t('titles.' + title.id + '.name') });
+                setTimeout(() => {
+                    const idx = titleToasts.value.findIndex(tt => tt.seq === seq);
+                    if (idx !== -1) titleToasts.value.splice(idx, 1);
+                }, 3600);
+            };
+
+            // 新規に条件を満たした称号だけをearnedへ追加(既に獲得済みのものはスキップ = 再獲得や
+            // 取り消しは発生しない)。保存はしない(呼び出し側でlifetimeCreatedの更新とまとめて保存)。
+            const checkTitles = () => {
+                const earnedIds = new Set(titlesData.value.earned.map(e => e.id));
+                TITLES.forEach(title => {
+                    if (titlesData.value.lifetimeCreated >= title.threshold && !earnedIds.has(title.id)) {
+                        titlesData.value.earned.push({ id: title.id, earnedAt: new Date().toISOString() });
+                        earnedIds.add(title.id);
+                        showTitleToast(title);
+                    }
+                });
+            };
+
+            const bumpLifetimeCreated = () => {
+                titlesData.value.lifetimeCreated += 1;
+                checkTitles();
+                saveTitles();
+            };
+
+            const addItem = () => {
+                placedItems.value.push({ id: uuid(), memo: "", placedDate: new Date(), isSuspended: false, genres: [] });
+                bumpLifetimeCreated();
+            };
 
             // 🗑️ 削除は他の破壊的操作(プロフィール削除・全データ削除)と同じ、インラインの
             // 確認・取消ステップを挟む。confirmDeleteIdは一度に1件だけ確認状態にする単純な
@@ -2940,6 +3082,19 @@
                 // 既存データの読み込み
                 load();
 
+                // 🏆 称号の読み込み。この機能を導入する前から創作物を追加していたユーザーの
+                // ために、現在の設置数を下回らないようハイウォーターマークを引き上げる
+                // (一方向にのみ増加、減ることはない)。ratchet分も含めて必ず保存する
+                // (メモリ上だけ更新して保存し忘れると、次回読み込み時にlocalStorageの古い
+                // 値から再計算されてしまい、その間に削除されていた場合ハイウォーターマークが
+                // 巻き戻ってしまう恐れがあるため)。
+                loadTitles();
+                if (placedItems.value.length > titlesData.value.lifetimeCreated) {
+                    titlesData.value.lifetimeCreated = placedItems.value.length;
+                }
+                checkTitles();
+                saveTitles();
+
                 // 🎨 ホーム画面アイコンのプレビューcanvas再描画。IIFE側は自身の評価時点
                 // （createApp().mount()より前）で一度 pfIconSetMode()→pfIconUpdatePreview()
                 // を呼んでcanvasに描画済みだが、mount()は#app配下のDOMを丸ごと作り直すため、
@@ -2960,7 +3115,8 @@
                 genreOptions, filterOptions, activeFilter, isGenreActive, toggleItemGenre, searchQuery,
                 hasActiveFilters, clearAllFilters,
                 bulkMode, selectedIds, toggleBulkMode, isSelected, toggleSelected, allVisibleSelected, selectAllVisible, bulkRePlace,
-                exportItemIcs, exportListText
+                exportItemIcs, exportListText,
+                earnedTitleList, titleToasts
             };
         }
     }).mount('#app');
