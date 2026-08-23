@@ -233,6 +233,29 @@
           padding: 6px 8px; font-size: 14px; color: var(--text-color); font-family: inherit; outline: none; box-sizing: border-box; text-align: right; }
         .pf-currency-input:focus { border-color: var(--accent-blue); }
 
+        /* 🏆 プロフィール切替モーダル：行ごとに8ツール横断の獲得済み称号を折りたたみ表示する。
+           .pf-rowはflexなので、トグルボタンと本文にflex-basis:100%を与えて強制的に
+           次の行へ折り返す(編集/削除中の行がstyle="flex-wrap: wrap;"で複数行化するのと同じ考え方)。 */
+        .pf-titles-toggle {
+            flex-basis: 100%;
+            display: flex; align-items: center; gap: 4px;
+            background: none; border: none; padding: 4px 0 0; margin: 0;
+            font-size: 11.5px; font-weight: 700; color: var(--badge-yellow-text);
+            cursor: pointer; text-align: left;
+        }
+        .pf-titles-toggle:hover { text-decoration: underline; }
+        .pf-titles-caret { font-size: 9px; transition: transform 0.15s ease; }
+        .pf-titles-toggle[aria-expanded="true"] .pf-titles-caret { transform: rotate(180deg); }
+        .pf-titles-body {
+            flex-basis: 100%;
+            display: flex; flex-direction: column; gap: 6px; margin: 6px 0 2px; padding: 8px 10px;
+            background: var(--input-bg); border-radius: 8px;
+        }
+        .pf-title-item { display: flex; align-items: flex-start; gap: 6px; font-size: 11.5px; color: var(--text-color); line-height: 1.5; }
+        .pf-title-icon { flex-shrink: 0; font-size: 14px; line-height: 1.5; }
+        .pf-title-source { color: var(--text-gray); font-size: 10.5px; }
+        .pf-titles-empty { flex-basis: 100%; font-size: 11px; color: var(--text-gray); margin: 4px 0 0; }
+
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
@@ -1123,6 +1146,16 @@
                 'pf.currency.ascendedCandle': '星のキャンドル',
                 'pf.currency.seasonCandle': 'シーズンキャンドル',
                 'pf.currency.giftPass': 'ギフトパス',
+                'pf.titlesToggle': '{count}個の称号',
+                'pf.titlesEmpty': 'まだ称号を獲得していません',
+                'pf.titleSource.item': 'アイテム所持管理',
+                'pf.titleSource.emote': 'エモート所持率管理',
+                'pf.titleSource.wings': '羽トラッカー',
+                'pf.titleSource.spirit': '精霊ツリー管理',
+                'pf.titleSource.score': '楽譜作成ツール',
+                'pf.titleSource.share': '創作物管理ツール',
+                'pf.titleSource.nomacan': 'ノマキャン計算機',
+                'pf.titleSource.starcandle': '星のキャンドル計算機',
                 'dash.title': '🗓️ 今日・今週・今月',
                 'dash.tooltip': '今日・今週・今月ダッシュボード',
                 'dash.redShard': '赤闇',
@@ -1229,6 +1262,16 @@
                 'pf.currency.ascendedCandle': 'Star Candles',
                 'pf.currency.seasonCandle': 'Season Candles',
                 'pf.currency.giftPass': 'Gift Pass',
+                'pf.titlesToggle': '{count} Titles',
+                'pf.titlesEmpty': 'No titles earned yet',
+                'pf.titleSource.item': 'Item Collection',
+                'pf.titleSource.emote': 'Emote Collection',
+                'pf.titleSource.wings': 'Wing Tracker',
+                'pf.titleSource.spirit': 'Spirit Tree Manager',
+                'pf.titleSource.score': 'Sheet Music Maker',
+                'pf.titleSource.share': 'Creation Manager',
+                'pf.titleSource.nomacan': 'Nomacan Calculator',
+                'pf.titleSource.starcandle': 'Star Candle Calculator',
                 'dash.title': '🗓️ Today / This Week / This Month',
                 'dash.tooltip': 'Today / this week / this month',
                 'dash.redShard': 'Red Shard',
@@ -1466,9 +1509,14 @@
             if (id === pfGetActiveId()) pfApplyThemeColor(null);
             pfRenderModal();
         }
+        // 任意のプロフィールID向けに名前空間化したキーを組み立てる汎用版。プロフィール切替
+        // モーダルで「アクティブに切り替えていない他プロフィールの称号」を横断的に読むために
+        // 必要(通常のnsKey()はアクティブなプロフィール固定なので使えない)。
+        window.nsKeyFor = function (rawKey, profileId) {
+            return profileId === DEFAULT_PROFILE_ID ? rawKey : (rawKey + '__p_' + profileId);
+        };
         window.nsKey = function (rawKey) {
-            var id = pfGetActiveId();
-            return id === DEFAULT_PROFILE_ID ? rawKey : (rawKey + '__p_' + id);
+            return nsKeyFor(rawKey, pfGetActiveId());
         };
 
         pfEnsureInit();
@@ -1861,6 +1909,133 @@
         var pfEditingId = null;
         var pfDeletingId = null;
 
+        // ═══ 🏆 8ツール横断の称号(実績)まとめ表示（プロフィール切替モーダル内、全サイト共通） ═══
+        // sky_toolsエコシステムの各ツール(アイテム所持管理・エモート所持率管理・羽トラッカー・
+        // 精霊ツリー管理・楽譜作成ツール・このshare自身・ノマキャン計算機・星のキャンドル計算機)は
+        // それぞれ独自の称号(実績)システムを持つが、共有ランタイムは無いため、id→アイコン/名前/条件の
+        // 対応表はこのファイルにも複製して持つ必要がある(tai-card等の姉妹サイトにある同一カタログと
+        // 内容を同期させること)。同一オリジンでlocalStorageを共有しているため、他ツールのタブを
+        // 開かなくてもnsKeyFor()経由でそのまま読める。
+        // name/descはカタログの原本どおり日本語を正とし、descEnがある場合のみpfGetLang()に応じて
+        // 条件文だけ英語に出し分ける(name自体の英訳はカタログ側に無いため、日本語のまま統一する)。
+        var TITLE_CATALOG = {
+            item: { storageKey: 'itemTitles_v1', namespaced: true, sourceKey: 'item',
+                extract: function (d) { return Object.keys((d && d.earned) || {}); },
+                titles: {
+                    rate25: { icon: '🕯️', name: '灯火の旅人', desc: '全アイテムの所持率が25%に到達', descEn: 'Reached 25% overall ownership' },
+                    rate50: { icon: '🌙', name: '星屑の収集家', desc: '全アイテムの所持率が50%に到達', descEn: 'Reached 50% overall ownership' },
+                    rate75: { icon: '✨', name: '煌めきの探究者', desc: '全アイテムの所持率が75%に到達', descEn: 'Reached 75% overall ownership' },
+                    rate100: { icon: '👑', name: '光の守護者', desc: '登録した全アイテムを100%所持', descEn: 'Reached 100% overall ownership' },
+                    catmaster1: { icon: '🏅', name: 'コレクションの第一歩', desc: 'いずれか1カテゴリを100%達成', descEn: 'Completed at least 1 category' },
+                    catmaster6: { icon: '🏆', name: '熟練コレクター', desc: '6カテゴリ以上を100%達成', descEn: 'Completed 6 or more categories' },
+                    spend1k: { icon: '💴', name: '灯火の支援者', desc: '実額の合計が¥1,000に到達', descEn: 'Real-money total reached ¥1,000' },
+                    spend5k: { icon: '🎁', name: '季節の後援者', desc: '実額の合計が¥5,000に到達', descEn: 'Real-money total reached ¥5,000' },
+                    spend15k: { icon: '💎', name: '彩りの後援者', desc: '実額の合計が¥15,000に到達', descEn: 'Real-money total reached ¥15,000' },
+                    spend30k: { icon: '🌌', name: '星空の大後援者', desc: '実額の合計が¥30,000に到達', descEn: 'Real-money total reached ¥30,000' },
+                    spend50k: { icon: '🌟', name: '光の大後援者', desc: '実額の合計が¥50,000に到達', descEn: 'Real-money total reached ¥50,000' }
+                } },
+            emote: { storageKey: 'emoteTitles_v1', namespaced: true, sourceKey: 'emote',
+                extract: function (d) { return Object.keys(d || {}); },
+                titles: {
+                    apprentice: { icon: '🔰', name: '一芸見習い', desc: '所持レベル数が全体の10%に到達', descEn: 'Owned levels reached 10% of the total' },
+                    performer: { icon: '🎭', name: '芸達者', desc: '所持レベル数が全体の50%に到達', descEn: 'Owned levels reached 50% of the total' },
+                    grandmaster: { icon: '👑', name: 'エモート完全制覇', desc: '全エモートの全レベルを所持', descEn: 'Owns every level of every emote' },
+                    completionist: { icon: '🗺️', name: '全種踏破', desc: '全エモートを最低1レベルずつ所持', descEn: 'Owns at least one level of every emote' },
+                    guideFan: { icon: '🧭', name: '案内人めぐり', desc: '「案内人」エモートを全種最低1レベルずつ所持', descEn: 'Owns at least one level of every Guide emote' }
+                } },
+            wings: { storageKey: 'wingsTitles_v1', namespaced: true, sourceKey: 'wings',
+                extract: function (d) { return Object.keys(d || {}); },
+                titles: {
+                    cape_lv5: { icon: '🪶', name: '羽ばたきの証', desc: 'ケープレベル5に到達(光の翼20枚)', descEn: 'Reached Cape Level 5 (20 Wings of Light)' },
+                    cape_lv10: { icon: '🧥', name: '旅するケープ使い', desc: 'ケープレベル10に到達(光の翼120枚)', descEn: 'Reached Cape Level 10 (120 Wings of Light)' },
+                    cape_lv13: { icon: '👑', name: '光の翼、極めし者', desc: 'ケープレベル最大の13に到達(光の翼250枚)', descEn: 'Reached the max Cape Level 13 (250 Wings of Light)' },
+                    lc_half: { icon: '🔦', name: '光を辿る探検家', desc: '光の子を62体(半数)発見', descEn: 'Found 62 Children of Light (half)' },
+                    lc_all: { icon: '🌟', name: '光の子コンプリート', desc: '光の子124体すべてを発見', descEn: 'Found all 124 Children of Light' }
+                } },
+            spirit: { storageKey: 'spiritCatalogTitles_v1', namespaced: true, sourceKey: 'spirit',
+                extract: function (d) { return Object.keys(d || {}); },
+                titles: {
+                    pct1: { icon: '🌱', name: '芽吹きの精霊使い', desc: '精霊ツリーのノードを1%以上解放した', descEn: 'Unlocked 1%+ of all spirit tree nodes' },
+                    pct10: { icon: '🕯️', name: '灯火の道しるべ', desc: '精霊ツリーのノードを10%以上解放した', descEn: 'Unlocked 10%+ of all spirit tree nodes' },
+                    pct25: { icon: '🌿', name: '深緑の探求者', desc: '精霊ツリーのノードを25%以上解放した', descEn: 'Unlocked 25%+ of all spirit tree nodes' },
+                    pct50: { icon: '🌳', name: '満開の森の守り人', desc: '精霊ツリーのノードを50%以上解放した', descEn: 'Unlocked 50%+ of all spirit tree nodes' },
+                    pct100: { icon: '👑', name: '精霊の森の賢者', desc: '精霊ツリーの全ノードをコンプリートした', descEn: 'Unlocked 100% of all spirit tree nodes' }
+                } },
+            score: { storageKey: 'taiScoreTitles_v1', namespaced: false, sourceKey: 'score',
+                extract: function (d) { return ((d && d.earned) || []).map(function (e) { return e.id; }); },
+                titles: {
+                    firstSong: { icon: '🎼', name: 'はじめの一歩', desc: 'はじめての1曲をライブラリに加えた', descEn: 'Added your first song to the library' },
+                    apprentice: { icon: '🎶', name: '作曲家見習い', desc: '曲を5曲、ライブラリに加えた', descEn: 'Added 5 songs to the library' },
+                    craftsman: { icon: '🎹', name: '楽譜職人', desc: '曲を20曲、ライブラリに加えた', descEn: 'Added 20 songs to the library' },
+                    legend: { icon: '🏅', name: '伝説の作曲家', desc: '曲を50曲、ライブラリに加えた', descEn: 'Added 50 songs to the library' },
+                    passionate: { icon: '🔥', name: '情熱の演奏者', desc: '1曲に100音を超える演奏を詰め込んだ', descEn: 'Packed over 100 notes into a single song' },
+                    virtuoso: { icon: '⚡', name: '超絶技巧', desc: '1曲に300音を超える演奏を詰め込んだ', descEn: 'Packed over 300 notes into a single song' }
+                } },
+            share: { storageKey: 'shareTitles_v1', namespaced: true, sourceKey: 'share',
+                extract: function (d) { return ((d && d.earned) || []).map(function (e) { return e.id; }); },
+                titles: {
+                    first: { icon: '🌱', name: 'はじめての一歩', desc: '創作物をはじめて追加した', descEn: 'Added your first creation' },
+                    apprentice: { icon: '🔨', name: '見習い設置職人', desc: '累計5個の創作物を追加した', descEn: '5 creations added (lifetime)' },
+                    skilled: { icon: '🏗️', name: '熟練の設置職人', desc: '累計15個の創作物を追加した', descEn: '15 creations added (lifetime)' },
+                    master: { icon: '🏛️', name: '創作の匠', desc: '累計30個の創作物を追加した', descEn: '30 creations added (lifetime)' },
+                    legend: { icon: '👑', name: '伝説の創作者', desc: '累計50個の創作物を追加した', descEn: '50 creations added (lifetime)' }
+                } },
+            nomacan: { storageKey: 'skyNomacanTitles_v1', namespaced: true, sourceKey: 'nomacan',
+                extract: function (d) { return Object.keys((d && d.earned) || {}); },
+                titles: {
+                    streak3: { icon: '🔥', name: '灯し始め', desc: '3日連続で記録', descEn: 'Recorded 3 days in a row' },
+                    streak7: { icon: '🕯️', name: '一週間の灯火', desc: '7日連続で記録', descEn: 'Recorded 7 days in a row' },
+                    streak30: { icon: '🌟', name: '絶やさぬ灯', desc: '30日連続で記録', descEn: 'Recorded 30 days in a row' },
+                    hold100: { icon: '🕯️', name: '灯の蓄え', desc: '所持本数が100本に到達', descEn: 'Reached 100 candles held' },
+                    hold300: { icon: '🏮', name: '光の貯蔵庫', desc: '所持本数が300本に到達', descEn: 'Reached 300 candles held' },
+                    hold600: { icon: '👑', name: '灯火の富豪', desc: '所持本数が600本に到達', descEn: 'Reached 600 candles held' }
+                } },
+            starcandle: { storageKey: 'skyStarCandleCalc_titles_v1', namespaced: true, sourceKey: 'starcandle',
+                extract: function (d) { return Object.keys(d || {}); },
+                titles: {
+                    streak_3: { icon: '🕯️', name: '灯を絶やさぬ者', desc: '赤闇を3日連続で取りこぼさず回収', descEn: 'Collected shard rewards 3 days in a row without missing one' },
+                    streak_7: { icon: '🔥', name: '一週間の灯火番', desc: '赤闇を7日連続で取りこぼさず回収', descEn: 'Collected shard rewards 7 days in a row without missing one' },
+                    streak_20: { icon: '🌌', name: '常夜の灯守', desc: '赤闇を20日連続で取りこぼさず回収', descEn: 'Collected shard rewards 20 days in a row without missing one' },
+                    candle_30: { icon: '⭐', name: '星屑の蒐集者', desc: '所持本数が最高30本に到達', descEn: 'Held 30 candles at once for the first time' },
+                    candle_100: { icon: '🌟', name: '百連の灯', desc: '所持本数が最高100本に到達', descEn: 'Held 100 candles at once for the first time' },
+                    candle_300: { icon: '👑', name: '星々の帳を統べる者', desc: '所持本数が最高300本に到達', descEn: 'Held 300 candles at once for the first time' }
+                } }
+        };
+
+        // 称号セクションの開閉状態(プロフィールID→bool)。pfRenderModal()は毎回innerHTMLを
+        // 丸ごと再構築するため、この状態を関数外の変数に保持しておかないと再描画のたびに閉じてしまう
+        // (pfCurrencyOpenと同じ考え方)。
+        var pfTitlesOpenIds = {};
+        function pfToggleProfileTitles(id) {
+            pfTitlesOpenIds[id] = !pfTitlesOpenIds[id];
+            pfRenderModal();
+        }
+
+        // 指定プロフィールが8ツール横断で獲得済みの称号を全て集めて返す。アクティブに切り替え
+        // なくても確認できるよう、profileIdを明示的に受け取り、nsKeyFor()で名前空間化して読む。
+        function pfCollectProfileTitles(profileId) {
+            var earned = [];
+            Object.keys(TITLE_CATALOG).forEach(function (toolId) {
+                var tool = TITLE_CATALOG[toolId];
+                var key = tool.namespaced ? nsKeyFor(tool.storageKey, profileId) : tool.storageKey;
+                var data = null;
+                try { data = JSON.parse(localStorage.getItem(key)); } catch (e) { data = null; }
+                var ids = [];
+                try { ids = tool.extract(data) || []; } catch (e) { ids = []; }
+                ids.forEach(function (id) {
+                    var def = tool.titles[id];
+                    if (!def) return; // 未知のid(想定外のデータ形式)は無視する
+                    earned.push({
+                        icon: def.icon,
+                        name: def.name,
+                        desc: (pfGetLang() === 'en' && def.descEn) ? def.descEn : def.desc,
+                        source: t('pf.titleSource.' + tool.sourceKey)
+                    });
+                });
+            });
+            return earned;
+        }
+
         function pfRenderModal() {
             var body = document.getElementById('pfModalBody');
             if (!body) return;
@@ -1886,12 +2061,27 @@
                     return;
                 }
                 var colorVal = pfIsSafeColor(p.color) ? p.color : '#007AFF';
-                html += '<div class="pf-row' + (p.id === activeId ? ' active' : '') + '">' +
+                // 🏆 このプロフィールに切り替えなくても8ツール横断の獲得済み称号を確認できるように、
+                // 行ごとにpfCollectProfileTitles()の結果を折りたたみ表示する(条件文はホバー無しで常に見える)。
+                var pTitles = pfCollectProfileTitles(p.id);
+                var titlesOpen = !!pfTitlesOpenIds[p.id];
+                html += '<div class="pf-row' + (p.id === activeId ? ' active' : '') + '" style="flex-wrap: wrap;">' +
                     '<input type="color" class="pf-color-input" value="' + colorVal + '" title="' + t('pf.colorTitle') + '" onchange="pfSetProfileColor(\'' + p.id + '\', this.value)">' +
                     '<span class="pf-row-name" onclick="pfSwitchProfile(\'' + p.id + '\')">' + (p.id === activeId ? '✅ ' : '') + pfEscapeHtml(pfDisplayName(p)) + '</span>' +
                     (p.color ? '<button type="button" class="pf-icon-btn pf-color-clear-btn" title="' + t('pf.colorReset') + '" onclick="pfClearProfileColor(\'' + p.id + '\')">↺</button>' : '') +
                     '<button type="button" class="pf-icon-btn" onclick="pfStartRename(\'' + p.id + '\')">✏️</button>' +
                     (list.length > 1 ? '<button type="button" class="pf-icon-btn" onclick="pfStartDelete(\'' + p.id + '\')">🗑️</button>' : '') +
+                    (pTitles.length > 0
+                        ? '<button type="button" class="pf-titles-toggle" aria-expanded="' + titlesOpen + '" onclick="pfToggleProfileTitles(\'' + p.id + '\')">🏆 ' +
+                            t('pf.titlesToggle', { count: pTitles.length }) + '<span class="pf-titles-caret">▾</span></button>' +
+                          (titlesOpen
+                              ? '<div class="pf-titles-body">' + pTitles.map(function (ti) {
+                                  return '<div class="pf-title-item"><span class="pf-title-icon">' + ti.icon + '</span>' +
+                                      '<span class="pf-title-text"><b>' + pfEscapeHtml(ti.name) + '</b> — ' + pfEscapeHtml(ti.desc) +
+                                      ' <span class="pf-title-source">(' + pfEscapeHtml(ti.source) + ')</span></span></div>';
+                              }).join('') + '</div>'
+                              : '')
+                        : '<p class="pf-titles-empty">' + t('pf.titlesEmpty') + '</p>') +
                     '</div>';
             });
             body.innerHTML = html;
@@ -2462,6 +2652,7 @@
         window.pfToggleCurrency = pfToggleCurrency;
         window.pfSetProfileColor = pfSetProfileColor;
         window.pfClearProfileColor = pfClearProfileColor;
+        window.pfToggleProfileTitles = pfToggleProfileTitles;
 
         document.addEventListener('DOMContentLoaded', function () { pfApplyStaticI18n(); pfRenderBar(); });
     })();
