@@ -521,6 +521,62 @@
         .btn-renew { color: var(--accent-blue); border: 1px solid rgba(0,122,255,0.2); }
         .btn-susp { color: var(--text-gray); border: 1px solid var(--border-color); }
         .btn-ics { color: var(--accent-indigo-text); border: 1px solid rgba(94,92,230,0.2); }
+        .btn-photo { color: var(--accent-green); border: 1px solid rgba(52,199,89,0.2); }
+
+        /* 📈⏰ 「期限間近」統計カードのクリック機能。他の2枠(設置中/保留・消滅)は
+           これまで通りただの<div>のまま、この枠だけ<button>にして操作可能にする。 */
+        button.stat-box { border: none; font-family: inherit; width: 100%; margin: 0; }
+        .stat-box-clickable { cursor: pointer; transition: background 0.15s ease; }
+        .stat-box-clickable:hover { background: var(--tab-bg); }
+        .stat-box-clickable:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+        .stat-box:disabled { cursor: default; opacity: 1; }
+
+        /* ⏰ 「期限間近」クイック絞り込み中であることを示すバナー(.bulk-barの色違い) */
+        .quick-filter-bar { background: rgba(255,149,0,0.12); border-color: rgba(255,149,0,0.35); }
+
+        /* 📷 創作物ごとの写真/スクリーンショットサムネイル */
+        .item-thumb-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+        .item-thumb { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color); background: var(--input-bg); }
+        .item-thumb-remove {
+            background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-gray);
+            width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 12px; line-height: 1; flex-shrink: 0;
+        }
+        .item-thumb-remove:hover { background: var(--border-color); color: var(--text-color); }
+
+        /* 🗺️ エリア(マップ)タグの単一選択ドロップダウン */
+        .area-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 12px; color: var(--text-gray); }
+        .area-row-label { flex-shrink: 0; }
+        .area-select {
+            flex: 1; min-width: 0; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 6px;
+            font-size: 13px; background-color: var(--input-bg); color: var(--text-color); font-family: inherit;
+        }
+
+        /* ═══ 📅 消滅カレンダー（月グリッド） ═══ */
+        .calendar-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .calendar-nav-btn { font-size: 17px; padding: 4px 14px; line-height: 1; }
+        .calendar-month-label { font-size: 14px; font-weight: 700; color: var(--text-color); }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 10px; }
+        .calendar-weekday { text-align: center; font-size: 11px; font-weight: 700; color: var(--text-gray); padding-bottom: 4px; }
+        .calendar-day {
+            aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 2px; background: var(--bg-color); border: 2px solid transparent; border-radius: 8px;
+            font-size: 12.5px; color: var(--text-color); font-family: inherit; padding: 0; cursor: default;
+        }
+        .calendar-day:disabled { opacity: 1; }
+        .calendar-day-empty { background: transparent; }
+        .calendar-day.has-events { cursor: pointer; font-weight: 700; }
+        .calendar-day.has-events:hover { border-color: var(--accent-blue); }
+        .calendar-day.is-today { border-color: var(--accent-blue); }
+        .calendar-day.is-selected { background: var(--tab-btn-active); border-color: var(--accent-blue); }
+        .calendar-day-num { line-height: 1; }
+        .calendar-day-dot { width: 6px; height: 6px; border-radius: 50%; }
+        .calendar-legend { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; font-size: 11.5px; color: var(--text-gray); margin-bottom: 8px; }
+        .calendar-legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+        .calendar-hint { text-align: center; font-size: 12px; color: var(--text-gray); }
+        .calendar-detail-panel { background: var(--input-bg); border-radius: 8px; padding: 10px 12px; }
+        .calendar-detail-header { font-size: 12.5px; font-weight: 700; color: var(--text-color); margin-bottom: 6px; }
+        .calendar-detail-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-color); padding: 3px 0; }
+        .calendar-detail-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 
         /* ═══ サイドバーレイアウト ═══ */
         @media (min-width: 850px) {
@@ -946,15 +1002,64 @@
                 <div style="font-size: 11px; color: var(--text-gray);">{{ t('stats.active') }}</div>
                 <div class="stat-val" style="color: var(--accent-green);">{{ stats.active }}</div>
             </div>
-            <div class="stat-box">
+            <button type="button" class="stat-box" :class="{ 'stat-box-clickable': stats.warning > 0 }"
+                    :disabled="stats.warning === 0"
+                    :title="stats.warning > 0 ? t('stats.warningHint') : null"
+                    @click="focusExpiringSoon">
                 <div style="font-size: 11px; color: var(--text-gray);">{{ t('stats.warning') }}</div>
                 <div class="stat-val" style="color: var(--accent-orange);">{{ stats.warning }}</div>
-            </div>
+            </button>
             <div class="stat-box">
                 <div style="font-size: 11px; color: var(--text-gray);">{{ t('stats.alert') }}</div>
                 <div class="stat-val" style="color: var(--accent-red);">{{ stats.alert }}</div>
             </div>
         </div>
+    </div>
+
+    <!-- ═══ 📅 消滅カレンダー（画面上のカレンダー形式の可視化） ═══
+         .icsの外部書き出しとは別に、いつ・どの設置物が消えるかをアプリ内で一目で
+         確認できるようにする月グリッド。対象は保留中を除く掲示中の創作物のみ。 -->
+    <div class="section-card">
+        <div class="section-header">📅 {{ t('calendar.header') }}</div>
+        <div v-if="!hasAnyCalendarEvents" style="text-align: center; color: var(--text-gray); padding: 20px 0; font-size: 13px;">
+            {{ t('calendar.emptyAll') }}
+        </div>
+        <template v-else>
+            <div class="calendar-nav">
+                <button type="button" class="pf-icon-btn calendar-nav-btn" :aria-label="t('calendar.prevMonth')" @click="goToPrevMonth">‹</button>
+                <div class="calendar-month-label">{{ calendarMonthLabel }}</div>
+                <button type="button" class="pf-icon-btn calendar-nav-btn" :aria-label="t('calendar.nextMonth')" @click="goToNextMonth">›</button>
+            </div>
+            <div style="text-align:center; margin-bottom:10px;">
+                <button type="button" class="btn-outline list-toolbar-btn" :disabled="isCurrentMonthShown" @click="goToCurrentMonth">🔵 {{ t('calendar.today') }}</button>
+            </div>
+            <div class="calendar-grid">
+                <div v-for="wd in calendarWeekdayLabels" :key="wd" class="calendar-weekday">{{ wd }}</div>
+                <template v-for="(cell, idx) in calendarCells" :key="idx">
+                    <div v-if="!cell" class="calendar-day calendar-day-empty"></div>
+                    <button v-else type="button" class="calendar-day"
+                            :class="{ 'is-today': cell.isToday, 'has-events': cell.items.length > 0, 'is-selected': selectedCalendarDate === cell.key }"
+                            :disabled="cell.items.length === 0"
+                            @click="selectCalendarDay(cell)">
+                        <span class="calendar-day-num">{{ cell.day }}</span>
+                        <span v-if="cell.items.length" class="calendar-day-dot" :style="{ background: calendarSeverityColor(cell.severity) }"></span>
+                    </button>
+                </template>
+            </div>
+            <div class="calendar-legend">
+                <span><span class="calendar-legend-dot" style="background:var(--accent-red);"></span>{{ t('calendar.legendPast') }}</span>
+                <span><span class="calendar-legend-dot" style="background:var(--accent-orange);"></span>{{ t('calendar.legendSoon') }}</span>
+                <span><span class="calendar-legend-dot" style="background:var(--accent-green);"></span>{{ t('calendar.legendLater') }}</span>
+            </div>
+            <div v-if="selectedCalendarDate && selectedDayItems.length" class="calendar-detail-panel">
+                <div class="calendar-detail-header">📅 {{ selectedCalendarDateLabel }}</div>
+                <div v-for="di in selectedDayItems" :key="di.id" class="calendar-detail-item">
+                    <span class="calendar-detail-dot" :style="{ background: 'var(--accent-blue-solid)' }"></span>
+                    <span>{{ di.memo && di.memo.trim() ? di.memo.trim() : t('export.noMemo') }}</span>
+                </div>
+            </div>
+            <div v-else class="calendar-hint">{{ t('calendar.noSelection') }}</div>
+        </template>
     </div>
 
     <div class="section-card">
@@ -970,12 +1075,18 @@
         </div>
     </div>
 
-    <div class="section-card">
+    <div class="section-card" ref="listSectionRef">
         <div class="section-header">📍 {{ t('list.header') }}</div>
 
         <div class="list-toolbar">
             <button type="button" class="btn-outline list-toolbar-btn" @click="exportListText">📤 {{ t('export.btn') }}</button>
+            <button type="button" class="btn-outline list-toolbar-btn" :disabled="activeItemsForIcs.length === 0" @click="exportAllIcs">📅 {{ t('actions.exportAllIcs') }}</button>
             <button type="button" class="btn-outline list-toolbar-btn" :class="{ active: bulkMode }" :aria-pressed="bulkMode" @click="toggleBulkMode">☑️ {{ bulkMode ? t('bulk.exit') : t('bulk.enter') }}</button>
+        </div>
+
+        <div v-if="expiringSoonOnly" class="bulk-bar quick-filter-bar">
+            <span>⏰ {{ t('quickFilter.expiringSoonNotice') }}</span>
+            <button type="button" class="pf-icon-btn" @click="clearAllFilters">🧹 {{ t('list.clearFilters') }}</button>
         </div>
 
         <div v-if="bulkMode" class="bulk-bar">
@@ -1016,6 +1127,11 @@
                 </span>
             </div>
 
+            <div v-if="item.thumbnail" class="item-thumb-row">
+                <img :src="item.thumbnail" class="item-thumb" :alt="t('item.thumbnailAlt')">
+                <button type="button" class="item-thumb-remove" :aria-label="t('actions.removePhoto')" @click="removePhoto(item.id)">✕</button>
+            </div>
+
             <div class="genre-selector">
                 <button v-for="g in genreOptions" :key="g.value" class="genre-btn"
                         :class="{ active: isGenreActive(item, g.value) }"
@@ -1024,6 +1140,13 @@
                         @click="toggleItemGenre(item.id, g.value)">
                     {{ optLabel(g) }}
                 </button>
+            </div>
+
+            <div class="area-row">
+                <span class="area-row-label">🗺️ {{ t('item.area') }}</span>
+                <select class="area-select" v-model="item.area">
+                    <option v-for="a in areaOptions" :key="a.value" :value="a.value">{{ optLabel(a) }}</option>
+                </select>
             </div>
 
             <div class="date-inputs">
@@ -1046,6 +1169,10 @@
                     <button class="action-btn btn-susp" @click="confirmDeleteId = null">{{ t('actions.cancel') }}</button>
                 </template>
                 <template v-else>
+                    <label class="action-btn btn-photo">
+                        📷 {{ item.thumbnail ? t('actions.changePhoto') : t('actions.addPhoto') }}
+                        <input type="file" accept="image/*" style="display:none" @change="handlePhotoFile($event, item.id)">
+                    </label>
                     <button class="action-btn btn-ics" @click="exportItemIcs(item)">📅 {{ t('actions.exportIcs') }}</button>
                     <button class="action-btn btn-renew" @click="rePlaceItem(item.id)">♻️ {{ t('actions.replace') }}</button>
                     <button v-if="!item.isSuspended" class="action-btn btn-susp" @click="suspendItem(item.id)">📦 {{ t('actions.suspend') }}</button>
@@ -2657,7 +2784,7 @@
         document.addEventListener('DOMContentLoaded', function () { pfApplyStaticI18n(); pfRenderBar(); });
     })();
 
-    const { createApp, ref, computed, onMounted, watch } = Vue;
+    const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
 
     createApp({
         setup() {
@@ -2801,7 +2928,25 @@
                     'titles.master.name': '創作の匠',
                     'titles.master.desc': '累計30個の創作物を追加した',
                     'titles.legend.name': '伝説の創作者',
-                    'titles.legend.desc': '累計50個の創作物を追加した'
+                    'titles.legend.desc': '累計50個の創作物を追加した',
+                    'stats.warningHint': 'クリックして期限間近の項目を一括再設置',
+                    'item.area': 'エリア',
+                    'item.thumbnailAlt': '設置物の写真',
+                    'actions.exportAllIcs': '全期限をまとめてカレンダー登録',
+                    'actions.addPhoto': '写真を追加',
+                    'actions.changePhoto': '写真を変更',
+                    'actions.removePhoto': '写真を削除',
+                    'export.areaLabel': 'エリア',
+                    'quickFilter.expiringSoonNotice': '期限間近の項目だけを表示しています',
+                    'calendar.header': '消滅カレンダー',
+                    'calendar.prevMonth': '前の月',
+                    'calendar.nextMonth': '次の月',
+                    'calendar.today': '今月',
+                    'calendar.emptyAll': '掲示中の創作物がありません。',
+                    'calendar.legendPast': '消滅済み',
+                    'calendar.legendSoon': '期限間近(3日以内)',
+                    'calendar.legendLater': '掲示中',
+                    'calendar.noSelection': '日付をタップすると内訳が見られます'
                 },
                 en: {
                     'header.title': 'Creation Expiry Manager (14-Day)',
@@ -2881,7 +3026,25 @@
                     'titles.master.name': 'Master Craftsperson',
                     'titles.master.desc': '30 creations added (lifetime)',
                     'titles.legend.name': 'Legendary Creator',
-                    'titles.legend.desc': '50 creations added (lifetime)'
+                    'titles.legend.desc': '50 creations added (lifetime)',
+                    'stats.warningHint': 'Click to bulk re-place items expiring soon',
+                    'item.area': 'Area',
+                    'item.thumbnailAlt': 'Creation photo',
+                    'actions.exportAllIcs': 'Export all expiries to calendar',
+                    'actions.addPhoto': 'Add Photo',
+                    'actions.changePhoto': 'Change Photo',
+                    'actions.removePhoto': 'Remove photo',
+                    'export.areaLabel': 'Area',
+                    'quickFilter.expiringSoonNotice': 'Showing only items expiring soon',
+                    'calendar.header': 'Expiry Calendar',
+                    'calendar.prevMonth': 'Previous month',
+                    'calendar.nextMonth': 'Next month',
+                    'calendar.today': 'This month',
+                    'calendar.emptyAll': 'No active creations to show.',
+                    'calendar.legendPast': 'Expired',
+                    'calendar.legendSoon': 'Expiring soon (within 3 days)',
+                    'calendar.legendLater': 'Active',
+                    'calendar.noSelection': 'Tap a date to see details'
                 }
             };
 
@@ -2963,7 +3126,11 @@
                                     placedDate: new Date(item.placedDate),
                                     isSuspended: item.isSuspended || false,
                                     // 旧データ(単一ジャンル)は配列に変換して引き継ぐ
-                                    genres: genres || (genre ? [genre] : [])
+                                    genres: genres || (genre ? [genre] : []),
+                                    // 🗺️ エリアタグ・📷 サムネイルは後から追加した任意項目のため、
+                                    // これらを持たない旧データでは明示的に空値を補う。
+                                    area: rest.area || '',
+                                    thumbnail: rest.thumbnail || null
                                 };
                             });
                         }
@@ -3006,6 +3173,26 @@
             const filterOptions = [{ value: 'all', label: 'すべて', labelEn: 'All', color: 'var(--accent-gray-solid)' }, ...genreOptions];
             const activeFilter = ref('all');
 
+            // 🗺️ エリア(マップ)タグ: ジャンルとは別に、ゲーム内のどのエリアに設置したかを
+            // 単一選択で記録するための任意項目(未設定可)。他ツール(wings)のエリア表記
+            // (孤島/草原/雨林/峡谷/捨てられた地/書庫/暴風域)と呼称・絵文字をそろえ、
+            // エコシステム内で同じ場所が別の名前で呼ばれないようにする。ジャンルのような
+            // 複数選択・絞り込みピルではなく、<select>によるシンプルな単一選択ドロップダウン。
+            const areaOptions = [
+                { value: '', label: '未設定', labelEn: 'Not set' },
+                { value: 'isleOfDawn', label: '🌅 孤島', labelEn: '🌅 Isle of Dawn' },
+                { value: 'prairie', label: '🌾 草原', labelEn: '🌾 Prairie' },
+                { value: 'forest', label: '🌲 雨林', labelEn: '🌲 Forest' },
+                { value: 'valley', label: '⛰️ 峡谷', labelEn: '⛰️ Valley' },
+                { value: 'wasteland', label: '🏜️ 捨てられた地', labelEn: '🏜️ Wasteland' },
+                { value: 'vault', label: '📚 書庫', labelEn: '📚 Vault' },
+                { value: 'eden', label: '🌩️ 暴風域', labelEn: '🌩️ Eye of Eden' }
+            ];
+            const areaLabel = (value) => {
+                const opt = areaOptions.find(o => o.value === value);
+                return opt ? optLabel(opt) : '';
+            };
+
             // 🔍 メモ欄のフリーテキスト検索(ジャンル絞り込みと併用可能)
             const searchQuery = ref('');
 
@@ -3031,20 +3218,28 @@
                 }
             };
 
+            // ⏰ 「期限間近」統計カードのクリックによるクイック絞り込み。ジャンル絞り込みとは
+            // 独立したもう1つの条件で、ONの間は保留中でなく残り0〜3日の項目だけに絞り込む。
+            const expiringSoonOnly = ref(false);
+
             const filteredPlacedItems = computed(() => {
                 let list = placedItems.value;
                 if (activeFilter.value === '') list = list.filter(item => !item.genres || item.genres.length === 0);
                 else if (activeFilter.value !== 'all') list = list.filter(item => item.genres && item.genres.includes(activeFilter.value));
+                if (expiringSoonOnly.value) {
+                    list = list.filter(item => !item.isSuspended && getDaysLeft(item.placedDate) >= 0 && getDaysLeft(item.placedDate) <= 3);
+                }
                 const q = searchQuery.value.trim().toLowerCase();
                 if (q) list = list.filter(item => (item.memo || '').toLowerCase().includes(q));
                 return list;
             });
 
-            // 🧹 ジャンル絞り込み・メモ検索を一括で初期状態に戻す
-            const hasActiveFilters = computed(() => activeFilter.value !== 'all' || searchQuery.value.trim() !== '');
+            // 🧹 ジャンル絞り込み・メモ検索・期限間近クイック絞り込みを一括で初期状態に戻す
+            const hasActiveFilters = computed(() => activeFilter.value !== 'all' || searchQuery.value.trim() !== '' || expiringSoonOnly.value);
             const clearAllFilters = () => {
                 activeFilter.value = 'all';
                 searchQuery.value = '';
+                expiringSoonOnly.value = false;
             };
 
             const sortedPlacedItems = computed(() => {
@@ -3159,7 +3354,7 @@
             };
 
             const addItem = () => {
-                placedItems.value.push({ id: uuid(), memo: "", placedDate: new Date(), isSuspended: false, genres: [] });
+                placedItems.value.push({ id: uuid(), memo: "", placedDate: new Date(), isSuspended: false, genres: [], area: '', thumbnail: null });
                 bumpLifetimeCreated();
             };
 
@@ -3177,6 +3372,43 @@
 
             const rePlaceItem = (id) => { const item = placedItems.value.find(i => i.id === id); if (item) { item.placedDate = new Date(); item.isSuspended = false; } };
             const suspendItem = (id) => { const item = placedItems.value.find(i => i.id === id); if (item) item.isSuspended = true; };
+
+            // 📷 創作物ごとの写真/スクリーンショットのサムネイル添付。ホーム画面アイコンの
+            // カスタマイズ機能(pfIconHandleFile→pfIconRenderToCanvas→canvas.toDataURL)と
+            // 全く同じ「FileReaderで読み込み→<img>化→<canvas>に縮小して描画→
+            // toDataURL('image/png')でdata URI化」という圧縮手法をそのまま踏襲する
+            // (新しい圧縮方式は作らない)。アイコンは正方形に切り抜く(cover)が、こちらは
+            // 写真そのものを見せるサムネイルなので切り抜かずに縦横比を保ったまま
+            // 収める(contain)。最大辺をMAX_THUMB_DIMに縮小することでlocalStorageに
+            // 保存するdata URIのサイズを抑える(小さい画像を無理に拡大はしない)。
+            const MAX_THUMB_DIM = 200;
+            const handlePhotoFile = (e, id) => {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const scale = Math.min(MAX_THUMB_DIM / img.width, MAX_THUMB_DIM / img.height, 1);
+                        const w = Math.max(1, Math.round(img.width * scale));
+                        const h = Math.max(1, Math.round(img.height * scale));
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w; canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        const item = placedItems.value.find(i => i.id === id);
+                        if (item) item.thumbnail = canvas.toDataURL('image/png');
+                    };
+                    img.src = reader.result;
+                };
+                reader.readAsDataURL(file);
+                // 同じファイルを再選択しても@changeが発火するようにリセットしておく
+                e.target.value = '';
+            };
+            const removePhoto = (id) => {
+                const item = placedItems.value.find(i => i.id === id);
+                if (item) item.thumbnail = null;
+            };
 
             // ☑️ 複数選択しての一括「今日再設置」。1件ずつしかできなかった再設置を、
             // 選択モードに切り替えてチェックした項目だけまとめて実行できるようにする。
@@ -3206,6 +3438,30 @@
                 });
                 selectedIds.value = [];
                 bulkMode.value = false;
+                // 再設置後は「期限間近」で絞り込んだままだと一覧が急に空になり分かりづらいため解除する
+                expiringSoonOnly.value = false;
+            };
+
+            // 📈⏰ 「期限間近」統計カードをクリックした時のショートカット。該当項目だけに
+            // 絞り込んだうえで選択モードに入り、対象を選択済みにしてそのまま既存の一括
+            // 「選択項目を今日再設置」フローに接続する(新しい一括更新の仕組みは作らず、
+            // 既存のbulkMode/selectedIds/bulkRePlaceにそのまま乗せる)。
+            const listSectionRef = ref(null);
+            const focusExpiringSoon = () => {
+                const targetIds = placedItems.value
+                    .filter(item => !item.isSuspended && getDaysLeft(item.placedDate) >= 0 && getDaysLeft(item.placedDate) <= 3)
+                    .map(item => item.id);
+                if (targetIds.length === 0) return;
+                activeFilter.value = 'all';
+                searchQuery.value = '';
+                expiringSoonOnly.value = true;
+                bulkMode.value = true;
+                selectedIds.value = targetIds;
+                nextTick(() => {
+                    if (listSectionRef.value && listSectionRef.value.scrollIntoView) {
+                        listSectionRef.value.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
             };
 
             // 📅 個別の創作物の自動消滅日を、カレンダーアプリに登録できる .ics ファイルとして
@@ -3224,20 +3480,17 @@
                 a.remove();
                 URL.revokeObjectURL(url);
             };
-            const exportItemIcs = (item) => {
+            // 1件分のVEVENTブロックを組み立てる共通処理。個別書き出し(exportItemIcs)と
+            // 全件まとめ書き出し(exportAllIcs)の両方から使い、フィールドの食い違いを防ぐ。
+            const buildIcsVevent = (item) => {
                 const expiry = new Date(item.placedDate);
                 expiry.setDate(expiry.getDate() + 14);
                 expiry.setHours(0, 0, 0, 0);
                 const dtEnd = new Date(expiry);
                 dtEnd.setDate(dtEnd.getDate() + 1);
-                const now = new Date();
-                const dtStamp = now.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                const dtStamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
                 const memo = item.memo && item.memo.trim() ? item.memo.trim() : t('ics.summaryFallback');
                 const lines = [
-                    'BEGIN:VCALENDAR',
-                    'VERSION:2.0',
-                    'PRODID:-//taipak5000.github.io//share//' + (lang.value === 'en' ? 'EN' : 'JA'),
-                    'CALSCALE:GREGORIAN',
                     'BEGIN:VEVENT',
                     'UID:' + item.id + '@share.taipak5000.github.io',
                     'DTSTAMP:' + dtStamp,
@@ -3250,10 +3503,39 @@
                     'DESCRIPTION:' + icsEscape(t('ics.summary', { memo })),
                     'TRIGGER:-P1D',
                     'END:VALARM',
-                    'END:VEVENT',
+                    'END:VEVENT'
+                ];
+                return { lines, expiry };
+            };
+
+            const exportItemIcs = (item) => {
+                const { lines: veventLines, expiry } = buildIcsVevent(item);
+                const lines = [
+                    'BEGIN:VCALENDAR',
+                    'VERSION:2.0',
+                    'PRODID:-//taipak5000.github.io//share//' + (lang.value === 'en' ? 'EN' : 'JA'),
+                    'CALSCALE:GREGORIAN',
+                    ...veventLines,
                     'END:VCALENDAR'
                 ];
                 downloadTextFile('sky-creation-expiry_' + icsDateStamp(expiry) + '.ics', 'text/calendar;charset=utf-8', lines.join('\r\n'));
+            };
+
+            // 📅🗂️ 保留中(isSuspended)以外の掲示中の創作物すべての消滅日を、1つの.icsファイルに
+            // まとめて複数のVEVENTとして書き出す(個別書き出しを1件ずつ繰り返す手間をなくす)。
+            const activeItemsForIcs = computed(() => placedItems.value.filter(item => !item.isSuspended));
+            const exportAllIcs = () => {
+                const targets = activeItemsForIcs.value;
+                if (targets.length === 0) return;
+                const lines = [
+                    'BEGIN:VCALENDAR',
+                    'VERSION:2.0',
+                    'PRODID:-//taipak5000.github.io//share//' + (lang.value === 'en' ? 'EN' : 'JA'),
+                    'CALSCALE:GREGORIAN'
+                ];
+                targets.forEach(item => { lines.push(...buildIcsVevent(item).lines); });
+                lines.push('END:VCALENDAR');
+                downloadTextFile('sky-creation-expiry-all_' + icsDateStamp(new Date()) + '.ics', 'text/calendar;charset=utf-8', lines.join('\r\n'));
             };
 
             // 📤 このツール(設置物一覧)だけを対象にした軽量なテキスト書き出し。全ツール共通の
@@ -3271,6 +3553,7 @@
                         : (getDaysLeft(item.placedDate) < 0 ? t('badge.expired') : (getDaysLeft(item.placedDate) === 0 ? t('badge.dueToday') : t('badge.daysLeft', { n: getDaysLeft(item.placedDate) })));
                     lines.push((idx + 1) + '. ' + (item.memo && item.memo.trim() ? item.memo.trim() : t('export.noMemo')));
                     lines.push('   ' + t('export.genreLabel') + ': ' + genreLabels);
+                    if (item.area) lines.push('   ' + t('export.areaLabel') + ': ' + areaLabel(item.area));
                     lines.push('   ' + t('item.placedDate') + ': ' + formatDateForInput(item.placedDate));
                     lines.push('   ' + t('item.expiryDate') + ': ' + getExpiryDateString(item.placedDate));
                     lines.push('   ' + t('export.statusLabel') + ': ' + status);
@@ -3278,6 +3561,106 @@
                 });
                 downloadTextFile('sky-creation-list_' + icsDateStamp(new Date()) + '.txt', 'text/plain;charset=utf-8', lines.join('\n'));
             };
+
+            // 📅 画面上のカレンダー形式の可視化(月グリッド)。.icsのような外部ファイル
+            // 書き出しとは別に、アプリ内で「いつ・どれだけ設置物が消えるか」を一目で
+            // 見られるようにする。対象は保留中を除く掲示中の創作物のみ(統計カードの
+            // 「期限間近」やまとめ.ics書き出しと同じスコープ)。
+            const dateKeyOf = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            // 'YYYY-MM-DD'文字列からのDate復元は、そのままnew Date(str)に渡すとUTC解釈により
+            // 環境によって前日にずれるバグ(このリポジトリで過去に修正済みの既知の不具合と同種)を
+            // 招くため、年月日をばらしてローカルタイムで組み立てる(updateItemDateと同じ考え方)。
+            const parseDateKey = (key) => {
+                const [y, m, d] = key.split('-').map(Number);
+                return new Date(y, m - 1, d);
+            };
+
+            const expiryByDate = computed(() => {
+                const map = {};
+                placedItems.value.forEach(item => {
+                    if (item.isSuspended) return;
+                    const expiry = new Date(item.placedDate);
+                    expiry.setDate(expiry.getDate() + 14);
+                    expiry.setHours(0, 0, 0, 0);
+                    const key = dateKeyOf(expiry);
+                    if (!map[key]) map[key] = [];
+                    map[key].push(item);
+                });
+                return map;
+            });
+            const hasAnyCalendarEvents = computed(() => placedItems.value.some(item => !item.isSuspended));
+
+            const startOfMonth = (d) => new Date(d.getFullYear(), d.getMonth(), 1);
+            const calendarMonthCursor = ref(startOfMonth(new Date()));
+            const calendarMonthLabel = computed(() => calendarMonthCursor.value.toLocaleDateString(
+                lang.value === 'en' ? 'en-US' : 'ja-JP', { year: 'numeric', month: 'long' }
+            ));
+            // 曜日見出しはi18n辞書に持たせず、既存の日付表示(getExpiryDateString等)と同じく
+            // toLocaleDateStringにロケール判定を任せる(2023-01-01は日曜日始まり基準)。
+            const calendarWeekdayLabels = computed(() => {
+                const loc = lang.value === 'en' ? 'en-US' : 'ja-JP';
+                return Array.from({ length: 7 }, (_, i) => new Date(2023, 0, 1 + i).toLocaleDateString(loc, { weekday: 'short' }));
+            });
+            const isCurrentMonthShown = computed(() => {
+                const now = new Date();
+                return calendarMonthCursor.value.getFullYear() === now.getFullYear() && calendarMonthCursor.value.getMonth() === now.getMonth();
+            });
+            const goToPrevMonth = () => {
+                const d = calendarMonthCursor.value;
+                calendarMonthCursor.value = new Date(d.getFullYear(), d.getMonth() - 1, 1);
+                selectedCalendarDate.value = null;
+            };
+            const goToNextMonth = () => {
+                const d = calendarMonthCursor.value;
+                calendarMonthCursor.value = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+                selectedCalendarDate.value = null;
+            };
+            const goToCurrentMonth = () => {
+                calendarMonthCursor.value = startOfMonth(new Date());
+                selectedCalendarDate.value = null;
+            };
+
+            const calendarCells = computed(() => {
+                const monthStart = calendarMonthCursor.value;
+                const year = monthStart.getFullYear(), month = monthStart.getMonth();
+                const firstWeekday = monthStart.getDay(); // 0=日曜
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const today = new Date(); today.setHours(0, 0, 0, 0);
+                const todayKey = dateKeyOf(today);
+                const cells = [];
+                for (let i = 0; i < firstWeekday; i++) cells.push(null);
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const date = new Date(year, month, day);
+                    const key = dateKeyOf(date);
+                    const items = expiryByDate.value[key] || [];
+                    let severity = 'none';
+                    if (items.length) {
+                        const diffDays = Math.round((date - today) / (1000 * 60 * 60 * 24));
+                        severity = diffDays < 0 ? 'past' : (diffDays <= 3 ? 'soon' : 'later');
+                    }
+                    cells.push({ key, day, items, severity, isToday: key === todayKey });
+                }
+                return cells;
+            });
+            const calendarSeverityColor = (severity) => {
+                if (severity === 'past') return 'var(--accent-red)';
+                if (severity === 'soon') return 'var(--accent-orange)';
+                if (severity === 'later') return 'var(--accent-green)';
+                return 'transparent';
+            };
+
+            const selectedCalendarDate = ref(null);
+            const selectCalendarDay = (cell) => {
+                if (!cell || !cell.items.length) return;
+                selectedCalendarDate.value = selectedCalendarDate.value === cell.key ? null : cell.key;
+            };
+            const selectedDayItems = computed(() => selectedCalendarDate.value ? (expiryByDate.value[selectedCalendarDate.value] || []) : []);
+            const selectedCalendarDateLabel = computed(() => {
+                if (!selectedCalendarDate.value) return '';
+                return parseDateKey(selectedCalendarDate.value).toLocaleDateString(
+                    lang.value === 'en' ? 'en-US' : 'ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short' }
+                );
+            });
 
             onMounted(() => {
                 // テーマの読み込み: 'light'/'dark'/'system'以外の値(未設定含む)は'system'扱い。
@@ -3320,9 +3703,15 @@
                 updateItemDate, addItem, removeItem, rePlaceItem, suspendItem, confirmDeleteId,
                 genreOptions, filterOptions, activeFilter, isGenreActive, toggleItemGenre, searchQuery,
                 hasActiveFilters, clearAllFilters,
+                areaOptions, areaLabel,
                 bulkMode, selectedIds, toggleBulkMode, isSelected, toggleSelected, allVisibleSelected, selectAllVisible, bulkRePlace,
-                exportItemIcs, exportListText,
-                earnedTitleList, titleChipList, titleToasts
+                expiringSoonOnly, focusExpiringSoon, listSectionRef,
+                exportItemIcs, exportListText, exportAllIcs, activeItemsForIcs,
+                handlePhotoFile, removePhoto,
+                earnedTitleList, titleChipList, titleToasts,
+                hasAnyCalendarEvents, calendarMonthLabel, calendarWeekdayLabels, calendarCells, calendarSeverityColor,
+                isCurrentMonthShown, goToPrevMonth, goToNextMonth, goToCurrentMonth,
+                selectedCalendarDate, selectCalendarDay, selectedDayItems, selectedCalendarDateLabel
             };
         }
     }).mount('#app');
