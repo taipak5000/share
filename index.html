@@ -268,7 +268,7 @@
         }
 
         .container {
-            max-width: 600px;
+            max-width: 720px;
             margin: 0 auto;
         }
 
@@ -278,6 +278,16 @@
             align-items: center;
             margin-bottom: 20px;
             gap: 10px;
+            /* 🧭 デスクトップレイアウト統一：他姉妹サイトのnav要素と同じくsticky化。
+               このheaderは #app (= .container) 内の子要素なのでVueマウント構造は変えず、
+               コンテナ幅のまま画面上端に固定する（他サイトのような画面全幅ではない）。
+               スクロール中のコンテンツと重ならないよう不透明な背景と下境界線を付与。 */
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: var(--bg-color);
+            padding: 10px 0;
+            border-bottom: 0.5px solid var(--border-color);
         }
 
         h1 {
@@ -441,10 +451,18 @@
            一目でわかるよう獲得済み(オレンジ)とはっきり区別する。 */
         .title-chip.locked { background: rgba(142,142,147,0.15); color: var(--badge-gray-text); }
 
-        /* 🎉 称号を新規獲得した瞬間の通知。既存のモーダル(z-index:1000)より前面に出す。 */
+        /* 🎉 称号を新規獲得した瞬間の通知。
+           デスクトップレイアウト統一監査で検証済み：これはルーティンの保存/エラー通知ではなく、
+           実績解除を祝う一度きりの演出用トーストであり、通常トースト(画面下部)とは
+           意図的に異なる位置(画面上部)・異なる視覚的重み(カード型・アイコン24px・
+           スライドインアニメーション)を持つ。そのため位置は上部のまま維持する特別枠として残すが、
+           z-indexだけは他サイト共通のトースト用スケール(2000)に合わせて統一する。
+           このサイトには他にルーティントースト通知の仕組みが存在しない
+           （保存等のフィードバックは各モーダル内のインラインテキストで完結しており、
+           それらは今回の対象外＝新規のグローバルトースト機構は追加しない）。 */
         .title-toast-wrap {
             position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
-            z-index: 1100; width: 100%; max-width: 380px; padding: 0 14px; box-sizing: border-box;
+            z-index: 2000; width: 100%; max-width: 380px; padding: 0 14px; box-sizing: border-box;
             display: flex; flex-direction: column; gap: 8px; pointer-events: none;
         }
         .title-toast {
@@ -590,11 +608,8 @@
         .calendar-detail-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-color); padding: 3px 0; }
         .calendar-detail-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 
-        /* ═══ サイドバーレイアウト ═══ */
-        @media (min-width: 850px) {
-            .container { max-width: 820px; }
-        }
-
+        /* ═══ サイドバーレイアウト（下部ドックの「他のツール」ドロワー専用。
+           常設カラム表示は行わない＝全幅で.main-content-wrapperが1カラム表示） ═══ */
         .app-layout {
             display: flex;
             gap: 20px;
@@ -603,15 +618,7 @@
         }
 
         .sidebar {
-            width: 200px;
-            flex-shrink: 0;
-            position: sticky;
-            top: 16px;
             display: none;
-        }
-
-        @media (min-width: 850px) {
-            .sidebar { display: block; }
         }
 
         .sidebar.sidebar-open {
@@ -962,12 +969,6 @@
                 <button class="sidebar-close-btn" @click="showSidebar = false">×</button>
             </div>
             <nav>
-                <!--
-                <a href="https://taipak5000.github.io/tai-nomacan-pro/" class="sidebar-nav-link">
-                    🕯️ ノマキャン計算機プロ
-                </a>
-                -->
-
                 <a href="https://taipak5000.github.io/tai-item/" class="sidebar-nav-link">
                     📁 {{ t('sidebar.item') }}
                 </a>
@@ -992,7 +993,9 @@
                 <a href="https://taipak5000.github.io/tai-transfer/" class="sidebar-nav-link">
                     🔄 {{ t('sidebar.transfer') }}
                 </a>
-
+                <a href="https://taipak5000.github.io/tai-info/" class="sidebar-nav-link">
+                    ⚙️ {{ t('sidebar.info') }}
+                </a>
             </nav>
             <div style="margin-top:18px; padding-top:14px; border-top:0.5px solid var(--border-color);">
                 <div class="sidebar-section-label" style="margin-bottom:8px;">📱 {{ t('sidebar.homeIcon') }}</div>
@@ -2885,6 +2888,7 @@
                     'sidebar.companion': '精霊同行ツール',
                     'sidebar.wings': '羽トラッカー',
                     'sidebar.transfer': 'データ引継ぎ',
+                    'sidebar.info': '設定・更新情報',
                     'sidebar.homeIcon': 'ホーム画面アイコン',
                     'sidebar.customizeIcon': 'アイコンをカスタマイズ',
                     'sidebar.settingsLabel': '表示設定',
@@ -2985,6 +2989,7 @@
                     'sidebar.companion': 'Spirit Companion Tool',
                     'sidebar.wings': 'Wing Tracker',
                     'sidebar.transfer': 'Data Transfer',
+                    'sidebar.info': 'Settings & Updates',
                     'sidebar.homeIcon': 'Home Screen Icon',
                     'sidebar.customizeIcon': 'Customize Icon',
                     'sidebar.settingsLabel': 'Display Settings',
