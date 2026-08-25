@@ -997,14 +997,6 @@
                     ⚙️ {{ t('sidebar.info') }}
                 </a>
             </nav>
-            <div style="margin-top:18px; padding-top:14px; border-top:0.5px solid var(--border-color);">
-                <div class="sidebar-section-label" style="margin-bottom:8px;">📱 {{ t('sidebar.homeIcon') }}</div>
-                <button type="button" class="sidebar-nav-link" style="width:100%; box-sizing:border-box; border:1px solid var(--border-color); background:var(--input-bg); cursor:pointer; justify-content:center;" onclick="pfIconOpenModal()">🎨 {{ t('sidebar.customizeIcon') }}</button>
-            </div>
-            <div style="margin-top:18px; padding-top:14px; border-top:0.5px solid var(--border-color);">
-                <div class="sidebar-section-label" style="margin-bottom:8px;">⚙️ {{ t('sidebar.settingsLabel') }}</div>
-                <button type="button" class="sidebar-nav-link" style="width:100%; box-sizing:border-box; border:1px solid var(--border-color); background:var(--input-bg); cursor:pointer; justify-content:center;" onclick="settingsOpenModal()">⚙️ {{ t('sidebar.openSettings') }}</button>
-            </div>
         </aside>
 
         <!-- ═══ メインコンテンツ ═══ -->
@@ -1214,8 +1206,10 @@
          サイドバー本体やそのトグルボタンは置き換えない。プロフィール/ダッシュボード/表示設定は
          Vue管理外のIIFEが window に公開している既存関数をそのまま呼び出し(既存のサイドバー
          内ボタンと同じ onclick 方式)、「他のツール」だけは Vue が持つ showSidebar を
-         @click でトグルする(ヘッダーの ☰ ボタンと同じ挙動)。アイコンカスタマイズは
-         ⚙️ 表示設定モーダル内の行に移設した(settingsCloseModal(); pfIconOpenModal();)。 -->
+         @click でトグルする(ヘッダーの ☰ ボタンと同じ挙動)。サイドバー(他のツール)は
+         🔗 関連ツールの一覧専用とし、ホーム画面アイコンのカスタマイズと⚙️ 表示設定は
+         このドックの「⚙️ 表示設定」ボタン→表示設定モーダル内の行(settingsCloseModal();
+         pfIconOpenModal();)からのみ到達できる、唯一の入り口として残す。 -->
     <nav class="site-dock" :aria-label="t('dock.ariaLabel')">
         <button type="button" onclick="pfOpenModal()">
             <span class="site-dock-icon">🗂️</span>
@@ -2889,10 +2883,6 @@
                     'sidebar.wings': '羽トラッカー',
                     'sidebar.transfer': 'データ引継ぎ',
                     'sidebar.info': '設定・更新情報',
-                    'sidebar.homeIcon': 'ホーム画面アイコン',
-                    'sidebar.customizeIcon': 'アイコンをカスタマイズ',
-                    'sidebar.settingsLabel': '表示設定',
-                    'sidebar.openSettings': '表示設定を開く',
                     'stats.header': '現在の状態',
                     'stats.active': '設置中',
                     'stats.warning': '期限間近',
@@ -2990,10 +2980,6 @@
                     'sidebar.wings': 'Wing Tracker',
                     'sidebar.transfer': 'Data Transfer',
                     'sidebar.info': 'Settings & Updates',
-                    'sidebar.homeIcon': 'Home Screen Icon',
-                    'sidebar.customizeIcon': 'Customize Icon',
-                    'sidebar.settingsLabel': 'Display Settings',
-                    'sidebar.openSettings': 'Open Display Settings',
                     'stats.header': 'Current Status',
                     'stats.active': 'Active',
                     'stats.warning': 'Expiring Soon',
