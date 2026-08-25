@@ -271,6 +271,8 @@
             max-width: 720px;
             margin: 0 auto;
         }
+        /* 🖥️ 共有デスクトップ標準：850px以上は960pxまで拡張（1カラムのまま、サイドバーは無し） */
+        @media (min-width: 850px) { .container { max-width: 960px; } }
 
         header {
             display: flex;
@@ -722,9 +724,13 @@
             flex-shrink: 0;
         }
 
+        /* 🧭 デスクトップでは常設のサイトドック「他のツール」ボタンが同じ役割を持つため、
+           ヘッダーのハンバーガーボタンは冗長として隠す。ただし .sidebar-close-btn は
+           ドックの「他のツール」ボタンから開いたドロワーを閉じる唯一のUI操作（背景クリック
+           以外の明示的な閉じ方）なので、幅に関わらず常に表示したままにする（隠すと閉じる
+           手段が無くなる）。 */
         @media (min-width: 850px) {
             .sidebar-toggle-btn { display: none; }
-            .sidebar-close-btn  { display: none; }
         }
 
         /* ═══ サイトドック（クイックアクセス、ハンバーガーサイドバーとは別に常設） ═══ */
