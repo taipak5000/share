@@ -312,6 +312,18 @@
             font-weight: 600;
         }
 
+        .calendar-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+        }
+        .calendar-collapse-caret {
+            font-size: 11px;
+            color: var(--text-gray);
+        }
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -1020,7 +1032,13 @@
          .icsの外部書き出しとは別に、いつ・どの設置物が消えるかをアプリ内で一目で
          確認できるようにする月グリッド。対象は保留中を除く掲示中の創作物のみ。 -->
     <div class="section-card">
-        <div class="section-header">📅 {{ t('calendar.header') }}</div>
+        <div class="section-header calendar-section-header" role="button" tabindex="0"
+             :aria-expanded="!calendarCollapsed" :aria-label="calendarCollapsed ? t('calendar.expand') : t('calendar.collapse')"
+             @click="toggleCalendarCollapsed" @keydown.enter="toggleCalendarCollapsed" @keydown.space.prevent="toggleCalendarCollapsed">
+            <span>📅 {{ t('calendar.header') }}</span>
+            <span class="calendar-collapse-caret">{{ calendarCollapsed ? '▶' : '▼' }}</span>
+        </div>
+        <template v-if="!calendarCollapsed">
         <div v-if="!hasAnyCalendarEvents" style="text-align: center; color: var(--text-gray); padding: 20px 0; font-size: 13px;">
             {{ t('calendar.emptyAll') }}
         </div>
@@ -1059,6 +1077,7 @@
                 </div>
             </div>
             <div v-else class="calendar-hint">{{ t('calendar.noSelection') }}</div>
+        </template>
         </template>
     </div>
 
@@ -2939,6 +2958,8 @@
                     'export.areaLabel': 'エリア',
                     'quickFilter.expiringSoonNotice': '期限間近の項目だけを表示しています',
                     'calendar.header': '消滅カレンダー',
+                    'calendar.collapse': 'カレンダーを折りたたむ',
+                    'calendar.expand': 'カレンダーを開く',
                     'calendar.prevMonth': '前の月',
                     'calendar.nextMonth': '次の月',
                     'calendar.today': '今月',
@@ -3037,6 +3058,8 @@
                     'export.areaLabel': 'Area',
                     'quickFilter.expiringSoonNotice': 'Showing only items expiring soon',
                     'calendar.header': 'Expiry Calendar',
+                    'calendar.collapse': 'Collapse calendar',
+                    'calendar.expand': 'Expand calendar',
                     'calendar.prevMonth': 'Previous month',
                     'calendar.nextMonth': 'Next month',
                     'calendar.today': 'This month',
@@ -3620,6 +3643,14 @@
                 selectedCalendarDate.value = null;
             };
 
+            // 折りたたみ状態はプロフィールごとの好みとして永続化する(検索条件やフィルタ
+            // と違い、開閉状態は次に開いたときも維持されていてほしい表示設定のため)。
+            const calendarCollapsed = ref(localStorage.getItem(nsKey('sky_share_calendar_collapsed')) === '1');
+            const toggleCalendarCollapsed = () => {
+                calendarCollapsed.value = !calendarCollapsed.value;
+                localStorage.setItem(nsKey('sky_share_calendar_collapsed'), calendarCollapsed.value ? '1' : '0');
+            };
+
             const calendarCells = computed(() => {
                 const monthStart = calendarMonthCursor.value;
                 const year = monthStart.getFullYear(), month = monthStart.getMonth();
@@ -3711,7 +3742,8 @@
                 earnedTitleList, titleChipList, titleToasts,
                 hasAnyCalendarEvents, calendarMonthLabel, calendarWeekdayLabels, calendarCells, calendarSeverityColor,
                 isCurrentMonthShown, goToPrevMonth, goToNextMonth, goToCurrentMonth,
-                selectedCalendarDate, selectCalendarDay, selectedDayItems, selectedCalendarDateLabel
+                selectedCalendarDate, selectCalendarDay, selectedDayItems, selectedCalendarDateLabel,
+                calendarCollapsed, toggleCalendarCollapsed
             };
         }
     }).mount('#app');
