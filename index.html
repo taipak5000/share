@@ -338,7 +338,7 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 10px;
             margin-bottom: 10px;
         }
@@ -363,7 +363,12 @@
             margin-bottom: 12px;
             border: 1px solid var(--border-color);
             box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
+
+        /* 📅➡📍 カレンダー日別詳細の「一覧で見る」からジャンプしてきた直後、対象カードを
+           一時的に視覚的に強調する(jumpToListItemが数秒後にクラスを外す)。 */
+        .item-card-highlighted { border-color: var(--accent-blue); box-shadow: 0 0 0 2px var(--accent-blue); }
 
         .row-flex {
             display: flex;
@@ -554,6 +559,9 @@
         .btn-susp { color: var(--text-gray); border: 1px solid var(--border-color); }
         .btn-ics { color: var(--accent-indigo-text); border: 1px solid rgba(94,92,230,0.2); }
         .btn-photo { color: var(--accent-green); border: 1px solid rgba(52,199,89,0.2); }
+        /* 📅➡📍 カレンダー日別詳細から一覧カードへジャンプするボタン。色は.btn-renewと
+           同じ青系(ナビゲーション用途)だが、意味の異なる別アクションのため専用クラスにする。 */
+        .btn-jump { color: var(--accent-blue); border: 1px solid rgba(0,122,255,0.2); }
 
         /* 📈⏰ 「期限間近」統計カードのクリック機能。他の2枠(設置中/保留・消滅)は
            これまで通りただの<div>のまま、この枠だけ<button>にして操作可能にする。 */
@@ -607,8 +615,9 @@
         .calendar-hint { text-align: center; font-size: 12px; color: var(--text-gray); }
         .calendar-detail-panel { background: var(--input-bg); border-radius: 8px; padding: 10px 12px; }
         .calendar-detail-header { font-size: 12.5px; font-weight: 700; color: var(--text-color); margin-bottom: 6px; }
-        .calendar-detail-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-color); padding: 3px 0; }
+        .calendar-detail-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-color); padding: 3px 0; flex-wrap: wrap; }
         .calendar-detail-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+        .calendar-detail-memo { flex: 1; min-width: 0; }
 
         /* ═══ サイドバーレイアウト（下部ドックの「他のツール」ドロワー専用。
            常設カラム表示は行わない＝全幅で.main-content-wrapperが1カラム表示） ═══ */
@@ -1023,8 +1032,12 @@
                 <div class="stat-val" style="color: var(--accent-orange);">{{ stats.warning }}</div>
             </button>
             <div class="stat-box">
-                <div style="font-size: 11px; color: var(--text-gray);">{{ t('stats.alert') }}</div>
-                <div class="stat-val" style="color: var(--accent-red);">{{ stats.alert }}</div>
+                <div style="font-size: 11px; color: var(--text-gray);">{{ t('stats.pending') }}</div>
+                <div class="stat-val" style="color: var(--text-gray);">{{ stats.pending }}</div>
+            </div>
+            <div class="stat-box">
+                <div style="font-size: 11px; color: var(--text-gray);">{{ t('stats.expired') }}</div>
+                <div class="stat-val" style="color: var(--accent-red);">{{ stats.expired }}</div>
             </div>
         </div>
     </div>
@@ -1052,6 +1065,13 @@
             <div style="text-align:center; margin-bottom:10px;">
                 <button type="button" class="btn-outline list-toolbar-btn" :disabled="isCurrentMonthShown" @click="goToCurrentMonth">🔵 {{ t('calendar.today') }}</button>
             </div>
+            <div class="area-row">
+                <span class="area-row-label">🗺️ {{ t('item.area') }}</span>
+                <select class="area-select" v-model="calendarAreaFilter">
+                    <option value="all">{{ t('calendar.areaFilterAll') }}</option>
+                    <option v-for="a in areaOptions" :key="a.value" :value="a.value">{{ optLabel(a) }}</option>
+                </select>
+            </div>
             <div class="calendar-grid">
                 <div v-for="wd in calendarWeekdayLabels" :key="wd" class="calendar-weekday">{{ wd }}</div>
                 <template v-for="(cell, idx) in calendarCells" :key="idx">
@@ -1074,7 +1094,9 @@
                 <div class="calendar-detail-header">📅 {{ selectedCalendarDateLabel }}</div>
                 <div v-for="di in selectedDayItems" :key="di.id" class="calendar-detail-item">
                     <span class="calendar-detail-dot" :style="{ background: 'var(--accent-blue-solid)' }"></span>
-                    <span>{{ di.memo && di.memo.trim() ? di.memo.trim() : t('export.noMemo') }}</span>
+                    <span class="calendar-detail-memo">{{ di.memo && di.memo.trim() ? di.memo.trim() : t('export.noMemo') }}</span>
+                    <span v-if="di.area" class="badge badge-gray">{{ areaLabel(di.area) }}</span>
+                    <button type="button" class="action-btn btn-jump" @click="jumpToListItem(di.id)">📋 {{ t('calendar.jumpToList') }}</button>
                 </div>
             </div>
             <div v-else class="calendar-hint">{{ t('calendar.noSelection') }}</div>
@@ -1136,7 +1158,8 @@
             {{ t('list.emptyFiltered') }}
         </div>
 
-        <div v-for="item in sortedPlacedItems" :key="item.id" class="item-card">
+        <div v-for="item in sortedPlacedItems" :key="item.id" :id="'item-card-' + item.id"
+             class="item-card" :class="{ 'item-card-highlighted': highlightedItemId === item.id }">
             <div class="row-flex">
                 <input v-if="bulkMode" type="checkbox" class="bulk-checkbox" :checked="isSelected(item.id)" :aria-label="t('bulk.selectItem')" @change="toggleSelected(item.id)">
                 <input type="text" v-model="item.memo" :placeholder="t('item.memoPlaceholder')">
@@ -2915,7 +2938,8 @@
                     'stats.header': '現在の状態',
                     'stats.active': '設置中',
                     'stats.warning': '期限間近',
-                    'stats.alert': '保留・消滅',
+                    'stats.pending': '保留中',
+                    'stats.expired': '期限切れ',
                     'list.header': '設置した創作物一覧',
                     'list.emptyAll': '現在管理している創作物は記憶されていません。<br>下のボタンから追加してください！',
                     'list.emptyFiltered': '選択したジャンル・検索条件に該当する設置物はありません。',
@@ -2990,7 +3014,9 @@
                     'calendar.legendPast': '消滅済み',
                     'calendar.legendSoon': '期限間近(3日以内)',
                     'calendar.legendLater': '掲示中',
-                    'calendar.noSelection': '日付をタップすると内訳が見られます'
+                    'calendar.noSelection': '日付をタップすると内訳が見られます',
+                    'calendar.areaFilterAll': 'すべて',
+                    'calendar.jumpToList': '一覧で見る'
                 },
                 en: {
                     'header.title': 'Creation Expiry Manager (14-Day)',
@@ -3012,7 +3038,8 @@
                     'stats.header': 'Current Status',
                     'stats.active': 'Active',
                     'stats.warning': 'Expiring Soon',
-                    'stats.alert': 'Suspended / Expired',
+                    'stats.pending': 'Suspended',
+                    'stats.expired': 'Expired',
                     'list.header': 'Placed Creations',
                     'list.emptyAll': 'No creations are being tracked yet.<br>Add one with the button below!',
                     'list.emptyFiltered': 'No placed items match the selected genre or search.',
@@ -3087,7 +3114,9 @@
                     'calendar.legendPast': 'Expired',
                     'calendar.legendSoon': 'Expiring soon (within 3 days)',
                     'calendar.legendLater': 'Active',
-                    'calendar.noSelection': 'Tap a date to see details'
+                    'calendar.noSelection': 'Tap a date to see details',
+                    'calendar.areaFilterAll': 'All',
+                    'calendar.jumpToList': 'View in list'
                 }
             };
 
@@ -3295,17 +3324,17 @@
             });
 
             const stats = computed(() => {
-                let active = 0; let warning = 0; let alertCount = 0;
+                let active = 0; let warning = 0; let pending = 0; let expired = 0;
                 placedItems.value.forEach(item => {
-                    if (item.isSuspended) { alertCount++; } 
+                    if (item.isSuspended) { pending++; }
                     else {
                         const days = getDaysLeft(item.placedDate);
-                        if (days < 0) alertCount++;
+                        if (days < 0) expired++;
                         else if (days <= 3) warning++;
                         else active++;
                     }
                 });
-                return { active, warning, alert: alertCount };
+                return { active, warning, pending, expired };
             });
 
             const formatDateForInput = (date) => {
@@ -3618,10 +3647,15 @@
                 return new Date(y, m - 1, d);
             };
 
+            // 🗺️ カレンダーのエリア絞り込み。項目自体のエリア(item.area)と同じ選択肢
+            // (areaOptions、''は「未設定」)を使い、'all'の間は絞り込まない。
+            const calendarAreaFilter = ref('all');
+
             const expiryByDate = computed(() => {
                 const map = {};
                 placedItems.value.forEach(item => {
                     if (item.isSuspended) return;
+                    if (calendarAreaFilter.value !== 'all' && (item.area || '') !== calendarAreaFilter.value) return;
                     const expiry = new Date(item.placedDate);
                     expiry.setDate(expiry.getDate() + 14);
                     expiry.setHours(0, 0, 0, 0);
@@ -3712,6 +3746,25 @@
                     lang.value === 'en' ? 'en-US' : 'ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short' }
                 );
             });
+            // 🗺️ エリアで絞り込むと選択中の日付に該当項目が無くなり得るため、月移動時と
+            // 同様に選択状態をリセットする。
+            watch(calendarAreaFilter, () => { selectedCalendarDate.value = null; });
+
+            // 📅➡📍 カレンダー日別詳細の「一覧で見る」。対象がジャンル絞り込み・メモ検索・
+            // 期限間近クイック絞り込みで一覧から隠れていても必ず見えるよう、既存の
+            // clearAllFiltersで絞り込みを解除してからスクロールし、対象カードを数秒間ハイライトする。
+            const highlightedItemId = ref(null);
+            let highlightTimer = null;
+            const jumpToListItem = (id) => {
+                clearAllFilters();
+                highlightedItemId.value = id;
+                if (highlightTimer) clearTimeout(highlightTimer);
+                highlightTimer = setTimeout(() => { highlightedItemId.value = null; }, 2500);
+                nextTick(() => {
+                    const el = document.getElementById('item-card-' + id);
+                    if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                });
+            };
 
             onMounted(() => {
                 // テーマの読み込み: 'light'/'dark'/'system'以外の値(未設定含む)は'system'扱い。
@@ -3763,7 +3816,8 @@
                 hasAnyCalendarEvents, calendarMonthLabel, calendarWeekdayLabels, calendarCells, calendarSeverityColor,
                 isCurrentMonthShown, goToPrevMonth, goToNextMonth, goToCurrentMonth,
                 selectedCalendarDate, selectCalendarDay, selectedDayItems, selectedCalendarDateLabel,
-                calendarCollapsed, toggleCalendarCollapsed
+                calendarCollapsed, toggleCalendarCollapsed,
+                calendarAreaFilter, highlightedItemId, jumpToListItem
             };
         }
     }).mount('#app');
