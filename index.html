@@ -707,6 +707,9 @@
             background: rgba(0, 122, 255, 0.18);
         }
 
+        /* 精度に不安がある新機能であることを示す小さな注記（例: 楽譜づくり） */
+        .tool-badge-test { font-size: 9px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.3px; }
+
         .sidebar-toggle-btn {
             background: var(--stat-box-bg, #fdfdfd);
             border: 1px solid var(--border-color);
@@ -1004,6 +1007,9 @@
                 </a>
                 <a href="https://taipak5000.github.io/wings/" class="sidebar-nav-link">
                     🪽 {{ t('sidebar.wings') }}
+                </a>
+                <a href="https://taipak5000.github.io/tai-score/" class="sidebar-nav-link">
+                    <span class="tool-badge-test">test</span>🎵 {{ t('sidebar.score') }}
                 </a>
                 <a href="https://taipak5000.github.io/tai-transfer/" class="sidebar-nav-link">
                     🔄 {{ t('sidebar.transfer') }}
@@ -2949,6 +2955,7 @@
                     'sidebar.starCandle': '星のキャンドル計算機',
                     'sidebar.companion': '精霊同行ツール',
                     'sidebar.wings': '羽トラッカー',
+                    'sidebar.score': '楽譜づくり',
                     'sidebar.transfer': 'データ引継ぎ',
                     'sidebar.info': '設定・更新情報',
                     'stats.header': '現在の状態',
@@ -3049,6 +3056,7 @@
                     'sidebar.starCandle': 'Star Candle Calculator',
                     'sidebar.companion': 'Spirit Companion Tool',
                     'sidebar.wings': 'Wing Tracker',
+                    'sidebar.score': 'Sheet Music Maker',
                     'sidebar.transfer': 'Data Transfer',
                     'sidebar.info': 'Settings & Updates',
                     'stats.header': 'Current Status',
