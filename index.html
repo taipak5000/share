@@ -780,6 +780,17 @@
         .site-dock button:active { background: var(--border-color); }
         .site-dock .site-dock-icon { font-size: 20px; line-height: 1; }
         .site-dock .site-dock-label { font-size: 10px; font-weight: 700; color: var(--text-gray); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        /* 🔴 ダッシュボードボタンの「まもなく終了」インジケーター（自分の設置物の期限間近、
+           または季節/イベント終了が3日以内のときだけ表示する小さな赤丸）。新規fetchは行わず、
+           既存のstats.warning(自分の設置物)とpfDashCache(開いた時に読み込み済みのダッシュボード
+           データ)のどちらかを流用するだけ(dockUrgentEnding computed参照)。 */
+        .site-dock .site-dock-icon-wrap { position: relative; display: inline-flex; }
+        .site-dock .dock-urgent-dot {
+            display: none; position: absolute; top: -2px; right: -6px;
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--accent-red); border: 1.5px solid var(--card-bg);
+        }
+        .site-dock .dock-urgent-dot.show { display: block; }
 
         [v-cloak] { display: none; }
     </style>
@@ -1271,7 +1282,10 @@
             <span class="site-dock-label">{{ activeProfileName }}</span>
         </button>
         <button type="button" onclick="pfDashOpen()">
-            <span class="site-dock-icon">🗓️</span>
+            <span class="site-dock-icon-wrap">
+                <span class="site-dock-icon">🗓️</span>
+                <span class="dock-urgent-dot" :class="{ show: dockUrgentEnding }" aria-hidden="true" :title="t('dock.urgentTitle')"></span>
+            </span>
             <span class="site-dock-label">{{ t('dock.dashboard') }}</span>
         </button>
         <button type="button" @click="showSidebar = !showSidebar">
@@ -2114,10 +2128,33 @@
                 if (!pfDashCache) return;
                 var body = document.getElementById('dashBody');
                 if (body) body.innerHTML = pfDashBuildHtml(pfDashCache);
+                if (window.pfDashNotifyUrgentUpdate) window.pfDashNotifyUrgentUpdate();
             }, 1000);
         }
         function pfDashStopTimer() {
             if (pfDashTimer) { clearInterval(pfDashTimer); pfDashTimer = null; }
+        }
+        // 🔴 サイトドックの「ダッシュボード」ボタンに表示する、終了間近インジケーター（小さな赤丸）の
+        // うち、季節/イベント終了(条件b)側の判定。新規fetchは一切行わず、pfDashCache（実際に
+        // ダッシュボードを一度開いて読み込み済みのデータ）を流用するだけ。pfDashCacheが無い
+        // （未読み込み・fetch失敗）場合はfalse＝安全側に倒す(wings/emote/companion等の同名
+        // インジケーターと同じ考え方)。もう一方の条件(自分の設置物の期限間近=stats.warning)との
+        // ORはVue側のdockUrgentEnding computedで行う。
+        var DOCK_URGENT_DAYS = 3;
+        function pfDashUrgentEndDates() {
+            var data = pfDashCache;
+            if (!data) return [];
+            var dates = [];
+            if (data.season && data.season.name && data.season.endDate) dates.push(new Date(data.season.endDate));
+            pfDashActiveScheduledEvents(data.eventSchedule).forEach(function (ev) { dates.push(new Date(ev.end)); });
+            return dates;
+        }
+        function pfDashHasUrgentEnding() {
+            var now = new Date();
+            return pfDashUrgentEndDates().some(function (end) {
+                var ms = end - now;
+                return ms > 0 && ms <= DOCK_URGENT_DAYS * 86400000;
+            });
         }
         function pfDashOpen() {
             var overlay = document.getElementById('dashModalOverlay');
@@ -2130,6 +2167,7 @@
                 pfDashCache = data;
                 body.innerHTML = pfDashBuildHtml(data);
                 pfDashStartTimer();
+                if (window.pfDashNotifyUrgentUpdate) window.pfDashNotifyUrgentUpdate();
             }).catch(function (e) {
                 console.error('pfDashOpen', e);
                 body.innerHTML = '<div class="dash-empty">' + t('dash.loadFailed') + '</div>';
@@ -2878,6 +2916,7 @@
         window.pfDisplayName = pfDisplayName;
         window.pfDashOpen = pfDashOpen;
         window.pfDashClose = pfDashClose;
+        window.pfDashHasUrgentEnding = pfDashHasUrgentEnding;
         window.pfSwitchProfile = pfSwitchProfile;
         window.pfStartRename = pfStartRename;
         window.pfStartDelete = pfStartDelete;
@@ -3026,6 +3065,7 @@
                     'dock.ariaLabel': 'クイックメニュー',
                     'dock.profile': 'プロフィール',
                     'dock.dashboard': 'ダッシュボード',
+                    'dock.urgentTitle': '期限間近の項目、または季節/イベントの終了が近づいています',
                     'dock.otherTools': '他のツール',
                     'dock.settings': '表示設定',
                     'titles.header': '称号',
@@ -3132,6 +3172,7 @@
                     'dock.ariaLabel': 'Quick menu',
                     'dock.profile': 'Profile',
                     'dock.dashboard': 'Dashboard',
+                    'dock.urgentTitle': 'An item is expiring soon, or a season/event is ending soon',
                     'dock.otherTools': 'Other Tools',
                     'dock.settings': 'Settings',
                     'titles.header': 'Titles',
@@ -3413,6 +3454,22 @@
                     }
                 });
                 return { active, warning, pending, expired };
+            });
+
+            // 🔴 サイトドックの「ダッシュボード」ボタンに表示する、終了間近インジケーター。
+            // (a) 自分の設置物に期限間近(残り0〜3日、保留中は除く)のものがある = 既存のstats.warning、
+            // (b) 既にダッシュボードを開いて読み込み済みのデータで、季節/イベント終了が3日以内
+            // (Vue管理外のIIFE側にあるpfDashHasUrgentEnding()を流用、新規fetchはしない)
+            // のどちらかを満たせば表示する。(b)はpfDashCacheの更新(ダッシュボードを開いた時・
+            // モーダル表示中の1秒タイマー)がVueの外側で起きるため、dashCacheTickという
+            // 素通しの参照カウンタをwindow.pfDashNotifyUrgentUpdate経由で叩いてもらい、
+            // このcomputedの再評価トリガーにする(companionのdashNowと同じ考え方)。
+            const dashCacheTick = ref(0);
+            window.pfDashNotifyUrgentUpdate = () => { dashCacheTick.value++; };
+            const dockUrgentEnding = computed(() => {
+                dashCacheTick.value;
+                if (stats.value.warning > 0) return true;
+                return window.pfDashHasUrgentEnding ? window.pfDashHasUrgentEnding() : false;
             });
 
             const formatDateForInput = (date) => {
@@ -3904,7 +3961,7 @@
             return {
                 isDarkMode, themeMode, toggleTheme, themeAriaLabel, showSidebar,
                 lang, t, optLabel, toggleLang, activeProfileName,
-                placedItems, sortedPlacedItems, stats, getDaysLeft, getExpiryDateString, formatDateForInput,
+                placedItems, sortedPlacedItems, stats, dockUrgentEnding, getDaysLeft, getExpiryDateString, formatDateForInput,
                 updateItemDate, addItem, removeItem, rePlaceItem, suspendItem, confirmDeleteId,
                 genreOptions, filterOptions, activeGenres, isGenreFilterActive, toggleGenreFilter, isGenreActive, toggleItemGenre, searchQuery,
                 hasActiveFilters, clearAllFilters,
