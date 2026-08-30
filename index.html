@@ -1142,20 +1142,37 @@
 
         <div v-if="bulkMode" class="bulk-bar">
             <span>{{ t('bulk.selectedCount', { n: selectedIds.length }) }}</span>
-            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <template v-if="confirmBulkDelete">
+                <span class="pf-row-confirm-text">{{ t('bulk.deleteConfirm', { n: selectedIds.length }) }}</span>
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                    <button type="button" class="action-btn btn-del" @click="bulkDelete">{{ t('actions.delete') }}</button>
+                    <button type="button" class="action-btn btn-susp" @click="confirmBulkDelete = false">{{ t('actions.cancel') }}</button>
+                </div>
+            </template>
+            <div v-else style="display:flex; gap:6px; flex-wrap:wrap;">
                 <button type="button" class="pf-icon-btn" @click="selectAllVisible">{{ allVisibleSelected ? t('bulk.deselectAll') : t('bulk.selectAll') }}</button>
                 <button type="button" class="pf-add-btn" :disabled="selectedIds.length === 0" @click="bulkRePlace">♻️ {{ t('bulk.rePlaceSelected') }}</button>
+                <button type="button" class="pf-icon-btn" :disabled="selectedIds.length === 0" @click="bulkSuspend">📦 {{ t('bulk.suspendSelected') }}</button>
+                <button type="button" class="pf-icon-btn pf-row-btn-danger" :disabled="selectedIds.length === 0" @click="confirmBulkDelete = true">🗑️ {{ t('bulk.deleteSelected') }}</button>
             </div>
         </div>
 
         <input type="text" v-model="searchQuery" class="search-input" :placeholder="t('list.searchPlaceholder')" :aria-label="t('list.searchPlaceholder')">
 
+        <div class="area-row">
+            <span class="area-row-label">🗺️ {{ t('item.area') }}</span>
+            <select class="area-select" v-model="listAreaFilter">
+                <option value="all">{{ t('list.areaFilterAll') }}</option>
+                <option v-for="a in areaOptions" :key="a.value" :value="a.value">{{ optLabel(a) }}</option>
+            </select>
+        </div>
+
         <div class="filter-row">
             <button v-for="f in filterOptions" :key="f.value" class="filter-btn"
-                    :class="{ active: activeFilter === f.value }"
-                    :style="activeFilter === f.value ? { background: f.color } : {}"
-                    :aria-pressed="activeFilter === f.value"
-                    @click="activeFilter = f.value">
+                    :class="{ active: isGenreFilterActive(f.value) }"
+                    :style="isGenreFilterActive(f.value) ? { background: f.color } : {}"
+                    :aria-pressed="isGenreFilterActive(f.value)"
+                    @click="toggleGenreFilter(f.value)">
                 {{ optLabel(f) }}
             </button>
             <button type="button" class="btn-outline list-toolbar-btn" :disabled="!hasActiveFilters" @click="clearAllFilters">🧹 {{ t('list.clearFilters') }}</button>
@@ -2969,9 +2986,10 @@
                     'stats.expired': '期限切れ',
                     'list.header': '設置した創作物一覧',
                     'list.emptyAll': '現在管理している創作物は記憶されていません。<br>下のボタンから追加してください！',
-                    'list.emptyFiltered': '選択したジャンル・検索条件に該当する設置物はありません。',
+                    'list.emptyFiltered': '選択したジャンル・エリア・検索条件に該当する設置物はありません。',
                     'list.searchPlaceholder': '🔍 メモを検索',
                     'list.clearFilters': 'フィルターを全てクリア',
+                    'list.areaFilterAll': 'すべて',
                     'item.memoPlaceholder': '設置場所や内容 (例: 花鳥郷 魔法のお店前)',
                     'item.placedDate': '設置日',
                     'item.expiryDate': '自動消滅日',
@@ -2992,10 +3010,13 @@
                     'export.noMemo': '(メモなし)',
                     'export.genreLabel': 'ジャンル',
                     'export.statusLabel': '状態',
-                    'bulk.enter': '選択して再設置',
+                    'bulk.enter': '選択して一括操作',
                     'bulk.exit': '選択解除',
                     'bulk.selectedCount': '{n}件選択中',
                     'bulk.rePlaceSelected': '選択項目を今日再設置',
+                    'bulk.suspendSelected': '選択項目を保留',
+                    'bulk.deleteSelected': '選択項目を削除',
+                    'bulk.deleteConfirm': '選択した{n}件を削除しますか？メモ・ジャンル・日付もすべて削除されます。',
                     'bulk.selectAll': 'すべて選択',
                     'bulk.deselectAll': '選択を解除',
                     'bulk.selectItem': 'この項目を選択',
@@ -3071,9 +3092,10 @@
                     'stats.expired': 'Expired',
                     'list.header': 'Placed Creations',
                     'list.emptyAll': 'No creations are being tracked yet.<br>Add one with the button below!',
-                    'list.emptyFiltered': 'No placed items match the selected genre or search.',
+                    'list.emptyFiltered': 'No placed items match the selected genre, area, or search.',
                     'list.searchPlaceholder': '🔍 Search memo',
                     'list.clearFilters': 'Clear all filters',
+                    'list.areaFilterAll': 'All',
                     'item.memoPlaceholder': 'Where you placed it (e.g. Hidden Forest, in front of the magic shop)',
                     'item.placedDate': 'Placed on',
                     'item.expiryDate': 'Auto-expires',
@@ -3094,10 +3116,13 @@
                     'export.noMemo': '(No memo)',
                     'export.genreLabel': 'Genre',
                     'export.statusLabel': 'Status',
-                    'bulk.enter': 'Select & Re-place',
+                    'bulk.enter': 'Select for Bulk Actions',
                     'bulk.exit': 'Cancel selection',
                     'bulk.selectedCount': '{n} selected',
                     'bulk.rePlaceSelected': 'Re-place selected today',
+                    'bulk.suspendSelected': 'Suspend selected',
+                    'bulk.deleteSelected': 'Delete selected',
+                    'bulk.deleteConfirm': 'Delete the {n} selected item(s)? Their memo, genre, and dates will all be removed too.',
                     'bulk.selectAll': 'Select all',
                     'bulk.deselectAll': 'Deselect all',
                     'bulk.selectItem': 'Select this item',
@@ -3272,7 +3297,19 @@
                 { value: 'スペース', label: '🌌 スペース', labelEn: '🌌 Space', color: '#5e5ce6' }
             ];
             const filterOptions = [{ value: 'all', label: 'すべて', labelEn: 'All', color: 'var(--accent-gray-solid)' }, ...genreOptions];
-            const activeFilter = ref('all');
+            // 🏷️ 絞り込みピルは複数選択可(item.genresが配列なのと同じ考え方)。選択中の値を
+            // 保持するSetが空 = 「すべて」(絞り込みなし)。'all'ピルは他の選択をすべて解除する
+            // 特別扱いのクリアボタンとして機能する(単一選択時のactiveFilter==='all'相当)。
+            const activeGenres = ref(new Set());
+            const isGenreFilterActive = (value) => {
+                if (value === 'all') return activeGenres.value.size === 0;
+                return activeGenres.value.has(value);
+            };
+            const toggleGenreFilter = (value) => {
+                if (value === 'all') { activeGenres.value.clear(); return; }
+                if (activeGenres.value.has(value)) activeGenres.value.delete(value);
+                else activeGenres.value.add(value);
+            };
 
             // 🗺️ エリア(マップ)タグ: ジャンルとは別に、ゲーム内のどのエリアに設置したかを
             // 単一選択で記録するための任意項目(未設定可)。他ツール(wings)のエリア表記
@@ -3293,6 +3330,11 @@
                 const opt = areaOptions.find(o => o.value === value);
                 return opt ? optLabel(opt) : '';
             };
+
+            // 🗺️ 一覧のエリア絞り込み。カレンダーのcalendarAreaFilterと同じareaOptions・
+            // 同じ'all'=絞り込みなしの考え方を、一覧の絞り込みにも適用する(別々の状態として
+            // 保持し、カレンダーと一覧のどちらかを変えてももう一方には影響しない)。
+            const listAreaFilter = ref('all');
 
             // 🔍 メモ欄のフリーテキスト検索(ジャンル絞り込みと併用可能)
             const searchQuery = ref('');
@@ -3325,8 +3367,14 @@
 
             const filteredPlacedItems = computed(() => {
                 let list = placedItems.value;
-                if (activeFilter.value === '') list = list.filter(item => !item.genres || item.genres.length === 0);
-                else if (activeFilter.value !== 'all') list = list.filter(item => item.genres && item.genres.includes(activeFilter.value));
+                if (activeGenres.value.size > 0) {
+                    const selected = [...activeGenres.value];
+                    list = list.filter(item => selected.some(g => {
+                        if (g === '') return !item.genres || item.genres.length === 0;
+                        return item.genres && item.genres.includes(g);
+                    }));
+                }
+                if (listAreaFilter.value !== 'all') list = list.filter(item => (item.area || '') === listAreaFilter.value);
                 if (expiringSoonOnly.value) {
                     list = list.filter(item => !item.isSuspended && getDaysLeft(item.placedDate) >= 0 && getDaysLeft(item.placedDate) <= 3);
                 }
@@ -3336,9 +3384,10 @@
             });
 
             // 🧹 ジャンル絞り込み・メモ検索・期限間近クイック絞り込みを一括で初期状態に戻す
-            const hasActiveFilters = computed(() => activeFilter.value !== 'all' || searchQuery.value.trim() !== '' || expiringSoonOnly.value);
+            const hasActiveFilters = computed(() => activeGenres.value.size > 0 || listAreaFilter.value !== 'all' || searchQuery.value.trim() !== '' || expiringSoonOnly.value);
             const clearAllFilters = () => {
-                activeFilter.value = 'all';
+                activeGenres.value.clear();
+                listAreaFilter.value = 'all';
                 searchQuery.value = '';
                 expiringSoonOnly.value = false;
             };
@@ -3517,7 +3566,7 @@
             const selectedIds = ref([]);
             const toggleBulkMode = () => {
                 bulkMode.value = !bulkMode.value;
-                if (!bulkMode.value) selectedIds.value = [];
+                if (!bulkMode.value) { selectedIds.value = []; confirmBulkDelete.value = false; }
             };
             const isSelected = (id) => selectedIds.value.includes(id);
             const toggleSelected = (id) => {
@@ -3543,6 +3592,28 @@
                 expiringSoonOnly.value = false;
             };
 
+            // ☑️📦🗑️ 一括保留・一括削除。単一項目用のsuspendItem/removeItemをそのまま選択件数分
+            // 繰り返し呼ぶだけで、判定ロジックの二重管理をしない(bulkRePlaceが単一項目の
+            // 更新処理をそのまま流用しているのと同じ考え方)。削除は破壊的操作のため、
+            // 単一項目のconfirmDeleteIdと同じ「インライン確認→実行/取消」パターンを
+            // confirmBulkDeleteといういち状態で一括バー側に持たせる。
+            const confirmBulkDelete = ref(false);
+            const bulkSuspend = () => {
+                selectedIds.value.forEach(id => suspendItem(id));
+                selectedIds.value = [];
+                bulkMode.value = false;
+                expiringSoonOnly.value = false;
+            };
+            const bulkDelete = () => {
+                // removeItem(id)はselectedIdsからもidを取り除く副作用があるため、
+                // 反復中に配列が変化しても取りこぼさないよう複製してから回す。
+                [...selectedIds.value].forEach(id => removeItem(id));
+                selectedIds.value = [];
+                bulkMode.value = false;
+                confirmBulkDelete.value = false;
+                expiringSoonOnly.value = false;
+            };
+
             // 📈⏰ 「期限間近」統計カードをクリックした時のショートカット。該当項目だけに
             // 絞り込んだうえで選択モードに入り、対象を選択済みにしてそのまま既存の一括
             // 「選択項目を今日再設置」フローに接続する(新しい一括更新の仕組みは作らず、
@@ -3553,7 +3624,8 @@
                     .filter(item => !item.isSuspended && getDaysLeft(item.placedDate) >= 0 && getDaysLeft(item.placedDate) <= 3)
                     .map(item => item.id);
                 if (targetIds.length === 0) return;
-                activeFilter.value = 'all';
+                activeGenres.value.clear();
+                listAreaFilter.value = 'all';
                 searchQuery.value = '';
                 expiringSoonOnly.value = true;
                 bulkMode.value = true;
@@ -3834,10 +3906,11 @@
                 lang, t, optLabel, toggleLang, activeProfileName,
                 placedItems, sortedPlacedItems, stats, getDaysLeft, getExpiryDateString, formatDateForInput,
                 updateItemDate, addItem, removeItem, rePlaceItem, suspendItem, confirmDeleteId,
-                genreOptions, filterOptions, activeFilter, isGenreActive, toggleItemGenre, searchQuery,
+                genreOptions, filterOptions, activeGenres, isGenreFilterActive, toggleGenreFilter, isGenreActive, toggleItemGenre, searchQuery,
                 hasActiveFilters, clearAllFilters,
-                areaOptions, areaLabel,
+                areaOptions, areaLabel, listAreaFilter,
                 bulkMode, selectedIds, toggleBulkMode, isSelected, toggleSelected, allVisibleSelected, selectAllVisible, bulkRePlace,
+                confirmBulkDelete, bulkSuspend, bulkDelete,
                 expiringSoonOnly, focusExpiringSoon, listSectionRef,
                 exportItemIcs, exportListText, exportAllIcs, activeItemsForIcs,
                 handlePhotoFile, removePhoto,
