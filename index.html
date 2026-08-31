@@ -814,15 +814,9 @@
     <header>
         <h1>{{ t('header.title') }}</h1>
         <div style="display: flex; gap: 8px; align-items: center;">
-            <button class="sidebar-toggle-btn" @click="showSidebar = !showSidebar">☰ {{ t('sidebar.toggleBtn') }}</button>
             <button class="theme-toggle-btn" @click="toggleLang">
-                <span v-if="lang === 'ja'">🇯🇵 日本語</span>
-                <span v-else>🇺🇸 English</span>
-            </button>
-            <button class="theme-toggle-btn" @click="toggleTheme" :aria-label="themeAriaLabel()">
-                <span v-if="themeMode === 'dark'">🌙 {{ t('theme.dark') }}</span>
-                <span v-else-if="themeMode === 'light'">☀️ {{ t('theme.light') }}</span>
-                <span v-else>🖥️ {{ t('theme.system') }}</span>
+                <span v-if="lang === 'ja'">EN</span>
+                <span v-else>日本語</span>
             </button>
         </div>
     </header>
