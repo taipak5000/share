@@ -3279,21 +3279,28 @@
                 if (saved) {
                     try {
                         const decoded = JSON.parse(saved);
-                        if (decoded.placedItems) {
-                            placedItems.value = decoded.placedItems.map(item => {
-                                const { genre, genres, ...rest } = item;
-                                return {
-                                    ...rest,
-                                    placedDate: new Date(item.placedDate),
-                                    isSuspended: item.isSuspended || false,
-                                    // 旧データ(単一ジャンル)は配列に変換して引き継ぐ
-                                    genres: genres || (genre ? [genre] : []),
-                                    // 🗺️ エリアタグ・📷 サムネイルは後から追加した任意項目のため、
-                                    // これらを持たない旧データでは明示的に空値を補う。
-                                    area: rest.area || '',
-                                    thumbnail: rest.thumbnail || null
-                                };
-                            });
+                        if (Array.isArray(decoded.placedItems)) {
+                            // ⚠️ 配列内の1件が壊れていても(例: null混入)、そのエントリだけを
+                            // 読み飛ばし、残りの正常なデータは維持する(1件の異常でreduce全体が
+                            // 例外を投げ、外側catchで全消去→自動保存されてしまうのを防ぐ)。
+                            placedItems.value = decoded.placedItems.reduce((acc, item) => {
+                                if (!item || typeof item !== 'object') return acc;
+                                try {
+                                    const { genre, genres, ...rest } = item;
+                                    acc.push({
+                                        ...rest,
+                                        placedDate: new Date(item.placedDate),
+                                        isSuspended: item.isSuspended || false,
+                                        // 旧データ(単一ジャンル)は配列に変換して引き継ぐ
+                                        genres: genres || (genre ? [genre] : []),
+                                        // 🗺️ エリアタグ・📷 サムネイルは後から追加した任意項目のため、
+                                        // これらを持たない旧データでは明示的に空値を補う。
+                                        area: rest.area || '',
+                                        thumbnail: rest.thumbnail || null
+                                    });
+                                } catch (e) { /* このエントリのみ読み飛ばす */ }
+                                return acc;
+                            }, []);
                         }
                     } catch (e) {
                         placedItems.value = [];
@@ -3314,9 +3321,15 @@
             };
 
             const getDaysLeft = (placedDate) => {
-                const today = new Date(); today.setHours(0,0,0,0);
-                const expiry = new Date(placedDate); expiry.setDate(expiry.getDate() + 14); expiry.setHours(0,0,0,0);
-                return Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+                // ⏰ ローカル日付同士の差をミリ秒で割ると、その間にDST(サマータイム)の
+                // 切り替えを挟む地域では実経過時間が24hの整数倍からずれ、日数が1日
+                // ずれることがある。カレンダー上の年月日をUTC基準の値に変換してから
+                // 差を取ることで、DSTの影響を受けない純粋な日数差にする。
+                const today = new Date();
+                const expiry = new Date(placedDate); expiry.setDate(expiry.getDate() + 14);
+                const todayUTC = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+                const expiryUTC = Date.UTC(expiry.getFullYear(), expiry.getMonth(), expiry.getDate());
+                return Math.ceil((expiryUTC - todayUTC) / (1000 * 60 * 60 * 24));
             };
 
             const getExpiryDateString = (placedDate) => {
@@ -3480,7 +3493,6 @@
                 if (item) {
                     const [year, month, day] = dateString.split('-').map(Number);
                     item.placedDate = new Date(year, month - 1, day);
-                    item.isSuspended = false;
                 }
             };
 
