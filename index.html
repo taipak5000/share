@@ -825,7 +825,7 @@
 
     <div class="pf-modal-overlay" id="pfModalOverlay">
         <div class="pf-modal-card">
-            <h3 data-i18n="pf.title">🗂️ プロフィール（保存枠）</h3>
+            <h3 data-i18n="pf.title">プロフィール（保存枠）</h3>
             <div id="pfModalBody"></div>
             <div class="pf-add-row">
                 <input type="text" id="pfNewProfileInput" class="pf-input" data-i18n-placeholder="pf.newPlaceholder" placeholder="新しいプロフィール名" maxlength="20">
@@ -834,19 +834,19 @@
             <p class="pf-hint" data-i18n="pf.hint">プロフィールを切り替えると、登録した創作物の一覧がそのプロフィール専用の保存内容に切り替わります。サブアカウントなど複数アカウントをお持ちの方にご利用いただけます。</p>
             <div class="pf-currency-section">
                 <div class="pf-currency-title" onclick="pfToggleCurrency()">
-                    <span data-i18n="pf.currencyTitle">💰 所持通貨</span>
+                    <span data-i18n="pf.currencyTitle">所持通貨</span>
                     <span class="pf-currency-toggle-label" id="pfCurrencyToggleLabel">閉じる ▲</span>
                 </div>
                 <div id="pfCurrencyBody"></div>
             </div>
-            <button type="button" class="pf-icon-btn" style="width:100%; margin-top:10px; padding:8px;" data-i18n="pf.backupBtn" onclick="dmOpenModal()">💾 データのバックアップ・復元・削除</button>
+            <button type="button" class="pf-icon-btn" style="width:100%; margin-top:10px; padding:8px;" data-i18n="pf.backupBtn" onclick="dmOpenModal()">データのバックアップ・復元・削除</button>
             <button type="button" class="pf-close-btn" data-i18n="common.close" onclick="pfCloseModal()">閉じる</button>
         </div>
     </div>
 
     <div class="pf-modal-overlay" id="dashModalOverlay">
         <div class="pf-modal-card">
-            <h3 data-i18n="dash.title">🗓️ 今日・今週・今月</h3>
+            <h3 data-i18n="dash.title">今日・今週・今月</h3>
             <div id="dashBody"><p class="pf-hint" data-i18n="dash.loading">読み込み中…</p></div>
             <button type="button" class="pf-close-btn" data-i18n="common.close" onclick="pfDashClose()">閉じる</button>
         </div>
@@ -855,14 +855,14 @@
     <!-- ▸ データのバックアップ・復元・削除モーダル -->
     <div class="pf-modal-overlay" id="dmModalOverlay">
         <div class="pf-modal-card">
-            <h3 data-i18n="dm.title">💾 データのバックアップ・復元・削除</h3>
+            <h3 data-i18n="dm.title">データのバックアップ・復元・削除</h3>
             <p class="pf-hint" style="margin-top:0;" data-i18n="dm.hint">このブラウザに保存されている taipak5000.github.io 系ツール（item・wings・companion 等）のデータをまとめて書き出し・読み込み・削除できます。全プロフィール分がまとめて対象になります。</p>
-            <button type="button" class="pf-add-btn" style="width:100%; margin-bottom:8px;" data-i18n="dm.exportBtn" onclick="dmExport()">⬇️ データをエクスポート（ファイルに保存）</button>
+            <button type="button" class="pf-add-btn" style="width:100%; margin-bottom:8px;" data-i18n="dm.exportBtn" onclick="dmExport()">データをエクスポート（ファイルに保存）</button>
             <input type="file" id="dmImportFile" accept="application/json" style="display:none" onchange="dmImportFileSelected(event)">
-            <button type="button" class="pf-icon-btn" style="width:100%; margin-bottom:8px; padding:8px;" data-i18n="dm.importBtn" onclick="document.getElementById('dmImportFile').click()">⬆️ ファイルからインポート</button>
+            <button type="button" class="pf-icon-btn" style="width:100%; margin-bottom:8px; padding:8px;" data-i18n="dm.importBtn" onclick="document.getElementById('dmImportFile').click()">ファイルからインポート</button>
             <div id="dmImportConfirmArea"></div>
             <div id="dmWipeArea">
-                <button type="button" class="pf-icon-btn pf-row-btn-danger" style="width:100%; padding:8px;" data-i18n="dm.wipeBtn" onclick="dmStartWipe()">🗑️ 全データを削除</button>
+                <button type="button" class="pf-icon-btn pf-row-btn-danger" style="width:100%; padding:8px;" data-i18n="dm.wipeBtn" onclick="dmStartWipe()">全データを削除</button>
             </div>
             <div id="dmStatus" class="pf-hint"></div>
             <button type="button" class="pf-close-btn" data-i18n="common.close" onclick="dmCloseModal()">閉じる</button>
@@ -872,7 +872,7 @@
     <!-- ▸ ホーム画面アイコンカスタマイズモーダル -->
     <div class="pf-modal-overlay" id="iconCustomModal">
         <div class="pf-modal-card">
-            <h3 data-i18n="icon.title">🎨 ホーム画面アイコンをカスタマイズ</h3>
+            <h3 data-i18n="icon.title">ホーム画面アイコンをカスタマイズ</h3>
 
             <p class="pf-hint" style="margin-top:0;" data-i18n-html="icon.hint">
                 スマホの「ホーム画面に追加」をしたときのアイコンを、好きな絵文字や画像に変更できます。<br>
@@ -880,8 +880,8 @@
             </p>
 
             <div style="display:flex; gap:8px; margin:14px 0;">
-                <button type="button" class="pf-icon-btn" id="iconModeEmojiBtn" onclick="pfIconSetMode('emoji')" style="flex:1; padding:8px;" data-i18n="icon.modeEmoji">😀 絵文字</button>
-                <button type="button" class="pf-icon-btn" id="iconModeImageBtn" onclick="pfIconSetMode('image')" style="flex:1; padding:8px;" data-i18n="icon.modeImage">🖼️ 画像</button>
+                <button type="button" class="pf-icon-btn" id="iconModeEmojiBtn" onclick="pfIconSetMode('emoji')" style="flex:1; padding:8px;" data-i18n="icon.modeEmoji">絵文字</button>
+                <button type="button" class="pf-icon-btn" id="iconModeImageBtn" onclick="pfIconSetMode('image')" style="flex:1; padding:8px;" data-i18n="icon.modeImage">画像</button>
             </div>
 
             <div id="iconEmojiPanel">
@@ -903,7 +903,7 @@
                     <button type="button" onclick="pfIconPickSwatch('#32ADE6')" style="width:32px; height:32px; border-radius:50%; background:#32ADE6; border:2px solid transparent;"></button>
                     <button type="button" onclick="pfIconPickSwatch('#48484A')" style="width:32px; height:32px; border-radius:50%; background:#48484A; border:2px solid transparent;"></button>
                 </div>
-                <p style="font-size:11.5px; color:var(--text-gray); margin:0 0 6px;" data-i18n="icon.swatchHint">🎨 タップして好きな色を自由に選ぶこともできます</p>
+                <p style="font-size:11.5px; color:var(--text-gray); margin:0 0 6px;" data-i18n="icon.swatchHint">タップして好きな色を自由に選ぶこともできます</p>
                 <input type="color" id="iconBgColorInput" value="#007AFF" oninput="pfIconUpdatePreview()" style="width:100%; height:40px; border:none; border-radius:10px; background:none;">
             </div>
 
@@ -926,11 +926,11 @@
     <!-- ▸ ⚙️ 表示設定モーダル（ダークモード・キーボードショートカット） -->
     <div class="pf-modal-overlay" id="settingsModalOverlay">
         <div class="pf-modal-card">
-            <h3 data-i18n="settings.title">⚙️ 表示設定</h3>
+            <h3 data-i18n="settings.title">表示設定</h3>
 
             <div class="pf-currency-section" style="margin-top:0; padding-top:0; border-top:none;">
                 <p class="pf-currency-title" style="cursor:default;">
-                    <span data-i18n="settings.themeSection">🌙 表示</span>
+                    <span data-i18n="settings.themeSection">表示</span>
                 </p>
                 <div class="pf-row">
                     <span class="pf-row-name" data-i18n="settings.darkModeLabel">テーマ</span>
@@ -940,7 +940,7 @@
 
             <div class="pf-currency-section">
                 <p class="pf-currency-title" style="cursor:default;">
-                    <span data-i18n="settings.shortcutsSection">⌨️ キーボードショートカット</span>
+                    <span data-i18n="settings.shortcutsSection">キーボードショートカット</span>
                 </p>
                 <div class="pf-row">
                     <span class="pf-row-name" data-i18n="settings.shortcutsEnableLabel">ショートカットを有効にする</span>
@@ -955,17 +955,17 @@
 
             <div class="pf-currency-section">
                 <p class="pf-currency-title" style="cursor:default;">
-                    <span data-i18n="settings.iconSection">📱 ホーム画面アイコン</span>
+                    <span data-i18n="settings.iconSection">ホーム画面アイコン</span>
                 </p>
                 <div class="pf-row">
                     <span class="pf-row-name" data-i18n="settings.customizeIconLabel">ホーム画面アイコン</span>
-                    <button type="button" class="pf-icon-btn" data-i18n="settings.customizeIconBtn" onclick="settingsCloseModal(); pfIconOpenModal();">🎨 カスタマイズ</button>
+                    <button type="button" class="pf-icon-btn" data-i18n="settings.customizeIconBtn" onclick="settingsCloseModal(); pfIconOpenModal();">カスタマイズ</button>
                 </div>
             </div>
 
             <div class="pf-currency-section">
                 <p class="pf-currency-title" style="cursor:default;">
-                    <span data-i18n="settings.langSection">🌐 言語 / Language</span>
+                    <span data-i18n="settings.langSection">言語 / Language</span>
                 </p>
                 <div class="pf-row">
                     <span class="pf-row-name" data-i18n="settings.langLabel">言語</span>
@@ -988,7 +988,7 @@
         <!-- ═══ サイドバー ═══ -->
         <aside class="sidebar section-card" :class="{ 'sidebar-open': showSidebar }">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
-                <div class="sidebar-section-label" style="margin-bottom: 0;">🔗 {{ t('sidebar.relatedTools') }}</div>
+                <div class="sidebar-section-label" style="margin-bottom: 0;">{{ t('sidebar.relatedTools') }}</div>
                 <button class="sidebar-close-btn" @click="showSidebar = false">×</button>
             </div>
             <nav>
@@ -1032,7 +1032,7 @@
         <div class="main-content-wrapper">
 
         <div class="section-card">
-        <div class="section-header">📈 {{ t('stats.header') }}</div>
+        <div class="section-header">{{ t('stats.header') }}</div>
         <div class="stats-grid">
             <div class="stat-box">
                 <div style="font-size: 11px; color: var(--text-gray);">{{ t('stats.active') }}</div>
@@ -1063,7 +1063,7 @@
         <div class="section-header calendar-section-header" role="button" tabindex="0"
              :aria-expanded="!calendarCollapsed" :aria-label="calendarCollapsed ? t('calendar.expand') : t('calendar.collapse')"
              @click="toggleCalendarCollapsed" @keydown.enter="toggleCalendarCollapsed" @keydown.space.prevent="toggleCalendarCollapsed">
-            <span>📅 {{ t('calendar.header') }}</span>
+            <span>{{ t('calendar.header') }}</span>
             <span class="calendar-collapse-caret">{{ calendarCollapsed ? '▶' : '▼' }}</span>
         </div>
         <template v-if="!calendarCollapsed">
@@ -1077,7 +1077,7 @@
                 <button type="button" class="pf-icon-btn calendar-nav-btn" :aria-label="t('calendar.nextMonth')" @click="goToNextMonth">›</button>
             </div>
             <div style="text-align:center; margin-bottom:10px;">
-                <button type="button" class="btn-outline list-toolbar-btn" :disabled="isCurrentMonthShown" @click="goToCurrentMonth">🔵 {{ t('calendar.today') }}</button>
+                <button type="button" class="btn-outline list-toolbar-btn" :disabled="isCurrentMonthShown" @click="goToCurrentMonth">{{ t('calendar.today') }}</button>
             </div>
             <div class="area-row">
                 <span class="area-row-label">🗺️ {{ t('item.area') }}</span>
@@ -1105,12 +1105,12 @@
                 <span><span class="calendar-legend-dot" style="background:var(--accent-green);"></span>{{ t('calendar.legendLater') }}</span>
             </div>
             <div v-if="selectedCalendarDate && selectedDayItems.length" class="calendar-detail-panel">
-                <div class="calendar-detail-header">📅 {{ selectedCalendarDateLabel }}</div>
+                <div class="calendar-detail-header">{{ selectedCalendarDateLabel }}</div>
                 <div v-for="di in selectedDayItems" :key="di.id" class="calendar-detail-item">
                     <span class="calendar-detail-dot" :style="{ background: 'var(--accent-blue-solid)' }"></span>
                     <span class="calendar-detail-memo">{{ di.memo && di.memo.trim() ? di.memo.trim() : t('export.noMemo') }}</span>
                     <span v-if="di.area" class="badge badge-gray">{{ areaLabel(di.area) }}</span>
-                    <button type="button" class="action-btn btn-jump" @click="jumpToListItem(di.id)">📋 {{ t('calendar.jumpToList') }}</button>
+                    <button type="button" class="action-btn btn-jump" @click="jumpToListItem(di.id)">{{ t('calendar.jumpToList') }}</button>
                 </div>
             </div>
             <div v-else class="calendar-hint">{{ t('calendar.noSelection') }}</div>
@@ -1120,7 +1120,7 @@
 
     <div class="section-card">
         <div class="section-header" style="display: flex; align-items: center; justify-content: space-between;">
-            <span>🏆 {{ t('titles.header') }}</span>
+            <span>{{ t('titles.header') }}</span>
             <span class="titles-count">{{ t('titles.countTemplate', { earned: earnedTitleList.length, total: titleChipList.length }) }}</span>
         </div>
         <div class="title-chip-row">
@@ -1132,17 +1132,17 @@
     </div>
 
     <div class="section-card" ref="listSectionRef">
-        <div class="section-header">📍 {{ t('list.header') }}</div>
+        <div class="section-header">{{ t('list.header') }}</div>
 
         <div class="list-toolbar">
-            <button type="button" class="btn-outline list-toolbar-btn" @click="exportListText">📤 {{ t('export.btn') }}</button>
-            <button type="button" class="btn-outline list-toolbar-btn" :disabled="activeItemsForIcs.length === 0" @click="exportAllIcs">📅 {{ t('actions.exportAllIcs') }}</button>
-            <button type="button" class="btn-outline list-toolbar-btn" :class="{ active: bulkMode }" :aria-pressed="bulkMode" @click="toggleBulkMode">☑️ {{ bulkMode ? t('bulk.exit') : t('bulk.enter') }}</button>
+            <button type="button" class="btn-outline list-toolbar-btn" @click="exportListText">{{ t('export.btn') }}</button>
+            <button type="button" class="btn-outline list-toolbar-btn" :disabled="activeItemsForIcs.length === 0" @click="exportAllIcs">{{ t('actions.exportAllIcs') }}</button>
+            <button type="button" class="btn-outline list-toolbar-btn" :class="{ active: bulkMode }" :aria-pressed="bulkMode" @click="toggleBulkMode">{{ bulkMode ? t('bulk.exit') : t('bulk.enter') }}</button>
         </div>
 
         <div v-if="expiringSoonOnly" class="bulk-bar quick-filter-bar">
-            <span>⏰ {{ t('quickFilter.expiringSoonNotice') }}</span>
-            <button type="button" class="pf-icon-btn" @click="clearAllFilters">🧹 {{ t('list.clearFilters') }}</button>
+            <span>{{ t('quickFilter.expiringSoonNotice') }}</span>
+            <button type="button" class="pf-icon-btn" @click="clearAllFilters">{{ t('list.clearFilters') }}</button>
         </div>
 
         <div v-if="bulkMode" class="bulk-bar">
@@ -1180,7 +1180,7 @@
                     @click="toggleGenreFilter(f.value)">
                 {{ optLabel(f) }}
             </button>
-            <button type="button" class="btn-outline list-toolbar-btn" :disabled="!hasActiveFilters" @click="clearAllFilters">🧹 {{ t('list.clearFilters') }}</button>
+            <button type="button" class="btn-outline list-toolbar-btn" :disabled="!hasActiveFilters" @click="clearAllFilters">{{ t('list.clearFilters') }}</button>
         </div>
 
         <div v-if="placedItems.length === 0" style="text-align: center; color: var(--text-gray); padding: 30px 0; font-size: 13px;" v-html="t('list.emptyAll')">
@@ -1338,12 +1338,12 @@
             ja: {
                 'pf.defaultName': 'メイン',
                 'pf.barSuffix': '&nbsp;に切替中（タップで切替）',
-                'pf.title': '🗂️ プロフィール（保存枠）',
+                'pf.title': 'プロフィール（保存枠）',
                 'pf.newPlaceholder': '新しいプロフィール名',
                 'pf.addBtn': '追加',
                 'pf.hint': 'プロフィールを切り替えると、登録した創作物の一覧がそのプロフィール専用の保存内容に切り替わります。サブアカウントなど複数アカウントをお持ちの方にご利用いただけます。',
-                'pf.currencyTitle': '💰 所持通貨',
-                'pf.backupBtn': '💾 データのバックアップ・復元・削除',
+                'pf.currencyTitle': '所持通貨',
+                'pf.backupBtn': 'データのバックアップ・復元・削除',
                 'pf.colorTitle': 'アカウントカラー',
                 'pf.colorReset': 'カラーを初期値に戻す',
                 'pf.deleteConfirm': '「{name}」を削除しますか？このプロフィールの保存データも削除されます。',
@@ -1362,7 +1362,7 @@
                 'pf.titleSource.share': '創作物管理ツール',
                 'pf.titleSource.nomacan': 'ノマキャン計算機',
                 'pf.titleSource.starcandle': '星のキャンドル計算機',
-                'dash.title': '🗓️ 今日・今週・今月',
+                'dash.title': '今日・今週・今月',
                 'dash.tooltip': '今日・今週・今月ダッシュボード',
                 'dash.redShard': '赤闇',
                 'dash.blackShard': '黒闇',
@@ -1394,11 +1394,11 @@
                 'dash.loading': '読み込み中…',
                 'dash.loadFailed': '読み込みに失敗しました',
                 'dash.daySuffix': '日 ',
-                'dm.title': '💾 データのバックアップ・復元・削除',
+                'dm.title': 'データのバックアップ・復元・削除',
                 'dm.hint': 'このブラウザに保存されている taipak5000.github.io 系ツール（item・wings・companion 等）のデータをまとめて書き出し・読み込み・削除できます。全プロフィール分がまとめて対象になります。',
-                'dm.exportBtn': '⬇️ データをエクスポート（ファイルに保存）',
-                'dm.importBtn': '⬆️ ファイルからインポート',
-                'dm.wipeBtn': '🗑️ 全データを削除',
+                'dm.exportBtn': 'データをエクスポート（ファイルに保存）',
+                'dm.importBtn': 'ファイルからインポート',
+                'dm.wipeBtn': '全データを削除',
                 'dm.exportDone': '書き出しました（{count}件のキー）。',
                 'dm.importParseError': 'ファイルの読み込みに失敗しました（JSON形式ではありません）。',
                 'dm.importFormatError': 'このツールで書き出したファイルではないようです。',
@@ -1408,13 +1408,13 @@
                 'dm.wipeConfirm': 'すべてのプロフィール・所持アイテム・お気に入り・精霊ツリーの進捗など、このブラウザに保存されている全データを削除します。この操作は取り消せません。先にエクスポートしておくことをおすすめします。本当に削除しますか？',
                 'dm.wipeExecBtn': '完全に削除する',
                 'dm.wipeDone': '削除しました。ページを再読み込みします…',
-                'icon.title': '🎨 ホーム画面アイコンをカスタマイズ',
+                'icon.title': 'ホーム画面アイコンをカスタマイズ',
                 'icon.hint': 'スマホの「ホーム画面に追加」をしたときのアイコンを、好きな絵文字や画像に変更できます。<br><b>追加する前に</b>設定してください。追加した後に変更しても、既に追加済みのアイコンは自動更新されません（変更したい場合は一度削除して追加し直してください）。',
-                'icon.modeEmoji': '😀 絵文字',
-                'icon.modeImage': '🖼️ 画像',
+                'icon.modeEmoji': '絵文字',
+                'icon.modeImage': '画像',
                 'icon.emojiLabel': '絵文字',
                 'icon.bgColorLabel': '背景色',
-                'icon.swatchHint': '🎨 タップして好きな色を自由に選ぶこともできます',
+                'icon.swatchHint': 'タップして好きな色を自由に選ぶこともできます',
                 'icon.uploadLabel': '画像をアップロード',
                 'icon.previewLabel': 'プレビュー',
                 'icon.saveBtn': '保存して適用',
@@ -1431,20 +1431,20 @@
                 'common.openArrow': '開く ▼',
                 'footer.disclaimer': 'このサイトはSky 星を紡ぐ子どもたちの非公式ファンサイトです。thatgamecompanyは一切関与していません。',
                 'footer.createdBy': '作成・ご意見:',
-                'footer.settingsLink': '⚙️ 設定・更新情報・クレジット・プライバシーポリシー',
-                'settings.title': '⚙️ 表示設定',
-                'settings.themeSection': '🌙 表示',
+                'footer.settingsLink': '設定・更新情報・クレジット・プライバシーポリシー',
+                'settings.title': '表示設定',
+                'settings.themeSection': '表示',
                 'settings.langLabel': '言語',
-                'settings.langSection': '🌐 言語 / Language',
+                'settings.langSection': '言語 / Language',
                 'settings.darkModeLabel': 'テーマ',
                 'theme.dark': 'ダーク',
                 'theme.light': 'ライト',
                 'theme.system': 'システム',
                 'theme.ariaLabel': '現在のテーマ: {current}。クリックで{next}に切替',
-                'settings.iconSection': '📱 ホーム画面アイコン',
+                'settings.iconSection': 'ホーム画面アイコン',
                 'settings.customizeIconLabel': 'ホーム画面アイコン',
-                'settings.customizeIconBtn': '🎨 カスタマイズ',
-                'settings.shortcutsSection': '⌨️ キーボードショートカット',
+                'settings.customizeIconBtn': 'カスタマイズ',
+                'settings.shortcutsSection': 'キーボードショートカット',
                 'settings.shortcutsEnableLabel': 'ショートカットを有効にする',
                 'settings.shortcutsOn': '✅ 有効',
                 'settings.shortcutsOff': '⛔ 無効',
@@ -1455,11 +1455,11 @@
             en: {
                 'pf.defaultName': 'Main',
                 'pf.barSuffix': ' active (tap to switch)',
-                'pf.title': '🗂️ Profiles',
+                'pf.title': 'Profiles',
                 'pf.newPlaceholder': 'New profile name',
                 'pf.addBtn': 'Add',
                 'pf.hint': 'Switching profiles swaps the whole list of registered creations for that profile’s own saved data. Handy if you have a sub-account or multiple accounts.',
-                'pf.currencyTitle': '💰 Owned Currency',
+                'pf.currencyTitle': 'Owned Currency',
                 'pf.backupBtn': 'Backup / restore / erase data',
                 'pf.colorTitle': 'Account color',
                 'pf.colorReset': 'Reset color to default',
@@ -1479,7 +1479,7 @@
                 'pf.titleSource.share': 'Creation Manager',
                 'pf.titleSource.nomacan': 'Nomacan Calculator',
                 'pf.titleSource.starcandle': 'Star Candle Calculator',
-                'dash.title': '🗓️ Today / This Week / This Month',
+                'dash.title': 'Today / This Week / This Month',
                 'dash.tooltip': 'Today / this week / this month',
                 'dash.redShard': 'Red Shard',
                 'dash.blackShard': 'Black Shard',
@@ -1511,11 +1511,11 @@
                 'dash.loading': 'Loading…',
                 'dash.loadFailed': 'Failed to load',
                 'dash.daySuffix': 'd ',
-                'dm.title': '💾 Backup / Restore / Erase Data',
+                'dm.title': 'Backup / Restore / Erase Data',
                 'dm.hint': 'Back up, restore, or erase all locally-stored data for the taipak5000.github.io tool suite (item, wings, companion, etc.) at once. This covers all profiles together.',
-                'dm.exportBtn': '⬇️ Export data (save to file)',
-                'dm.importBtn': '⬆️ Import from file',
-                'dm.wipeBtn': '🗑️ Erase all data',
+                'dm.exportBtn': 'Export data (save to file)',
+                'dm.importBtn': 'Import from file',
+                'dm.wipeBtn': 'Erase all data',
                 'dm.exportDone': 'Exported ({count} keys).',
                 'dm.importParseError': 'Failed to read file (not valid JSON).',
                 'dm.importFormatError': 'This doesn\'t look like a file exported from this tool.',
@@ -1525,13 +1525,13 @@
                 'dm.wipeConfirm': 'This will erase ALL locally stored data (profiles, owned items, favorites, spirit tree progress, etc.) across the whole tool suite. This cannot be undone. Exporting a backup first is recommended. Really erase everything?',
                 'dm.wipeExecBtn': 'Erase everything',
                 'dm.wipeDone': 'Erased. Reloading…',
-                'icon.title': '🎨 Customize Home Screen Icon',
+                'icon.title': 'Customize Home Screen Icon',
                 'icon.hint': 'You can change the icon used when adding this site to your phone\'s home screen. Set this up before adding it — changing it afterward won\'t update an icon that\'s already been added (remove and re-add it if you want to change it later).',
-                'icon.modeEmoji': '😀 Emoji',
-                'icon.modeImage': '🖼️ Image',
+                'icon.modeEmoji': 'Emoji',
+                'icon.modeImage': 'Image',
                 'icon.emojiLabel': 'Emoji',
                 'icon.bgColorLabel': 'Background Color',
-                'icon.swatchHint': '🎨 Or tap below to pick any color freely',
+                'icon.swatchHint': 'Or tap below to pick any color freely',
                 'icon.uploadLabel': 'Upload Image',
                 'icon.previewLabel': 'Preview',
                 'icon.saveBtn': 'Save & Apply',
@@ -1548,20 +1548,20 @@
                 'common.openArrow': 'Open ▼',
                 'footer.disclaimer': 'This is an unofficial fan site for Sky: Children of the Light. thatgamecompany is not involved in any way.',
                 'footer.createdBy': 'Created by / feedback:',
-                'footer.settingsLink': '⚙️ Settings / What\'s New / Credits / Privacy Policy',
-                'settings.title': '⚙️ Display Settings',
-                'settings.themeSection': '🌙 Display',
+                'footer.settingsLink': 'Settings / What\'s New / Credits / Privacy Policy',
+                'settings.title': 'Display Settings',
+                'settings.themeSection': 'Display',
                 'settings.langLabel': 'Language',
-                'settings.langSection': '🌐 言語 / Language',
+                'settings.langSection': '言語 / Language',
                 'settings.darkModeLabel': 'Theme',
                 'theme.dark': 'Dark',
                 'theme.light': 'Light',
                 'theme.system': 'System',
                 'theme.ariaLabel': 'Current theme: {current}. Click to switch to {next}.',
-                'settings.iconSection': '📱 Home Screen Icon',
+                'settings.iconSection': 'Home Screen Icon',
                 'settings.customizeIconLabel': 'Home Screen Icon',
-                'settings.customizeIconBtn': '🎨 Customize',
-                'settings.shortcutsSection': '⌨️ Keyboard Shortcuts',
+                'settings.customizeIconBtn': 'Customize',
+                'settings.shortcutsSection': 'Keyboard Shortcuts',
                 'settings.shortcutsEnableLabel': 'Enable keyboard shortcuts',
                 'settings.shortcutsOn': '✅ On',
                 'settings.shortcutsOff': '⛔ Off',
@@ -1780,7 +1780,7 @@
             pfApplyThemeColor(active.color);
             var bar = document.getElementById('pfBar');
             if (bar) {
-                bar.innerHTML = '<span class="pf-bar-text" onclick="pfOpenModal()">🗂️ <b>' + pfEscapeHtml(pfDisplayName(active)) + '</b>' + t('pf.barSuffix') + '</span>' +
+                bar.innerHTML = '<span class="pf-bar-text" onclick="pfOpenModal()"><b>' + pfEscapeHtml(pfDisplayName(active)) + '</b>' + t('pf.barSuffix') + '</span>' +
                     '<button type="button" class="pf-dash-btn" onclick="pfDashOpen()" title="' + t('dash.tooltip') + '">🗓️</button>';
             }
             // 🗂️ サイトドックの「プロフィール」ボタンのラベルは Vue が管理する reactive な
@@ -3020,7 +3020,7 @@
                     'list.header': '設置した創作物一覧',
                     'list.emptyAll': '現在管理している創作物は記憶されていません。<br>下のボタンから追加してください！',
                     'list.emptyFiltered': '選択したジャンル・エリア・検索条件に該当する設置物はありません。',
-                    'list.searchPlaceholder': '🔍 メモを検索',
+                    'list.searchPlaceholder': 'メモを検索',
                     'list.clearFilters': 'フィルターを全てクリア',
                     'list.areaFilterAll': 'すべて',
                     'item.memoPlaceholder': '設置場所や内容 (例: 花鳥郷 魔法のお店前)',
@@ -3127,7 +3127,7 @@
                     'list.header': 'Placed Creations',
                     'list.emptyAll': 'No creations are being tracked yet.<br>Add one with the button below!',
                     'list.emptyFiltered': 'No placed items match the selected genre, area, or search.',
-                    'list.searchPlaceholder': '🔍 Search memo',
+                    'list.searchPlaceholder': 'Search memo',
                     'list.clearFilters': 'Clear all filters',
                     'list.areaFilterAll': 'All',
                     'item.memoPlaceholder': 'Where you placed it (e.g. Hidden Forest, in front of the magic shop)',
@@ -3980,7 +3980,7 @@
     <span data-i18n="footer.disclaimer">このサイトはSky 星を紡ぐ子どもたちの非公式ファンサイトです。thatgamecompanyは一切関与していません。</span><br>
     <span data-i18n="footer.createdBy">作成・ご意見:</span> <a href="https://x.com/Skyzztai" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: none; font-weight: bold;">@Skyzztai</a><br>
     <span style="color: var(--text-gray); font-size: 12px; margin-top: 4px; display: inline-block;">
-        <a href="https://taipak5000.github.io/tai-info/" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);" data-i18n="footer.settingsLink">⚙️ 設定・更新情報・クレジット・プライバシーポリシー</a>
+        <a href="https://taipak5000.github.io/tai-info/" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);" data-i18n="footer.settingsLink">設定・更新情報・クレジット・プライバシーポリシー</a>
     </span>
 </footer>
 
