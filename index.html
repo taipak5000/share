@@ -965,6 +965,11 @@
                補間させる（サイドバー等のCSSアニメーションと同じくコンポジタ駆動で軽い） */
             transition: background-color 0.32s var(--ios-ease);
         }
+        /* display:none→flex と同一タスク内でのtransformの書き換えではCSS Transitionsが
+           発火しない（比較対象となる「変化前スタイル」が存在しないため）。animationは
+           display復帰の直後かどうかに関係なく必ず0%→100%を再生するので、開く瞬間の
+           フェードイン/スライドアップはtransitionではなくanimationで実装する */
+        .pf-modal-overlay.is-visible { animation: iosFade 0.32s var(--ios-ease); }
         .pf-modal-overlay.is-closing { display: flex; pointer-events: none; }
         .pf-modal-card {
             width: 100%; max-width: 100%; max-height: 88vh; max-height: 88dvh;
@@ -977,8 +982,11 @@
                物理アニメーション中(.is-dragging/.js-anim)だけJSの毎フレーム書き換えと
                衝突しないよう打ち消す */
             transition: transform 0.32s var(--ios-ease);
+            /* 開く瞬間はdisplay:none→flexと同期してtransformが書き換わるためtransitionが
+               効かない。サイドバー(iosSlideIn)と同じくanimationで初期表示を担う */
+            animation: sheetSlideUp 0.32s var(--ios-ease);
         }
-        .pf-modal-card.is-dragging, .pf-modal-card.js-anim { transition: none; }
+        .pf-modal-card.is-dragging, .pf-modal-card.js-anim { transition: none; animation: none; }
         .pf-modal-card::before {
             content: ''; position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
             width: 36px; height: 5px; border-radius: 3px; background: rgba(60, 60, 67, 0.3);
@@ -999,6 +1007,7 @@
         }
         @keyframes iosSheetIn { from { opacity: 0; transform: scale(0.94) translateY(8px); filter: blur(6px); } to { opacity: 1; transform: none; filter: blur(0); } }
         @keyframes iosFade { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes sheetSlideUp { from { transform: translate3d(0, 100%, 0); } to { transform: translate3d(0, 0, 0); } }
 
         /* ── タブバー（サイトドック）のすりガラス。上端の細い光沢線＝光が当たるマテリアルの縁 ── */
         .site-dock {
