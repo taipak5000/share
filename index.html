@@ -2441,7 +2441,16 @@
             var overlay = document.getElementById('dashModalOverlay');
             if (overlay) overlay.classList.add('is-visible');
             var body = document.getElementById('dashBody');
-            if (pfDashCache) { body.innerHTML = pfDashBuildHtml(pfDashCache); pfDashStartTimer(); return; }
+            if (pfDashCache) {
+                // 🍎 開き始める分にはbody.innerHTMLの再構築を待たせない。#dashBodyには
+                // 前回開いた時の内容がまだ残っているため、シートの高さ計算はそれを
+                // 元に行われ、開き始めた直後の1フレームで最新の内容に差し替わる。
+                requestAnimationFrame(function () {
+                    body.innerHTML = pfDashBuildHtml(pfDashCache);
+                    pfDashStartTimer();
+                });
+                return;
+            }
             body.innerHTML = '<p class="pf-hint">' + t('dash.loading') + '</p>';
             if (!pfDashLoading) pfDashLoading = pfDashLoadData();
             pfDashLoading.then(function (data) {
@@ -2778,10 +2787,15 @@
         function pfOpenModal() {
             pfEditingId = null;
             pfDeletingId = null;
-            pfRenderModal();
-            pfRenderCurrency();
+            // 🍎 横断検索と同じく、シートを開き始めるのを先にする。以前はプロフィール
+            // 一覧の描画(称号の横断集計を含み重い)を待ってから開いていたため、
+            // タップしてから動き出すまでに一拍の間があった。
             var overlay = document.getElementById('pfModalOverlay');
             if (overlay) overlay.classList.add('is-visible');
+            requestAnimationFrame(function () {
+                pfRenderModal();
+                pfRenderCurrency();
+            });
         }
         function pfCloseModal() {
             pfEditingId = null;
