@@ -818,15 +818,21 @@
             --fill-tertiary: rgba(118, 118, 128, 0.12);
             --separator: rgba(60, 60, 67, 0.29);
             --group-secondary-bg: #f2f2f7;
-            --glass-bg: rgba(249, 249, 249, 0.78);
+            --glass-bg: rgba(249, 249, 249, 0.72);
+            --glass-edge: rgba(255, 255, 255, 0.5);   /* 光が当たるマテリアルの上端 */
+            --edge-shadow: rgba(0, 0, 0, 0.08);        /* スクロールエッジ効果の影 */
             --nav-h: 52px;
+            color-scheme: light;
         }
         [data-theme="dark"] {
             --fill-secondary: rgba(120, 120, 128, 0.32);
             --fill-tertiary: rgba(118, 118, 128, 0.24);
             --separator: rgba(84, 84, 88, 0.65);
             --group-secondary-bg: #2c2c2e;
-            --glass-bg: rgba(28, 28, 30, 0.72);
+            --glass-bg: rgba(28, 28, 30, 0.68);
+            --glass-edge: rgba(255, 255, 255, 0.08);
+            --edge-shadow: rgba(0, 0, 0, 0.55);
+            color-scheme: dark;
         }
 
         html { -webkit-text-size-adjust: 100%; }
@@ -835,10 +841,12 @@
                 "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Segoe UI", Roboto, sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            font-optical-sizing: auto;
             padding-top: 0;
         }
         button, input, select, textarea { font-family: inherit; }
-        button { -webkit-tap-highlight-color: transparent; }
+        /* 300msのタップ遅延を排除し、押した瞬間(:active)に反応させる */
+        button, a, label, [role="button"] { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
         *:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
         ::selection { background: rgba(0, 122, 255, 0.25); }
 
@@ -851,24 +859,32 @@
             background: var(--glass-bg);
             -webkit-backdrop-filter: blur(25px) saturate(180%);
             backdrop-filter: blur(25px) saturate(180%);
-            border-bottom: 0.5px solid transparent;
-            transition: border-color 0.25s var(--ios-ease);
+            border-bottom: 0;
         }
-        html.nav-collapsed header.nav-bar { border-bottom-color: var(--separator); }
+        /* スクロールエッジ効果: 1pxの区切り線の代わりに、コンテンツがバーの下へ潜り込む境目だけを
+           短いグラデーションで柔らかく分離する。--nav-progress(0→1)はスクロール量に連続的に追従し、
+           しきい値で急に切り替わらない。 */
+        header.nav-bar::after {
+            content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 14px; pointer-events: none;
+            background: linear-gradient(to bottom, var(--edge-shadow), transparent);
+            opacity: var(--nav-progress, 0);
+        }
+        /* すりガラス上の文字は「ヴァイブランシー」: 平坦なグレーではなく、やや重めのウェイトと
+           わずかな字間で可読性を確保する */
         .nav-title-small {
-            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-            font-size: 17px; font-weight: 600; letter-spacing: -0.4px; color: var(--text-color);
-            opacity: 0; transition: opacity 0.2s var(--ios-ease);
+            position: absolute; left: 50%; top: 50%;
+            transform: translate(-50%, calc(-50% + (1 - var(--nav-progress, 0)) * 6px));
+            font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.01em; color: var(--text-color);
+            opacity: var(--nav-progress, 0);
             pointer-events: none; white-space: nowrap; max-width: 60%; overflow: hidden; text-overflow: ellipsis;
         }
-        html.nav-collapsed .nav-title-small { opacity: 1; }
+        /* ラージタイトル: 大きい文字ほどトラッキングは負に、行送りは詰める(サイズ別タイポグラフィ)。
+           狭い画面では日本語タイトルが不自然な位置で折り返さないよう可変サイズにする */
         .large-title {
-            /* 狭い画面では日本語タイトルが不自然な位置で折り返さないよう可変サイズにする */
-            font-size: clamp(26px, 7.6vw, 34px); font-weight: 700; letter-spacing: 0.37px; line-height: 1.2;
-            margin: 8px 8px 16px; color: var(--text-color);
-            transition: opacity 0.2s var(--ios-ease);
+            font-size: clamp(1.625rem, 7.6vw, 2.125rem); font-weight: 700; letter-spacing: -0.02em; line-height: 1.1;
+            margin: 0.5rem 8px 1rem; color: var(--text-color);
+            opacity: calc(1 - var(--nav-progress, 0));
         }
-        html.nav-collapsed .large-title { opacity: 0; }
         .theme-toggle-btn {
             background: var(--fill-tertiary); border: none; color: var(--accent-blue);
             font-weight: 600; font-size: 15px; padding: 6px 12px; border-radius: 999px;
@@ -954,51 +970,65 @@
             transition: transform 0.18s var(--ios-ease), background 0.2s var(--ios-ease), opacity 0.2s var(--ios-ease),
                         box-shadow 0.2s var(--ios-ease), color 0.2s var(--ios-ease), border-color 0.2s var(--ios-ease);
         }
+        /* 押した瞬間(pointer-down)に反応する。押下は100msの短い応答、離したときは通常の緩やかな復帰 */
         .btn-blue:active, .btn-outline:active, .pf-icon-btn:active, .pf-add-btn:active, .pf-close-btn:active, .action-btn:active,
         .filter-btn:active, .genre-btn:active, .theme-toggle-btn:active, .pf-dash-btn:active, .stat-box-clickable:active,
-        .calendar-day.has-events:active, .item-thumb-remove:active { transform: scale(0.96); }
+        .calendar-day.has-events:active, .item-thumb-remove:active {
+            transform: scale(0.96); transition-duration: 100ms; transition-timing-function: ease-out;
+        }
         .btn-blue:active, .pf-add-btn:active { opacity: 0.85; }
 
-        /* ── モーダル → ボトムシート（ハンドル付き・下スワイプで閉じる） ── */
-        .pf-modal-overlay { background: rgba(0, 0, 0, 0.4); align-items: flex-end; justify-content: center; padding: 0; }
-        .pf-modal-overlay.is-visible { animation: iosFade 0.25s var(--ios-ease); }
+        /* ── モーダル → 流体ボトムシート ──
+           モバイル幅ではCSSアニメーションを使わず、JS側のスプリング(減衰比/応答時間で指定)が
+           transformを駆動する: 指に1:1で追従し、離した瞬間の速度を引き継ぎ、途中で掴んで反転できる。
+           スクリムの濃さ(--sheet-progress)もシート位置に連動する。 */
+        .pf-modal-overlay {
+            background: rgba(0, 0, 0, calc(0.4 * var(--sheet-progress, 1)));
+            align-items: flex-end; justify-content: center; padding: 0;
+        }
+        .pf-modal-overlay.is-closing { display: flex; pointer-events: none; }
         .pf-modal-card {
             width: 100%; max-width: 100%; max-height: 88vh; max-height: 88dvh;
             border-radius: 20px 20px 0 0;
             padding: 30px 20px calc(20px + env(safe-area-inset-bottom));
-            box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.25), inset 0 1px 0 var(--glass-edge);
             position: relative; overscroll-behavior: contain;
-            animation: iosSheetUp 0.38s var(--ios-ease);
+            touch-action: pan-y; will-change: transform;
         }
         .pf-modal-card::before {
             content: ''; position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
             width: 36px; height: 5px; border-radius: 3px; background: rgba(60, 60, 67, 0.3);
         }
         [data-theme="dark"] .pf-modal-card::before { background: rgba(235, 235, 245, 0.3); }
-        .pf-modal-card h3 { text-align: center; font-size: 17px; font-weight: 600; letter-spacing: -0.4px; margin: 0 0 16px; }
-        .pf-modal-card.is-dragging { animation: none; transition: none; }
-        .pf-modal-card.is-snapping { transition: transform 0.3s var(--ios-ease); }
+        .pf-modal-card h3 { text-align: center; font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 16px; }
+        .pf-modal-card.is-dragging { cursor: grabbing; user-select: none; }
         @media (min-width: 850px) {
-            .pf-modal-overlay { align-items: center; padding: 24px; }
-            .pf-modal-card { max-width: 440px; border-radius: 18px; padding: 24px 22px; max-height: 84vh; animation: iosSheetIn 0.3s var(--ios-ease); }
+            .pf-modal-overlay { align-items: center; padding: 24px; background: rgba(0, 0, 0, 0.4); }
+            .pf-modal-overlay.is-visible { animation: iosFade 0.25s var(--ios-ease); }
+            .pf-modal-card {
+                max-width: 440px; border-radius: 18px; padding: 24px 22px; max-height: 84vh;
+                touch-action: auto; will-change: auto;
+                /* 素材が「現れる」: 透明度だけでなく、ぼかしとスケールを同時に解いて実体化させる */
+                animation: iosSheetIn 0.3s var(--ios-ease);
+            }
             .pf-modal-card::before { display: none; }
         }
-        @keyframes iosSheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        @keyframes iosSheetIn { from { opacity: 0; transform: scale(0.94) translateY(8px); } to { opacity: 1; transform: none; } }
+        @keyframes iosSheetIn { from { opacity: 0; transform: scale(0.94) translateY(8px); filter: blur(6px); } to { opacity: 1; transform: none; filter: blur(0); } }
         @keyframes iosFade { from { opacity: 0; } to { opacity: 1; } }
 
-        /* ── タブバー（サイトドック）のすりガラス ── */
+        /* ── タブバー（サイトドック）のすりガラス。上端の細い光沢線＝光が当たるマテリアルの縁 ── */
         .site-dock {
             background: var(--glass-bg);
             -webkit-backdrop-filter: blur(25px) saturate(180%);
             backdrop-filter: blur(25px) saturate(180%);
             border-top: 0.5px solid var(--separator);
+            box-shadow: inset 0 1px 0 var(--glass-edge);
             padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
         }
         .site-dock button { border-radius: 12px; gap: 3px; transition: transform 0.18s var(--ios-ease), opacity 0.18s var(--ios-ease); }
-        .site-dock button:active { background: none; transform: scale(0.92); opacity: 0.7; }
+        .site-dock button:active { background: none; transform: scale(0.92); opacity: 0.7; transition-duration: 100ms; transition-timing-function: ease-out; }
         .site-dock .site-dock-icon { font-size: 22px; }
-        .site-dock .site-dock-label { font-size: 10px; font-weight: 600; }
+        .site-dock .site-dock-label { font-size: 10px; font-weight: 600; letter-spacing: 0.02em; }
 
         /* ── 他のツール ドロワー ── */
         .sidebar.sidebar-open { border-radius: 0 20px 20px 0; background: var(--card-bg); padding: 16px; animation: iosSlideIn 0.32s var(--ios-ease); }
@@ -1013,8 +1043,26 @@
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
         }
 
+        /* 小さな文字は正のトラッキングで可読性を確保（サイズ別タイポグラフィ） */
+        .section-header, .site-dock .site-dock-label, .badge, .title-chip, .dash-section-label { letter-spacing: 0.03em; }
+        .stat-val { letter-spacing: -0.02em; }
+
+        /* ── アクセシビリティ: 動き・透明・コントラストの各設定に応じて穏やかな代替表現にする ── */
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+            /* スライドではなく短いクロスフェードで出入りする */
+            .pf-modal-overlay.is-visible { animation: iosFade 200ms ease !important; animation-duration: 200ms !important; }
+            .pf-modal-card { animation: none !important; transform: none !important; }
+        }
+        @media (prefers-reduced-transparency: reduce) {
+            header.nav-bar, .site-dock, .title-toast {
+                background: var(--card-bg); -webkit-backdrop-filter: none; backdrop-filter: none;
+            }
+        }
+        @media (prefers-contrast: more) {
+            header.nav-bar, .site-dock { background: var(--card-bg); -webkit-backdrop-filter: none; backdrop-filter: none; }
+            header.nav-bar { border-bottom: 1px solid var(--separator); }
+            .section-card, .item-card, .pf-modal-card { border: 1px solid var(--separator); }
         }
 
         [v-cloak] { display: none; }
@@ -3107,66 +3155,198 @@
             if (closeFn) closeFn(); else target.classList.remove('is-visible');
         });
 
-        // 🍎 iOS風ボトムシート: シートを下方向にスワイプして閉じる（モバイル幅のみ）。
-        // シート内容が先頭までスクロールされている状態で下向きにドラッグしたときだけ
-        // 追従させ、一定距離を超えて離すとスライドアウトして閉じる。それ以外は元の位置に
-        // スナップバックする。閉じる処理はEsc/背景クリックと同じ関数表を使う。
+        // 🍎 流体ボトムシート（Pointer Events + スプリング物理）。Appleの"Designing Fluid Interfaces"の
+        // 考え方をWebに移植したもの:
+        //  ・応答: pointerdownの瞬間から指に1:1で追従し、掴んだ位置のオフセットを保つ
+        //  ・中断可能: 開閉アニメーション中でも掴めば、常に「現在の表示位置」から続きが始まる
+        //  ・速度の引き継ぎ: 離した瞬間の速度をそのままスプリングの初速にして、継ぎ目を作らない
+        //  ・慣性の投影: 離した位置ではなく「勢いで到達する位置」で開く/閉じるを決める
+        //  ・ラバーバンド: 上へ引っ張ると徐々に抵抗する（硬い壁で止めない）
+        //  ・出入りは同じ経路（下から現れ、下へ戻る）。スクリムの濃さもシート位置に連動
+        //  ・prefers-reduced-motion時はスライドをやめ、CSS側のクロスフェードに任せる
+        // 開閉はEsc・背景クリック・閉じるボタンなど複数経路で起きるため、.is-visibleの付け外しを
+        // MutationObserverで捕まえて出入りのアニメーションを一元管理する。
         (function () {
-            var card = null, startY = 0, dy = 0, dragging = false, startedAtTop = false;
-            document.addEventListener('touchstart', function (e) {
-                if (window.matchMedia('(min-width: 850px)').matches) return;
-                var t = e.target;
-                var c = t && t.closest ? t.closest('.pf-modal-card') : null;
-                if (!c) return;
-                var tag = t.tagName;
-                if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA' || tag === 'BUTTON' || tag === 'LABEL') return;
-                card = c; startY = e.touches[0].clientY; dy = 0; dragging = false;
-                startedAtTop = c.scrollTop <= 0;
-            }, { passive: true });
-            document.addEventListener('touchmove', function (e) {
-                if (!card) return;
-                dy = e.touches[0].clientY - startY;
-                if (!dragging) {
-                    if (dy > 8 && startedAtTop) { dragging = true; card.classList.add('is-dragging'); }
-                    else return;
-                }
-                if (dy < 0) dy = 0;
-                card.style.transform = 'translateY(' + dy + 'px)';
-                if (e.cancelable) e.preventDefault();
-            }, { passive: false });
-            document.addEventListener('touchend', function () {
-                if (!card) return;
-                var c = card; card = null;
-                if (!dragging) return;
-                c.classList.remove('is-dragging');
-                c.classList.add('is-snapping');
-                if (dy > 110) {
-                    c.style.transform = 'translateY(110%)';
-                    setTimeout(function () {
-                        var ov = c.closest('.pf-modal-overlay');
-                        var fn = ov && SETTINGS_MODAL_CLOSE_FUNCS[ov.id];
-                        if (fn) fn(); else if (ov) ov.classList.remove('is-visible');
-                        c.classList.remove('is-snapping'); c.style.transform = '';
-                    }, 260);
-                } else {
-                    c.style.transform = '';
-                    setTimeout(function () { c.classList.remove('is-snapping'); }, 320);
-                }
-            });
-        })();
+            var MOBILE = window.matchMedia('(max-width: 849px)');
+            var REDUCE_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)');
+            var sheets = {};
+            var active = null;
 
-        // 🍎 ラージタイトル: ページを少しスクロールしたらナビゲーションバーに小タイトルを
-        // 表示し、下境界線を出す（iOSのLarge Titleの縮退挙動）。
-        (function () {
-            var last = null;
-            function update() {
-                var collapsed = (window.scrollY || document.documentElement.scrollTop || 0) > 34;
-                if (collapsed !== last) {
-                    last = collapsed;
-                    document.documentElement.classList.toggle('nav-collapsed', collapsed);
+            // Appleのパラメータ化: 減衰比(1.0=行き過ぎなし, <1で弾む) と 応答時間(秒)
+            function spring(damping, response) { return { zeta: damping, omega: (2 * Math.PI) / response }; }
+            var SPRING_PRESENT = spring(1.0, 0.4); // 開閉（ジェスチャ由来でない動き）は行き過ぎなし
+            var SPRING_FLICK   = spring(0.8, 0.3); // 指を離した後（勢いがある動き）だけ少し弾む
+
+            function project(v, d) { d = d || 0.998; return (v / 1000) * d / (1 - d); } // 慣性の投影先(px)
+            function rubberband(over, dim, c) { c = c || 0.55; return (over * dim * c) / (dim + c * Math.abs(over)); }
+
+            function stateFor(overlay) {
+                var s = sheets[overlay.id];
+                var card = overlay.querySelector('.pf-modal-card');
+                if (!s) {
+                    s = sheets[overlay.id] = { overlay: overlay, card: card, y: 0, v: 0, target: 0, height: 0, raf: null,
+                        last: 0, spring: SPRING_PRESENT, dragging: false, pointerId: null, grabY: 0, hist: [],
+                        onSettle: null, closedByGesture: false };
+                } else if (s.card !== card) { s.card = card; }
+                return s;
+            }
+            function measure(s) { s.height = s.card.getBoundingClientRect().height || window.innerHeight; }
+            function render(s) {
+                s.card.style.transform = 'translate3d(0,' + s.y.toFixed(2) + 'px,0)';
+                var p = 1 - Math.min(Math.max(s.y / s.height, 0), 1);
+                s.overlay.style.setProperty('--sheet-progress', p.toFixed(3));
+            }
+            function stopAnim(s) { if (s.raf) { cancelAnimationFrame(s.raf); s.raf = null; } }
+            function animateTo(s, target, sp, velocity, onSettle) {
+                stopAnim(s);
+                s.target = target; s.spring = sp; s.onSettle = onSettle || null;
+                if (typeof velocity === 'number') s.v = velocity;
+                s.last = performance.now();
+                function step(now) {
+                    // 実時間に追従させる（フレームが飛んでも動きが遅くならない）。大きな間隔は
+                    // 0.1秒で頭打ちにし、4ms刻みのセミ陰的オイラーで数値的に安定させる
+                    var dt = Math.min((now - s.last) / 1000, 0.1); s.last = now;
+                    var steps = Math.max(1, Math.ceil(dt / 0.004));
+                    var h = dt / steps;
+                    for (var i = 0; i < steps; i++) {
+                        var x = s.y - s.target;
+                        var a = -2 * s.spring.zeta * s.spring.omega * s.v - s.spring.omega * s.spring.omega * x;
+                        s.v += a * h; s.y += s.v * h;
+                    }
+                    if (Math.abs(s.y - s.target) < 0.5 && Math.abs(s.v) < 20) {
+                        s.y = s.target; s.v = 0; render(s); s.raf = null;
+                        if (s.onSettle) { var fn = s.onSettle; s.onSettle = null; fn(); }
+                        return;
+                    }
+                    render(s);
+                    s.raf = requestAnimationFrame(step);
+                }
+                s.raf = requestAnimationFrame(step);
+            }
+            function closeOverlay(overlay) {
+                var fn = SETTINGS_MODAL_CLOSE_FUNCS[overlay.id];
+                if (fn) fn(); else overlay.classList.remove('is-visible');
+            }
+            function finishHide(s) {
+                s.overlay.classList.remove('is-closing');
+                s.card.style.transform = '';
+                s.overlay.style.removeProperty('--sheet-progress');
+                s.y = 0; s.v = 0;
+            }
+            function onVisibilityChange(overlay, visible) {
+                if (!MOBILE.matches || REDUCE_MOTION.matches) return;
+                var s = stateFor(overlay);
+                if (visible) {
+                    overlay.classList.remove('is-closing');
+                    measure(s);
+                    if (!s.raf && !s.dragging) { s.y = s.height; s.v = 0; } // 閉じる途中の再表示なら現在位置から続ける
+                    render(s);
+                    animateTo(s, 0, SPRING_PRESENT, undefined, null);
+                } else {
+                    if (s.closedByGesture) { s.closedByGesture = false; finishHide(s); return; }
+                    if (s.dragging) return;
+                    overlay.classList.add('is-closing');
+                    animateTo(s, s.height, SPRING_PRESENT, undefined, function () { finishHide(s); });
                 }
             }
-            window.addEventListener('scroll', update, { passive: true });
+            new MutationObserver(function (records) {
+                records.forEach(function (r) {
+                    var el = r.target;
+                    if (!el.classList || !el.classList.contains('pf-modal-overlay')) return;
+                    var was = (' ' + (r.oldValue || '') + ' ').indexOf(' is-visible ') !== -1;
+                    var now = el.classList.contains('is-visible');
+                    if (was !== now) onVisibilityChange(el, now);
+                });
+            }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'], subtree: true, attributeOldValue: true });
+
+            function isInteractive(el) {
+                return !!(el && el.closest && el.closest('input, select, textarea, button, a, label, [contenteditable]'));
+            }
+            document.addEventListener('pointerdown', function (e) {
+                if (!MOBILE.matches || REDUCE_MOTION.matches) return;
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                var card = e.target && e.target.closest ? e.target.closest('.pf-modal-card') : null;
+                if (!card) return;
+                var overlay = card.closest('.pf-modal-overlay');
+                if (!overlay || !overlay.classList.contains('is-visible') || isInteractive(e.target)) return;
+                var s = stateFor(overlay);
+                measure(s);
+                stopAnim(s);                       // 動いている途中でも掴める（表示中の値から続行）
+                s.pointerId = e.pointerId;
+                s.grabY = e.clientY - s.y;         // 掴んだ位置のオフセットを保持
+                s.hist = [{ t: performance.now(), y: e.clientY }];
+                s.dragging = false;
+                active = s;
+            }, { passive: true });
+            document.addEventListener('pointermove', function (e) {
+                var s = active; if (!s || e.pointerId !== s.pointerId) return;
+                s.hist.push({ t: performance.now(), y: e.clientY }); if (s.hist.length > 6) s.hist.shift();
+                if (!s.dragging) {
+                    var moved = e.clientY - s.hist[0].y;
+                    if (Math.abs(moved) < 10) return;                              // 10pxのヒステリシス
+                    if (moved < 0 || s.card.scrollTop > 0) { active = null; return; } // 内容のスクロールに譲る
+                    s.dragging = true;
+                    s.card.classList.add('is-dragging');
+                    try { s.card.setPointerCapture(e.pointerId); } catch (_) { /* noop */ }
+                }
+                var y = e.clientY - s.grabY;
+                if (y < 0) y = rubberband(y, s.height);                            // 上へはラバーバンド
+                s.y = y; render(s);
+            });
+            document.addEventListener('touchmove', function (e) {
+                if (active && active.dragging && e.cancelable) e.preventDefault();
+            }, { passive: false });
+            function release(e) {
+                var s = active; if (!s || e.pointerId !== s.pointerId) return;
+                active = null;
+                if (!s.dragging) return;
+                s.dragging = false; s.card.classList.remove('is-dragging');
+                try { s.card.releasePointerCapture(e.pointerId); } catch (_) { /* noop */ }
+                // 直近約100msの履歴から離した瞬間の速度(px/s)を求める
+                var h = s.hist, v = 0;
+                if (h.length >= 2) {
+                    var b = h[h.length - 1], a = b;
+                    for (var i = h.length - 2; i >= 0; i--) { if (b.t - h[i].t > 100) break; a = h[i]; }
+                    var dt = (b.t - a.t) / 1000; if (dt > 0) v = (b.y - a.y) / dt;
+                }
+                // 勢いがあれば速度の向きで、なければ慣性の投影先が半分を越えるかで決める
+                var projected = s.y + project(v);
+                var shouldClose = Math.abs(v) > 250 ? v > 0 : projected > s.height * 0.5;
+                if (shouldClose) {
+                    animateTo(s, s.height, SPRING_FLICK, v, function () { s.closedByGesture = true; closeOverlay(s.overlay); });
+                } else {
+                    animateTo(s, 0, SPRING_FLICK, v, null);
+                }
+            }
+            document.addEventListener('pointerup', release);
+            document.addEventListener('pointercancel', release);
+
+            // 画面幅がデスクトップ側に変わったら、JSで与えたtransform等を片付けてCSS側に引き渡す
+            function onLayoutChange(e) {
+                if (e.matches) return;
+                active = null;
+                Object.keys(sheets).forEach(function (id) {
+                    var s = sheets[id];
+                    stopAnim(s); s.dragging = false; s.card.classList.remove('is-dragging'); finishHide(s);
+                });
+            }
+            if (MOBILE.addEventListener) MOBILE.addEventListener('change', onLayoutChange);
+            else if (MOBILE.addListener) MOBILE.addListener(onLayoutChange);
+        })();
+
+        // 🍎 ラージタイトル: スクロール量に連続的に追従して(しきい値で切り替えない)、小タイトルの
+        // 表示・ラージタイトルの消え方・スクロールエッジの影を --nav-progress(0→1) で駆動する。
+        (function () {
+            var ticking = false;
+            function update() {
+                ticking = false;
+                var y = window.scrollY || document.documentElement.scrollTop || 0;
+                var p = Math.min(Math.max((y - 8) / 28, 0), 1);
+                document.documentElement.style.setProperty('--nav-progress', p.toFixed(3));
+            }
+            window.addEventListener('scroll', function () {
+                if (!ticking) { ticking = true; requestAnimationFrame(update); }
+            }, { passive: true });
             update();
         })();
 
