@@ -1405,6 +1405,7 @@
                 'dm.importConfirm': '{count}件のキーをインポートします。現在保存されているデータは上書きされます（インポートするファイルに無いキーはそのまま残ります）。よろしいですか？',
                 'dm.importExecBtn': 'インポート実行',
                 'dm.importDone': 'インポートしました。ページを再読み込みします…',
+                'dm.importPartial': '{total}件中{failed}件の復元に失敗しました（保存容量の上限などが原因の可能性があります）。残り{ok}件は復元できました。ページを再読み込みします…',
                 'dm.wipeConfirm': 'すべてのプロフィール・所持アイテム・お気に入り・精霊ツリーの進捗など、このブラウザに保存されている全データを削除します。この操作は取り消せません。先にエクスポートしておくことをおすすめします。本当に削除しますか？',
                 'dm.wipeExecBtn': '完全に削除する',
                 'dm.wipeDone': '削除しました。ページを再読み込みします…',
@@ -1522,6 +1523,7 @@
                 'dm.importConfirm': 'Import {count} keys? Currently stored data will be overwritten for matching keys (keys not present in the file are left as-is). Continue?',
                 'dm.importExecBtn': 'Import',
                 'dm.importDone': 'Imported. Reloading…',
+                'dm.importPartial': 'Failed to restore {failed} of {total} keys (this may be due to a storage limit). The remaining {ok} keys were restored successfully. Reloading…',
                 'dm.wipeConfirm': 'This will erase ALL locally stored data (profiles, owned items, favorites, spirit tree progress, etc.) across the whole tool suite. This cannot be undone. Exporting a backup first is recommended. Really erase everything?',
                 'dm.wipeExecBtn': 'Erase everything',
                 'dm.wipeDone': 'Erased. Reloading…',
@@ -2578,13 +2580,29 @@
         }
         function dmConfirmImport() {
             if (!dmPendingImport) return;
-            Object.keys(dmPendingImport).forEach(function (key) {
-                localStorage.setItem(key, dmPendingImport[key]);
+            var pending = dmPendingImport;
+            var keys = Object.keys(pending);
+            var okCount = 0;
+            var failedKeys = [];
+            keys.forEach(function (key) {
+                try {
+                    localStorage.setItem(key, pending[key]);
+                    okCount++;
+                } catch (e) {
+                    // 保存容量の上限などで setItem が失敗しても、他のキーの復元は止めない
+                    failedKeys.push(key);
+                }
             });
             dmPendingImport = null;
             document.getElementById('dmImportConfirmArea').innerHTML = '';
-            document.getElementById('dmStatus').textContent = t('dm.importDone');
-            setTimeout(function () { location.reload(); }, 800);
+            if (failedKeys.length > 0) {
+                document.getElementById('dmStatus').textContent = t('dm.importPartial', { total: keys.length, failed: failedKeys.length, ok: okCount });
+            } else {
+                document.getElementById('dmStatus').textContent = t('dm.importDone');
+            }
+            if (okCount > 0) {
+                setTimeout(function () { location.reload(); }, 800);
+            }
         }
 
         var dmWipeConfirming = false;
