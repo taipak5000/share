@@ -724,21 +724,6 @@
         /* 精度に不安がある新機能であることを示す小さな注記（例: 楽譜づくり） */
         .tool-badge-test { font-size: 9px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.3px; }
 
-        .sidebar-toggle-btn {
-            background: var(--stat-box-bg, #fdfdfd);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 6px 12px;
-            font-size: 14px;
-            cursor: pointer;
-            color: var(--text-color);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-weight: 500;
-            white-space: nowrap;
-        }
-
         .sidebar-close-btn {
             background: none;
             border: none;
@@ -748,15 +733,6 @@
             padding: 0;
             line-height: 1;
             flex-shrink: 0;
-        }
-
-        /* 🧭 デスクトップでは常設のサイトドック「他のツール」ボタンが同じ役割を持つため、
-           ヘッダーのハンバーガーボタンは冗長として隠す。ただし .sidebar-close-btn は
-           ドックの「他のツール」ボタンから開いたドロワーを閉じる唯一のUI操作（背景クリック
-           以外の明示的な閉じ方）なので、幅に関わらず常に表示したままにする（隠すと閉じる
-           手段が無くなる）。 */
-        @media (min-width: 850px) {
-            .sidebar-toggle-btn { display: none; }
         }
 
         /* ═══ サイトドック（クイックアクセス、ハンバーガーサイドバーとは別に常設） ═══ */
@@ -3028,7 +3004,11 @@
                 var blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
                 var url = URL.createObjectURL(blob);
                 var manifestLink = document.querySelector('link[rel="manifest"]');
-                if (manifestLink) manifestLink.href = url;
+                if (manifestLink) {
+                    // 前回作った分のblob URLを解放してから差し替える（毎回作りっぱなしにしない）
+                    if (manifestLink.href && manifestLink.href.indexOf('blob:') === 0) URL.revokeObjectURL(manifestLink.href);
+                    manifestLink.href = url;
+                }
             }).catch(function (e) { console.error('manifest update failed', e); });
         }
 
@@ -3545,7 +3525,6 @@
             const TRANSLATIONS = {
                 ja: {
                     'header.title': '創作物期限管理 (14日間)',
-                    'sidebar.toggleBtn': 'ツール',
                     'theme.dark': 'ダーク',
                     'theme.light': 'ライト',
                     'theme.system': 'システム',
@@ -3652,7 +3631,6 @@
                 },
                 en: {
                     'header.title': 'Creation Expiry Manager (14-Day)',
-                    'sidebar.toggleBtn': 'Tools',
                     'theme.dark': 'Dark',
                     'theme.light': 'Light',
                     'theme.system': 'System',
