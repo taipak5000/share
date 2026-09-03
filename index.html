@@ -10,6 +10,19 @@
     <meta name="apple-mobile-web-app-title" content="創作物管理">
     <meta name="theme-color" content="#007AFF">
     <title>シェア系創作物管理ツール</title>
+    <script>
+        // 🌓 初回描画より前にテーマ(data-theme)とステータスバー色を適用し、
+        // ライト→ダークのちらつきを防ぐ。判定は resolveEffectiveTheme() と同じ。
+        (function () {
+            try {
+                var s = localStorage.getItem('sky_app_theme');
+                var dark = (s === 'dark') || (s !== 'light' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+                var m = document.querySelector('meta[name="theme-color"]');
+                if (m) m.setAttribute('content', dark ? '#000000' : '#f2f2f7');
+            } catch (e) { /* noop */ }
+        })();
+    </script>
     <style>
         /* 🎨 ライトモード標準の共通色 */
         :root {
@@ -60,16 +73,17 @@
         }
 
         /* 🌙 ダークモード用の共通色 */
+        /* 🍎 iOSダークモード準拠: 背景#000 / グループ背景#1C1C1E / 二次背景#2C2C2E */
         [data-theme="dark"] {
-            --bg-color: #0c081a;
-            --card-bg: #1b1535;
+            --bg-color: #000000;
+            --card-bg: #1c1c1e;
             --text-color: #ffffff;
-            --text-gray: #aaa4c4;
-            --border-color: rgba(255, 255, 255, 0.15);
-            --input-bg: rgba(0, 0, 0, 0.25);
-            --tab-bg: rgba(255, 255, 255, 0.1);
-            --tab-btn-active: rgba(255, 255, 255, 0.15);
-            --stat-box-bg: rgba(255, 255, 255, 0.04);
+            --text-gray: #8e8e93;
+            --border-color: rgba(84, 84, 88, 0.65);
+            --input-bg: #2c2c2e;
+            --tab-bg: #2c2c2e;
+            --tab-btn-active: #3a3a3c;
+            --stat-box-bg: #2c2c2e;
 
             /* ステータスバッジの文字色: ダークモードは元の彩度色のまま(既にコントラスト確保済み) */
             /* ただし赤バッジのみ元のaccent-redだと合成背景に対し実測4.2:1でAA未達のため、
@@ -792,6 +806,217 @@
         }
         .site-dock .dock-urgent-dot.show { display: block; }
 
+        /* ═══════════════════════════════════════════════════════════════
+           🍎 iOS Human Interface Guidelines デザイン層
+           既存ルールより後ろに置き、同じ詳細度なら後勝ちで上書きする「見た目の層」。
+           レイアウト・機能のロジックには手を入れず、質感と操作感だけを
+           ネイティブiOSアプリに寄せる。
+           ═══════════════════════════════════════════════════════════════ */
+        :root {
+            --ios-ease: cubic-bezier(0.25, 1, 0.5, 1);
+            --fill-secondary: rgba(120, 120, 128, 0.16);
+            --fill-tertiary: rgba(118, 118, 128, 0.12);
+            --separator: rgba(60, 60, 67, 0.29);
+            --group-secondary-bg: #f2f2f7;
+            --glass-bg: rgba(249, 249, 249, 0.78);
+            --nav-h: 52px;
+        }
+        [data-theme="dark"] {
+            --fill-secondary: rgba(120, 120, 128, 0.32);
+            --fill-tertiary: rgba(118, 118, 128, 0.24);
+            --separator: rgba(84, 84, 88, 0.65);
+            --group-secondary-bg: #2c2c2e;
+            --glass-bg: rgba(28, 28, 30, 0.72);
+        }
+
+        html { -webkit-text-size-adjust: 100%; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+                "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Segoe UI", Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            padding-top: 0;
+        }
+        button, input, select, textarea { font-family: inherit; }
+        button { -webkit-tap-highlight-color: transparent; }
+        *:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+        ::selection { background: rgba(0, 122, 255, 0.25); }
+
+        /* ── ナビゲーションバー（すりガラス）とラージタイトル ── */
+        header.nav-bar {
+            position: sticky; top: 0; z-index: 20;
+            margin: 0 -8px; padding: env(safe-area-inset-top) 16px 0;
+            min-height: var(--nav-h);
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+            background: var(--glass-bg);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            backdrop-filter: blur(25px) saturate(180%);
+            border-bottom: 0.5px solid transparent;
+            transition: border-color 0.25s var(--ios-ease);
+        }
+        html.nav-collapsed header.nav-bar { border-bottom-color: var(--separator); }
+        .nav-title-small {
+            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            font-size: 17px; font-weight: 600; letter-spacing: -0.4px; color: var(--text-color);
+            opacity: 0; transition: opacity 0.2s var(--ios-ease);
+            pointer-events: none; white-space: nowrap; max-width: 60%; overflow: hidden; text-overflow: ellipsis;
+        }
+        html.nav-collapsed .nav-title-small { opacity: 1; }
+        .large-title {
+            /* 狭い画面では日本語タイトルが不自然な位置で折り返さないよう可変サイズにする */
+            font-size: clamp(26px, 7.6vw, 34px); font-weight: 700; letter-spacing: 0.37px; line-height: 1.2;
+            margin: 8px 8px 16px; color: var(--text-color);
+            transition: opacity 0.2s var(--ios-ease);
+        }
+        html.nav-collapsed .large-title { opacity: 0; }
+        .theme-toggle-btn {
+            background: var(--fill-tertiary); border: none; color: var(--accent-blue);
+            font-weight: 600; font-size: 15px; padding: 6px 12px; border-radius: 999px;
+        }
+
+        /* ── Inset Grouped List（角丸16pxカード） ── */
+        .section-card { border-radius: 16px; padding: 16px; margin-bottom: 18px; box-shadow: none; border: none; }
+        .section-header { font-size: 13px; font-weight: 600; letter-spacing: 0.4px; color: var(--text-gray); margin-bottom: 12px; }
+        .pf-bar { border: none; border-radius: 14px; padding: 12px 16px; font-size: 14px; }
+        .pf-dash-btn {
+            background: var(--fill-secondary); border: none; border-radius: 50%;
+            width: 34px; height: 34px; padding: 0; font-size: 16px;
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        .stat-box { background: var(--group-secondary-bg); border-radius: 12px; padding: 12px 8px; }
+        .stat-val { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; font-variant-numeric: tabular-nums; }
+        .stat-box-clickable:hover { background: var(--fill-secondary); }
+        @media (max-width: 400px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+        .item-card { background: var(--group-secondary-bg); border: none; box-shadow: none; border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+        .item-card-highlighted { box-shadow: 0 0 0 2px var(--accent-blue); }
+        .dash-row { background: var(--group-secondary-bg); border-radius: 12px; padding: 10px 12px; }
+        .calendar-detail-panel { background: var(--group-secondary-bg); border-radius: 12px; }
+        .bulk-bar { background: var(--fill-tertiary); border: none; border-radius: 12px; padding: 10px 12px; }
+        .bulk-bar.quick-filter-bar { background: rgba(255, 149, 0, 0.12); }
+        .pf-row { padding: 12px 4px; border-bottom: 0.5px solid var(--separator); }
+        .pf-row-name { font-size: 16px; }
+        .pf-titles-body { background: var(--group-secondary-bg); border-radius: 10px; }
+
+        /* ── 入力欄 ── */
+        input[type="text"], input[type="date"], .pf-input, .pf-row-input, .pf-currency-input, .area-select {
+            background: var(--fill-tertiary); border: 1px solid transparent; border-radius: 10px;
+            padding: 9px 12px; font-size: 15px; color: var(--text-color);
+            transition: box-shadow 0.2s var(--ios-ease), border-color 0.2s var(--ios-ease);
+        }
+        .item-card input[type="text"], .item-card input[type="date"], .item-card .area-select { background: var(--card-bg); }
+        input[type="text"]:focus, input[type="date"]:focus, .pf-input:focus, .pf-row-input:focus, .pf-currency-input:focus, .area-select:focus {
+            outline: none; border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.25);
+        }
+        .pf-currency-input { font-variant-numeric: tabular-nums; }
+
+        /* ── ボタン（塗り / ティント / グレー） ── */
+        .btn-blue { border-radius: 14px; padding: 15px; font-size: 17px; font-weight: 600; margin-top: 10px; }
+        .btn-outline { background: rgba(0, 122, 255, 0.12); border: none; color: var(--accent-blue); border-radius: 10px; padding: 8px 14px; font-weight: 600; font-size: 13px; }
+        [data-theme="dark"] .btn-outline { background: rgba(10, 132, 255, 0.22); color: #409cff; }
+        .pf-icon-btn { background: var(--fill-secondary); border: none; color: var(--text-color); border-radius: 10px; padding: 7px 12px; font-weight: 600; font-size: 13px; }
+        .pf-row-btn-ok { background: var(--accent-blue-solid); color: #fff; }
+        .pf-row-btn-danger { background: var(--accent-red); color: #fff; }
+        .pf-add-btn { border-radius: 10px; font-weight: 600; padding: 9px 16px; }
+        .pf-close-btn {
+            background: var(--fill-secondary); border: none; border-radius: 12px;
+            padding: 13px; font-size: 16px; font-weight: 600; color: var(--accent-blue); margin-top: 18px;
+        }
+        .action-btn { border-radius: 8px; padding: 6px 10px; font-weight: 600; font-size: 12.5px; }
+        .btn-del { background: rgba(255, 59, 48, 0.12); border: none; }
+        .btn-renew { background: rgba(0, 122, 255, 0.12); border: none; }
+        .btn-susp { background: var(--fill-secondary); border: none; color: var(--text-color); }
+        .btn-ics { background: rgba(94, 92, 230, 0.12); border: none; }
+        .btn-photo { background: rgba(52, 199, 89, 0.14); border: none; color: var(--badge-green-text); }
+        .btn-jump { background: rgba(0, 122, 255, 0.12); border: none; }
+        .filter-btn, .genre-btn { background: var(--fill-tertiary); border: 1px solid transparent; color: var(--text-color); font-weight: 600; }
+        .filter-btn:not(.active):hover, .genre-btn:not(.active):hover { border-color: transparent; background: var(--fill-secondary); }
+        .list-toolbar-btn.active { border-radius: 10px; }
+        .badge { border-radius: 6px; padding: 4px 8px; font-weight: 600; }
+        .item-thumb { border-radius: 10px; border: none; }
+        .item-thumb-remove { border: none; background: var(--fill-secondary); }
+
+        /* ── カレンダー（今日は青文字、選択日は青丸） ── */
+        .calendar-day { border-radius: 50%; background: transparent; border: 2px solid transparent; font-size: 13px; }
+        .calendar-day.has-events { background: var(--group-secondary-bg); }
+        .calendar-day.is-today { color: var(--accent-blue); font-weight: 700; border-color: transparent; }
+        .calendar-day.is-selected { background: var(--accent-blue-solid); color: #fff; border-color: transparent; }
+        .calendar-day.is-selected .calendar-day-dot { background: #fff !important; }
+        .calendar-day.has-events:hover { border-color: rgba(0, 122, 255, 0.4); }
+        .calendar-nav-btn {
+            border-radius: 50%; width: 34px; height: 34px; padding: 0; font-size: 20px; color: var(--accent-blue);
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+
+        /* ── タップ時の縮小フィードバック ── */
+        .btn-blue, .btn-outline, .pf-icon-btn, .pf-add-btn, .pf-close-btn, .action-btn, .filter-btn, .genre-btn,
+        .theme-toggle-btn, .pf-dash-btn, .stat-box-clickable, .title-chip, .calendar-day.has-events, .item-thumb-remove,
+        .calendar-section-header {
+            transition: transform 0.18s var(--ios-ease), background 0.2s var(--ios-ease), opacity 0.2s var(--ios-ease),
+                        box-shadow 0.2s var(--ios-ease), color 0.2s var(--ios-ease), border-color 0.2s var(--ios-ease);
+        }
+        .btn-blue:active, .btn-outline:active, .pf-icon-btn:active, .pf-add-btn:active, .pf-close-btn:active, .action-btn:active,
+        .filter-btn:active, .genre-btn:active, .theme-toggle-btn:active, .pf-dash-btn:active, .stat-box-clickable:active,
+        .calendar-day.has-events:active, .item-thumb-remove:active { transform: scale(0.96); }
+        .btn-blue:active, .pf-add-btn:active { opacity: 0.85; }
+
+        /* ── モーダル → ボトムシート（ハンドル付き・下スワイプで閉じる） ── */
+        .pf-modal-overlay { background: rgba(0, 0, 0, 0.4); align-items: flex-end; justify-content: center; padding: 0; }
+        .pf-modal-overlay.is-visible { animation: iosFade 0.25s var(--ios-ease); }
+        .pf-modal-card {
+            width: 100%; max-width: 100%; max-height: 88vh; max-height: 88dvh;
+            border-radius: 20px 20px 0 0;
+            padding: 30px 20px calc(20px + env(safe-area-inset-bottom));
+            box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.25);
+            position: relative; overscroll-behavior: contain;
+            animation: iosSheetUp 0.38s var(--ios-ease);
+        }
+        .pf-modal-card::before {
+            content: ''; position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+            width: 36px; height: 5px; border-radius: 3px; background: rgba(60, 60, 67, 0.3);
+        }
+        [data-theme="dark"] .pf-modal-card::before { background: rgba(235, 235, 245, 0.3); }
+        .pf-modal-card h3 { text-align: center; font-size: 17px; font-weight: 600; letter-spacing: -0.4px; margin: 0 0 16px; }
+        .pf-modal-card.is-dragging { animation: none; transition: none; }
+        .pf-modal-card.is-snapping { transition: transform 0.3s var(--ios-ease); }
+        @media (min-width: 850px) {
+            .pf-modal-overlay { align-items: center; padding: 24px; }
+            .pf-modal-card { max-width: 440px; border-radius: 18px; padding: 24px 22px; max-height: 84vh; animation: iosSheetIn 0.3s var(--ios-ease); }
+            .pf-modal-card::before { display: none; }
+        }
+        @keyframes iosSheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes iosSheetIn { from { opacity: 0; transform: scale(0.94) translateY(8px); } to { opacity: 1; transform: none; } }
+        @keyframes iosFade { from { opacity: 0; } to { opacity: 1; } }
+
+        /* ── タブバー（サイトドック）のすりガラス ── */
+        .site-dock {
+            background: var(--glass-bg);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            backdrop-filter: blur(25px) saturate(180%);
+            border-top: 0.5px solid var(--separator);
+            padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+        }
+        .site-dock button { border-radius: 12px; gap: 3px; transition: transform 0.18s var(--ios-ease), opacity 0.18s var(--ios-ease); }
+        .site-dock button:active { background: none; transform: scale(0.92); opacity: 0.7; }
+        .site-dock .site-dock-icon { font-size: 22px; }
+        .site-dock .site-dock-label { font-size: 10px; font-weight: 600; }
+
+        /* ── 他のツール ドロワー ── */
+        .sidebar.sidebar-open { border-radius: 0 20px 20px 0; background: var(--card-bg); padding: 16px; animation: iosSlideIn 0.32s var(--ios-ease); }
+        .sidebar-nav-link { border-radius: 10px; font-size: 15px; padding: 11px 12px; transition: background 0.15s var(--ios-ease), transform 0.15s var(--ios-ease); }
+        .sidebar-nav-link:active { transform: scale(0.97); }
+        @keyframes iosSlideIn { from { transform: translateX(-100%); } to { transform: none; } }
+
+        /* ── 称号獲得トースト ── */
+        .title-toast {
+            border: none; border-radius: 16px; background: var(--glass-bg);
+            -webkit-backdrop-filter: blur(25px) saturate(180%); backdrop-filter: blur(25px) saturate(180%);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        }
+
         [v-cloak] { display: none; }
     </style>
 </head>
@@ -811,8 +1036,11 @@
         </div>
     </div>
 
-    <header>
-        <h1>{{ t('header.title') }}</h1>
+    <!-- 🍎 iOS風ナビゲーションバー: すりガラス + スクロールで現れる小タイトル。
+         ラージタイトル(h1)は通常フローに置き、スクロールで流れて消える。 -->
+    <header class="nav-bar">
+        <span class="nav-title-small" aria-hidden="true">{{ t('header.title') }}</span>
+        <span></span>
         <div style="display: flex; gap: 8px; align-items: center;">
             <button class="theme-toggle-btn" @click="toggleLang">
                 <span v-if="lang === 'ja'">EN</span>
@@ -820,6 +1048,7 @@
             </button>
         </div>
     </header>
+    <h1 class="large-title">{{ t('header.title') }}</h1>
 
     <div class="pf-bar" id="pfBar"></div>
 
@@ -2878,6 +3107,69 @@
             if (closeFn) closeFn(); else target.classList.remove('is-visible');
         });
 
+        // 🍎 iOS風ボトムシート: シートを下方向にスワイプして閉じる（モバイル幅のみ）。
+        // シート内容が先頭までスクロールされている状態で下向きにドラッグしたときだけ
+        // 追従させ、一定距離を超えて離すとスライドアウトして閉じる。それ以外は元の位置に
+        // スナップバックする。閉じる処理はEsc/背景クリックと同じ関数表を使う。
+        (function () {
+            var card = null, startY = 0, dy = 0, dragging = false, startedAtTop = false;
+            document.addEventListener('touchstart', function (e) {
+                if (window.matchMedia('(min-width: 850px)').matches) return;
+                var t = e.target;
+                var c = t && t.closest ? t.closest('.pf-modal-card') : null;
+                if (!c) return;
+                var tag = t.tagName;
+                if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA' || tag === 'BUTTON' || tag === 'LABEL') return;
+                card = c; startY = e.touches[0].clientY; dy = 0; dragging = false;
+                startedAtTop = c.scrollTop <= 0;
+            }, { passive: true });
+            document.addEventListener('touchmove', function (e) {
+                if (!card) return;
+                dy = e.touches[0].clientY - startY;
+                if (!dragging) {
+                    if (dy > 8 && startedAtTop) { dragging = true; card.classList.add('is-dragging'); }
+                    else return;
+                }
+                if (dy < 0) dy = 0;
+                card.style.transform = 'translateY(' + dy + 'px)';
+                if (e.cancelable) e.preventDefault();
+            }, { passive: false });
+            document.addEventListener('touchend', function () {
+                if (!card) return;
+                var c = card; card = null;
+                if (!dragging) return;
+                c.classList.remove('is-dragging');
+                c.classList.add('is-snapping');
+                if (dy > 110) {
+                    c.style.transform = 'translateY(110%)';
+                    setTimeout(function () {
+                        var ov = c.closest('.pf-modal-overlay');
+                        var fn = ov && SETTINGS_MODAL_CLOSE_FUNCS[ov.id];
+                        if (fn) fn(); else if (ov) ov.classList.remove('is-visible');
+                        c.classList.remove('is-snapping'); c.style.transform = '';
+                    }, 260);
+                } else {
+                    c.style.transform = '';
+                    setTimeout(function () { c.classList.remove('is-snapping'); }, 320);
+                }
+            });
+        })();
+
+        // 🍎 ラージタイトル: ページを少しスクロールしたらナビゲーションバーに小タイトルを
+        // 表示し、下境界線を出す（iOSのLarge Titleの縮退挙動）。
+        (function () {
+            var last = null;
+            function update() {
+                var collapsed = (window.scrollY || document.documentElement.scrollTop || 0) > 34;
+                if (collapsed !== last) {
+                    last = collapsed;
+                    document.documentElement.classList.toggle('nav-collapsed', collapsed);
+                }
+            }
+            window.addEventListener('scroll', update, { passive: true });
+            update();
+        })();
+
         // ═══ ⌨️ グローバルキーボードショートカット（? / D / Esc） ═══
         // ・Escapeは sky_shortcuts_enabled の設定に関わらず常に有効（モーダルの基本UX）。
         // ・? と D はテキスト入力中は無効化し、有効/無効設定もチェックする。
@@ -2974,6 +3266,9 @@
             const applyThemeToDOM = () => {
                 isDarkMode.value = resolveEffectiveTheme(themeMode.value) === 'dark';
                 document.documentElement.setAttribute('data-theme', isDarkMode.value ? 'dark' : 'light');
+                // 🍎 iOS Safari等のステータスバー/ブラウザ枠の色もテーマに追従させる
+                const metaTheme = document.querySelector('meta[name="theme-color"]');
+                if (metaTheme) metaTheme.setAttribute('content', isDarkMode.value ? '#000000' : '#f2f2f7');
                 // ⚙️ 表示設定モーダル（Vue管理外のプレーンJS）のダークモード表示ボタンを同期する。
                 // toggleLang() → window.pfApplyLang() と同じ「IIFE⇄Vue間はwindowに生やした
                 // 関数で橋渡しする」考え方。
