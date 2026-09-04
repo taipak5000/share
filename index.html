@@ -994,18 +994,6 @@
         [data-theme="dark"] .pf-modal-card::before { background: rgba(235, 235, 245, 0.3); }
         .pf-modal-card h3 { text-align: center; font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 16px; }
         .pf-modal-card.is-dragging { cursor: grabbing; user-select: none; }
-        @media (min-width: 850px) {
-            .pf-modal-overlay { align-items: center; padding: 24px; background: rgba(0, 0, 0, 0.4); }
-            .pf-modal-overlay.is-visible { animation: iosFade 0.25s var(--ios-ease); }
-            .pf-modal-card {
-                max-width: 440px; border-radius: 18px; padding: 24px 22px; max-height: 84vh;
-                touch-action: auto; will-change: auto;
-                /* 素材が「現れる」: 透明度だけでなく、ぼかしとスケールを同時に解いて実体化させる */
-                animation: iosSheetIn 0.3s var(--ios-ease);
-            }
-            .pf-modal-card::before { display: none; }
-        }
-        @keyframes iosSheetIn { from { opacity: 0; transform: scale(0.94) translateY(8px); filter: blur(6px); } to { opacity: 1; transform: none; filter: blur(0); } }
         @keyframes iosFade { from { opacity: 0; } to { opacity: 1; } }
         @keyframes sheetSlideUp { from { transform: translate3d(0, 100%, 0); } to { transform: translate3d(0, 0, 0); } }
 
@@ -3178,7 +3166,6 @@
         // 開閉はEsc・背景クリック・閉じるボタンなど複数経路で起きるため、.is-visibleの付け外しを
         // MutationObserverで捕まえて出入りのアニメーションを一元管理する。
         (function () {
-            var MOBILE = window.matchMedia('(max-width: 849px)');
             var REDUCE_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)');
             var sheets = {};
             var active = null;
@@ -3266,7 +3253,7 @@
             // フリック後の物理演算だけは従来どおりanimateTo()が担当する（.js-anim/.is-dragging
             // がCSSトランジションを打ち消すので競合しない）。
             function onVisibilityChange(overlay, visible) {
-                if (!MOBILE.matches || REDUCE_MOTION.matches) return;
+                if (REDUCE_MOTION.matches) return;
                 var s = stateFor(overlay);
                 if (s.dragging) return;
                 stopAnim(s);
@@ -3308,7 +3295,7 @@
                 return !!(el && el.closest && el.closest('input, select, textarea, button, a, label, [contenteditable]'));
             }
             document.addEventListener('pointerdown', function (e) {
-                if (!MOBILE.matches || REDUCE_MOTION.matches) return;
+                if (REDUCE_MOTION.matches) return;
                 if (e.pointerType === 'mouse' && e.button !== 0) return;
                 var card = e.target && e.target.closest ? e.target.closest('.pf-modal-card') : null;
                 if (!card) return;
@@ -3366,18 +3353,6 @@
             }
             document.addEventListener('pointerup', release);
             document.addEventListener('pointercancel', release);
-
-            // 画面幅がデスクトップ側に変わったら、JSで与えたtransform等を片付けてCSS側に引き渡す
-            function onLayoutChange(e) {
-                if (e.matches) return;
-                active = null;
-                Object.keys(sheets).forEach(function (id) {
-                    var s = sheets[id];
-                    stopAnim(s); s.dragging = false; s.card.classList.remove('is-dragging'); finishHide(s);
-                });
-            }
-            if (MOBILE.addEventListener) MOBILE.addEventListener('change', onLayoutChange);
-            else if (MOBILE.addListener) MOBILE.addListener(onLayoutChange);
         })();
 
         // 🍎 ラージタイトル: スクロール量に連続的に追従して(しきい値で切り替えない)、小タイトルの
