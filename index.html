@@ -1003,6 +1003,9 @@
                効かない。サイドバー(iosSlideIn)と同じくanimationで初期表示を担う */
             animation: sheetSlideUp 0.32s var(--ios-ease);
         }
+        @media (min-width: 560px) {
+            .pf-modal-card { max-width: 480px; }
+        }
         .pf-modal-card.is-dragging, .pf-modal-card.js-anim { transition: none; animation: none; }
         .pf-modal-card::before {
             content: ''; position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
