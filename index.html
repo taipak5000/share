@@ -102,7 +102,11 @@
         .inline-icon.ok { stroke: var(--accent-green); color: var(--accent-green); }
         .icon-chip {
             display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-            border-radius: 26%; color: var(--accent-blue);
+            background: rgba(0, 122, 255, 0.12);
+            background-image: linear-gradient(180deg, rgba(255,255,255,0.32), rgba(255,255,255,0) 60%);
+            border-radius: 26%;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35), inset 0 1px 1px rgba(255,255,255,0.5), 0 1px 2px rgba(0,0,0,0.10);
+            color: var(--accent-blue);
         }
         .icon-chip svg { display: block; stroke: var(--accent-blue); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
         .pf-titles-caret { transition: transform 0.15s ease; }
@@ -1096,6 +1100,7 @@
     <symbol id="i-hanger" viewBox="0 0 24 24"><path d="M12 4.2a1.8 1.8 0 1 0-1.8 1.8"/><path d="M12 6v1.6"/><path d="M3.5 17.5 12 11l8.5 6.5"/><path d="M3.5 17.5h17"/></symbol>
     <symbol id="i-image" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.167) translate(-12 -12)"><path d="M4.5 4.5h15v15h-15Z"/><path d="M4.5 15.5l4.2-4.5a1 1 0 0 1 1.5 0l2.3 2.5 2.5-3a1 1 0 0 1 1.5 0l3 4.5"/><path d="M9 9.5a1.2 1.2 0 1 0 0-2.4 1.2 1.2 0 0 0 0 2.4Z"/></g></symbol>
     <symbol id="i-monitor" viewBox="0 0 24 24"><path d="M4 5.5h16a1 1 0 0 1 1 1V16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1Z"/><path d="M9 20.5h6M12 17v3.5"/></symbol>
+    <symbol id="i-keyboard" viewBox="0 0 24 24"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h14a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 19 18H5a1.5 1.5 0 0 1-1.5-1.5Z"/><path d="M6.5 9.5h.01M9.5 9.5h.01M12.5 9.5h.01M15.5 9.5h.01M17.5 9.5h.01M6.5 12.5h.01M9.5 12.5h.01M12.5 12.5h.01M15.5 12.5h.01M17.5 12.5h.01M8 15.5h8"/></symbol>
     <symbol id="i-sun" viewBox="0 0 24 24"><path d="M12 6.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11Z"/><path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></symbol>
     <symbol id="i-moon" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.049) translate(-11.66 -12.34)"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></g></symbol>
     <symbol id="i-globe" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.094) translate(-12 -12)"><path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/><path d="M4.5 9h15M4.5 15h15"/><path d="M12 4a12 12 0 0 1 0 16"/><path d="M12 4a12 12 0 0 0 0 16"/></g></symbol>
@@ -1282,9 +1287,10 @@
 
             <div class="pf-currency-section" style="margin-top:0; padding-top:0; border-top:none;">
                 <p class="pf-currency-title" style="cursor:default;">
-                    <span data-i18n="settings.themeSection">表示</span>
+                    <span style="display:inline-flex; align-items:center; gap:4px;"><svg class="inline-icon" width="15" height="15"><use href="#i-monitor"/></svg><span data-i18n="settings.themeSection">表示</span></span>
                 </p>
                 <div class="pf-row">
+                    <span class="icon-chip" style="width:22px; height:22px;"><svg width="17" height="17"><use href="#i-palette"/></svg></span>
                     <span class="pf-row-name" data-i18n="settings.darkModeLabel">テーマ</span>
                     <button type="button" class="pf-icon-btn" id="settingsThemeBtn" onclick="window.toggleTheme && window.toggleTheme()"></button>
                 </div>
@@ -1292,9 +1298,10 @@
 
             <div class="pf-currency-section">
                 <p class="pf-currency-title" style="cursor:default;">
-                    <span data-i18n="settings.shortcutsSection">キーボードショートカット</span>
+                    <span style="display:inline-flex; align-items:center; gap:4px;"><svg class="inline-icon" width="15" height="15"><use href="#i-keyboard"/></svg><span data-i18n="settings.shortcutsSection">キーボードショートカット</span></span>
                 </p>
                 <div class="pf-row">
+                    <span class="icon-chip" style="width:22px; height:22px;"><svg width="17" height="17"><use href="#i-keyboard"/></svg></span>
                     <span class="pf-row-name" data-i18n="settings.shortcutsEnableLabel">ショートカットを有効にする</span>
                     <button type="button" class="pf-icon-btn" id="settingsShortcutsBtn" onclick="settingsToggleShortcuts()"></button>
                 </div>
@@ -1307,9 +1314,10 @@
 
             <div class="pf-currency-section">
                 <p class="pf-currency-title" style="cursor:default;">
-                    <span data-i18n="settings.iconSection">ホーム画面アイコン</span>
+                    <span style="display:inline-flex; align-items:center; gap:4px;"><svg class="inline-icon" width="15" height="15"><use href="#i-palette"/></svg><span data-i18n="settings.iconSection">ホーム画面アイコン</span></span>
                 </p>
                 <div class="pf-row">
+                    <span class="icon-chip" style="width:22px; height:22px;"><svg width="17" height="17"><use href="#i-palette"/></svg></span>
                     <span class="pf-row-name" data-i18n="settings.customizeIconLabel">ホーム画面アイコン</span>
                     <button type="button" class="pf-icon-btn" data-i18n="settings.customizeIconBtn" onclick="settingsCloseModal(); pfIconOpenModal();">カスタマイズ</button>
                 </div>
@@ -1317,7 +1325,7 @@
 
             <div class="pf-currency-section">
                 <p class="pf-currency-title" style="cursor:default;">
-                    <span data-i18n="settings.langSection">言語 / Language</span>
+                    <span style="display:inline-flex; align-items:center; gap:4px;"><svg class="inline-icon" width="15" height="15"><use href="#i-globe"/></svg><span data-i18n="settings.langSection">言語 / Language</span></span>
                 </p>
                 <div class="pf-row">
                     <span class="pf-row-name" data-i18n="settings.langLabel">言語</span>
@@ -1341,7 +1349,7 @@
         <aside class="sidebar section-card" :class="{ 'sidebar-open': showSidebar }">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
                 <div class="sidebar-section-label" style="margin-bottom: 0;">{{ t('sidebar.relatedTools') }}</div>
-                <button class="sidebar-close-btn" @click="showSidebar = false"><svg class="inline-icon" width="14" height="14"><use href="#i-close"/></svg></button>
+                <button class="sidebar-close-btn" @click="showSidebar = false"><span class="icon-chip" style="width:22px; height:22px;"><svg width="16" height="16"><use href="#i-close"/></svg></span></button>
             </div>
             <nav>
                 <a href="https://taipak5000.github.io/tai-item/" class="sidebar-nav-link">
@@ -1624,22 +1632,22 @@
          pfIconOpenModal();)からのみ到達できる、唯一の入り口として残す。 -->
     <nav class="site-dock" :aria-label="t('dock.ariaLabel')">
         <button type="button" onclick="pfOpenModal()">
-            <span class="site-dock-icon"><svg class="inline-icon" width="20" height="20"><use href="#i-folder"/></svg></span>
+            <span class="site-dock-icon"><span class="icon-chip" style="width:28px; height:28px;"><svg width="22" height="22"><use href="#i-folder"/></svg></span></span>
             <span class="site-dock-label">{{ activeProfileName }}</span>
         </button>
         <button type="button" onclick="pfDashOpen()">
             <span class="site-dock-icon-wrap">
-                <span class="site-dock-icon"><svg class="inline-icon" width="20" height="20"><use href="#i-calendar"/></svg></span>
+                <span class="site-dock-icon"><span class="icon-chip" style="width:28px; height:28px;"><svg width="22" height="22"><use href="#i-calendar"/></svg></span></span>
                 <span class="dock-urgent-dot" :class="{ show: dockUrgentEnding }" aria-hidden="true" :title="t('dock.urgentTitle')"></span>
             </span>
             <span class="site-dock-label">{{ t('dock.dashboard') }}</span>
         </button>
         <button type="button" @click="showSidebar = !showSidebar">
-            <span class="site-dock-icon"><svg class="inline-icon" width="20" height="20"><use href="#i-menu"/></svg></span>
+            <span class="site-dock-icon"><span class="icon-chip" style="width:28px; height:28px;"><svg width="22" height="22"><use href="#i-menu"/></svg></span></span>
             <span class="site-dock-label">{{ t('dock.otherTools') }}</span>
         </button>
         <button type="button" onclick="settingsOpenModal()">
-            <span class="site-dock-icon"><svg class="inline-icon" width="20" height="20"><use href="#i-settings"/></svg></span>
+            <span class="site-dock-icon"><span class="icon-chip" style="width:28px; height:28px;"><svg width="22" height="22"><use href="#i-settings"/></svg></span></span>
             <span class="site-dock-label">{{ t('dock.settings') }}</span>
         </button>
     </nav>
