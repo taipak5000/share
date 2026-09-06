@@ -1165,7 +1165,7 @@
     <!-- 🎉 称号の新規獲得トースト -->
     <div class="title-toast-wrap" aria-live="polite">
         <div v-for="tt in titleToasts" :key="tt.seq" class="title-toast">
-            <span class="title-toast-icon">{{ tt.icon }}</span>
+            <span class="title-toast-icon" v-html="tt.icon"></span>
             <div>
                 <div class="title-toast-label">{{ t('titles.unlocked') }}</div>
                 <div class="title-toast-name">{{ tt.name }}</div>
@@ -2842,6 +2842,15 @@
                 localStorage.setItem(ekey, JSON.stringify(extra));
             }
         }
+        // 所持通貨の値をそのまま文字列結合すると、極端に大きい値(1e+21以上)は
+        // Numberの既定のtoString()で "1e+24" のような指数表記になってしまい、
+        // type="number"の入力欄にその文字列がそのまま表示されてしまう。
+        // useGrouping:falseのtoLocaleString()なら桁区切りなしの普通の10進文字列になり、
+        // number入力のvalue属性としても有効なままにできる。
+        function pfPlainNumber(n) {
+            n = Number(n) || 0;
+            return n.toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 0 });
+        }
         function pfRenderCurrency() {
             var body = document.getElementById('pfCurrencyBody');
             if (!body) return;
@@ -2849,7 +2858,7 @@
             body.innerHTML = PF_CURRENCY_FIELDS.map(function (f) {
                 return '<div class="pf-currency-row">' +
                     '<span class="pf-currency-label">' + f.icon + ' ' + t('pf.currency.' + f.key) + '</span>' +
-                    '<input type="number" min="0" class="pf-currency-input" value="' + c[f.key] + '" ' +
+                    '<input type="number" min="0" class="pf-currency-input" value="' + pfPlainNumber(c[f.key]) + '" ' +
                     'onchange="pfSaveCurrencyField(\'' + f.key + '\', this.value)">' +
                     '</div>';
             }).join('');
