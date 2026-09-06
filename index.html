@@ -142,6 +142,11 @@
         .dash-row-text { flex: 1; min-width: 0; }
         .dash-row b { color: var(--accent-blue); }
         .dash-countdown { display: block; margin-top: 3px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--accent-blue); }
+        /* 🔢➡📏 数字と単位に強弱: 「3日 12:34:56」のうち「3」は残り時間の主役の数値、
+           「日」は単位ラベルなので、数値だけ一回り大きく保ち単位は小さく・控えめな色に落として
+           視覚的な主従をつける(時計部分HH:MM:SSは単位を伴わない書式のため対象外)。 */
+        .dash-countdown-days { font-size: 1.15em; }
+        .dash-countdown-unit { font-size: 0.75em; font-weight: 500; color: var(--text-gray); }
         .dash-note { display: block; margin-top: 2px; font-size: 11.5px; font-weight: 400; color: var(--text-gray); }
         .dash-shard-times { display: block; margin-top: 3px; }
         .dash-shard-time { color: var(--accent-blue); font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -2316,7 +2321,7 @@
             var hh = String(Math.floor((totalSec % 86400) / 3600)).padStart(2, '0');
             var mm = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
             var ss = String(totalSec % 60).padStart(2, '0');
-            return days > 0 ? (days + t('dash.daySuffix') + hh + ':' + mm + ':' + ss) : (hh + ':' + mm + ':' + ss);
+            return days > 0 ? ('<span class="dash-countdown-days">' + days + '</span><span class="dash-countdown-unit">' + t('dash.daySuffix') + '</span>' + hh + ':' + mm + ':' + ss) : (hh + ':' + mm + ':' + ss);
         }
         // ダッシュボードの今日/今週/今月は「項目の種類」ではなく「実際の残り時間」で振り分ける
         // （24時間未満=今日、7日未満=今週、それ以上=今月）。以前は種類ごとに固定のセクションへ
@@ -4608,7 +4613,7 @@
 
 <footer style="text-align: center; padding: 24px 16px; color: var(--text-gray); font-size: 13px; border-top: 1px solid var(--border-color); margin-top: 40px; line-height: 1.6;">
     <span data-i18n="footer.disclaimer">このサイトはSky 星を紡ぐ子どもたちの非公式ファンサイトです。thatgamecompanyは一切関与していません。</span><br>
-    <span data-i18n="footer.createdBy">作成・ご意見:</span> <a href="https://x.com/Skyzztai" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: none; font-weight: bold;">@Skyzztai</a><br>
+    <span data-i18n="footer.createdBy">作成・ご意見:</span> <a href="https://x.com/Skyzztai" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: underline; font-weight: bold;">@Skyzztai</a><br>
     <span style="color: var(--text-gray); font-size: 12px; margin-top: 4px; display: inline-block;">
         <a href="https://taipak5000.github.io/tai-info/" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);" data-i18n="footer.settingsLink">設定・更新情報・クレジット・プライバシーポリシー</a>
     </span>
