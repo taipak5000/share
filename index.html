@@ -2363,10 +2363,14 @@
             if (now < start2) return { active: false, daysUntil: Math.ceil((start2 - now) / 86400000), target: start2 };
             return null;
         }
-        // 複数の来訪(周期的な単独の旅の精霊・期間限定の来訪団など)が同時に進行することがあるため、
-        // それぞれの状態をまとめて計算する
+        // 複数の来訪(周期的な単独の旅の精霊など)が同時に進行することがあるため、それぞれの
+        // 状態をまとめて計算する。一回限り(start/end)の期間限定来訪団はEVENT_SCHEDULE側で
+        // 「〇〇が開催中」として既に表示されるため、ここではintervalDaysを持つ周期的な
+        // 単独の旅する精霊のみを対象にする（同じ来訪が二重に表示されるのを防ぐ）。
         function pfDashRevisitStatuses(schedules) {
-            return (schedules || []).map(function (schedule) {
+            return (schedules || []).filter(function (schedule) {
+                return !!schedule.intervalDays;
+            }).map(function (schedule) {
                 return { schedule: schedule, status: pfDashRevisitStatus(schedule) };
             }).filter(function (x) { return x.status; });
         }
