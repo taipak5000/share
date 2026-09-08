@@ -2546,6 +2546,7 @@
         function pfDashOpen() {
             var overlay = document.getElementById('dashModalOverlay');
             if (overlay) overlay.classList.add('is-visible');
+            pfSyncReminderUI(); // ブラウザ側の通知許可状態が変わっている可能性があるため開くたびに再同期
             var body = document.getElementById('dashBody');
             if (pfDashCache) {
                 // 🍎 開き始める分にはbody.innerHTMLの再構築を待たせない。#dashBodyには
