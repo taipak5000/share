@@ -159,6 +159,12 @@
            関係しない常時表示要素へのtransitionなので問題ない。
            背景色・角丸は.dash-row（後方の.dash-row{background:var(--group-secondary-bg);
            border-radius:12px}が同名クラスの先勝ち定義を上書きして実際に効いている値）に合わせている。 ---------- */
+        /* 🖥️ デスクトップ幅では.pf-modal-card自体が600pxまで広がる(#dashModalOverlayは
+           #settingsModalOverlayと違って幅キャップの対象外指定が無いため)。.dash-cal-dayは
+           aspect-ratio:1の7列gridでmax-widthの上限が無いと、その分セルが70px超まで
+           肥大化し中身(11pxの数字・4pxのドット)だけ小さいまま不釣り合いになる。
+           カレンダー自体の幅を、コンパクトな見た目を保てる360pxに固定してキャップする。 */
+        .dash-calendar { max-width: 360px; margin: 0 auto; }
         .dash-calendar-summary {
             display: flex; align-items: center; gap: 6px; cursor: pointer; list-style: none;
             font-size: 12.5px; font-weight: 600; color: var(--text-color); padding: 9px 11px;
@@ -177,8 +183,15 @@
         .dash-cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; gap: 2px; }
         .dash-cal-day.is-pad { visibility: hidden; }
         .dash-cal-daynum { font-size: 11px; font-variant-numeric: tabular-nums; color: var(--text-color); }
-        .dash-cal-day.is-today { background: var(--accent-blue); }
+        /* ♿ 実測コントラスト: 白文字+--accent-blue(#007aff)は4.02:1でWCAG AA(4.5:1)未達
+           (このファイル冒頭:root内の--accent-blue-solidの説明コメント参照)。他の不透明背景+
+           白文字の組み合わせと同じく--accent-blue-solid(#0071ec, 実測4.59:1)に差し替える。
+           ドットは彩度色のまま(季節2.10:1/イベント1.14:1/キャンドル1.43:1/再訪1.61:1と
+           いずれも非文字コントラスト基準3:1未達、solidに変えても届かない)なので、
+           is-today内のドットだけ白い縁取りを足して背景色に依らず視認できるようにする。 */
+        .dash-cal-day.is-today { background: var(--accent-blue-solid); }
         .dash-cal-day.is-today .dash-cal-daynum { color: #fff; font-weight: 700; }
+        .dash-cal-day.is-today .dash-cal-dot { box-shadow: 0 0 0 1px #fff; }
         .dash-cal-dots { display: flex; gap: 2px; height: 4px; }
         .dash-cal-dot { width: 4px; height: 4px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
         .dash-cal-dot.season { background: #eab308; }
@@ -2050,13 +2063,17 @@
                 if (dashBodyEl) {
                     // カレンダーの開閉(<details>)はinnerHTMLごと差し替えるとdetails要素が
                     // 作り直され、開いていた状態が言語切替のたびに勝手に閉じてしまう。
-                    // 差し替え前に開閉状態を読み、差し替え後に復元する。
+                    // 差し替え前に開閉状態を読み、差し替え後に復元する。同じ理由でフォーカス
+                    // (<summary>にキーボード/スクリーンリーダーでフォーカス中の場合)も失われる
+                    // ため、pfDashStartTimer()と同じヘルパーで一緒に保存/復元する。
                     var calWasOpen = dashBodyEl.querySelector('.dash-calendar') ? dashBodyEl.querySelector('.dash-calendar').open : false;
+                    var focusSel = pfDashCaptureFocus(dashBodyEl);
                     dashBodyEl.innerHTML = pfDashCache ? pfDashBuildHtml(pfDashCache) : '<p class="pf-hint">' + t('dash.loading') + '</p>';
                     if (calWasOpen) {
                         var calEl = dashBodyEl.querySelector('.dash-calendar');
                         if (calEl) calEl.open = true;
                     }
+                    pfDashRestoreFocus(dashBodyEl, focusSel);
                 }
             }
             pfSyncReminderUI(); // 🔔 状態文言(data-i18n非対応)を言語切替時にも再同期。チェックボックス自体は常設DOMなので非表示時も安全に呼べる
@@ -2593,9 +2610,10 @@
                 var key = year + '-' + month + '-' + d;
                 var cats = marks.get(key);
                 var isToday = key === todayKey;
-                var dotsHtml = cats
-                    ? '<span class="dash-cal-dots">' + CAT_ORDER.filter(function (c) { return cats.has(c); }).map(function (c) { return '<i class="dash-cal-dot ' + c + '"></i>'; }).join('') + '</span>'
-                    : '';
+                // 📏 ドットが無い日でも.dash-cal-dots自体は常に描画し(高さ4pxを確保したまま
+                // 中身だけ空にする)、justify-content:centerでの1要素/2要素の高さ差により
+                // 同じ行内で日付の数字の縦位置がずれる(ドットが無い日だけ数px下がる)のを防ぐ。
+                var dotsHtml = '<span class="dash-cal-dots">' + (cats ? CAT_ORDER.filter(function (c) { return cats.has(c); }).map(function (c) { return '<i class="dash-cal-dot ' + c + '"></i>'; }).join('') : '') + '</span>';
                 cellsHtml += '<div class="dash-cal-day' + (isToday ? ' is-today' : '') + '"><span class="dash-cal-daynum">' + d + '</span>' + dotsHtml + '</div>';
             }
             var monthLabel = pfGetLang() === 'en'
@@ -2701,6 +2719,25 @@
                 '<div class="dash-section"><p class="dash-section-label">' + t('dash.thisWeek') + '</p>' + weekHtml + '</div>' +
                 '<div class="dash-section"><p class="dash-section-label">' + t('dash.thisMonth') + '</p>' + monthHtml + '</div>';
         }
+        // ♿ カレンダーの.open状態と同じ理由で、#dashBodyのinnerHTMLを差し替えるたびに
+        // フォーカスも失われる。<summary>(カレンダーの開閉トグル)にキーボード/スクリーン
+        // リーダーでフォーカスしている最中に1秒タイマーや言語切替が発火すると、要素ごと
+        // 作り直されてフォーカスがdocument.bodyへ落ち、モーダルのフォーカストラップが壊れる。
+        // .openの保存/復元と全く同じパターンで、差し替え前にフォーカス位置を読み、
+        // 差し替え後に復元する。#dashBody内で再構築対象の中に恒常的にフォーカス可能な要素は
+        // 現状<summary class="dash-calendar-summary">のみ(日別/今日/今週/今月の各行は
+        // ボタン等を含まない)。
+        function pfDashCaptureFocus(body) {
+            var active = document.activeElement;
+            if (!active || !body.contains(active)) return null;
+            if (active.classList && active.classList.contains('dash-calendar-summary')) return '.dash-calendar-summary';
+            return null;
+        }
+        function pfDashRestoreFocus(body, selector) {
+            if (!selector) return;
+            var el = body.querySelector(selector);
+            if (el && typeof el.focus === 'function') el.focus();
+        }
         var pfDashCache = null;
         var pfDashLoading = null;
         var pfDashTimer = null;
@@ -2714,11 +2751,13 @@
                 // innerHTMLごと差し替えるとdetails要素が作り直され、開いていた状態が毎秒
                 // 勝手に閉じてしまう。差し替え前に開閉状態を読み、差し替え後に復元する。
                 var calWasOpen = body.querySelector('.dash-calendar') ? body.querySelector('.dash-calendar').open : false;
+                var focusSel = pfDashCaptureFocus(body);
                 body.innerHTML = pfDashBuildHtml(pfDashCache);
                 if (calWasOpen) {
                     var cal = body.querySelector('.dash-calendar');
                     if (cal) cal.open = true;
                 }
+                pfDashRestoreFocus(body, focusSel);
             }, 1000);
         }
         function pfDashStopTimer() {
@@ -2733,8 +2772,20 @@
                 // 🍎 開き始める分にはbody.innerHTMLの再構築を待たせない。#dashBodyには
                 // 前回開いた時の内容がまだ残っているため、シートの高さ計算はそれを
                 // 元に行われ、開き始めた直後の1フレームで最新の内容に差し替わる。
+                // ⚠️ pfDashClose()は#dashBodyの中身に一切触れないため、閉じた時点で
+                // カレンダーが開いていればそのDOMはそのまま(openのまま)残る。ここで
+                // pfDashStartTimer()/pfApplyLang()と同じ開閉状態の保存/復元を行わないと、
+                // 次に開いた瞬間だけ無条件にinnerHTMLを差し替えてしまい、閉じる前に
+                // ユーザーが開いていたカレンダーが毎回まっさらな折りたたみ状態に戻ってしまう。
                 requestAnimationFrame(function () {
+                    var calWasOpen = body.querySelector('.dash-calendar') ? body.querySelector('.dash-calendar').open : false;
+                    var focusSel = pfDashCaptureFocus(body);
                     body.innerHTML = pfDashBuildHtml(pfDashCache);
+                    if (calWasOpen) {
+                        var cal = body.querySelector('.dash-calendar');
+                        if (cal) cal.open = true;
+                    }
+                    pfDashRestoreFocus(body, focusSel);
                     pfDashStartTimer();
                 });
                 return;
