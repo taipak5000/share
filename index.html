@@ -2617,6 +2617,18 @@
             var marks = pfDashCalendarMarks(data, year, month);
             var todayKey = year + '-' + month + '-' + now.getDate();
             var CAT_ORDER = ['season', 'event', 'candle', 'revisit'];
+            // ♿ 各日のカテゴリは4pxの丸ドットの色だけで示されており、スクリーンリーダー
+            // 利用者やドットの色が区別しづらい利用者には情報が一切伝わらない(凡例と違い
+            // テキストが無い)。凡例と同じラベル文言を使って日付+カテゴリの説明文を組み立て、
+            // セルのtitle/aria-labelに付与する(見た目は変えず、支援技術・マウスホバー向けの
+            // テキスト等価物を追加するだけ)。
+            var CAT_LABELS = {
+                season: t('dash.calLegendSeason'), event: t('dash.calLegendEvent'),
+                candle: t('dash.calLegendCandle'), revisit: t('dash.calLegendRevisit')
+            };
+            var monthNameOnly = pfGetLang() === 'en'
+                ? new Intl.DateTimeFormat('en-US', { month: 'long' }).format(now)
+                : (month + 1) + '月';
 
             var dow = pfGetLang() === 'en' ? ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'] : ['日', '月', '火', '水', '木', '金', '土'];
             var cellsHtml = '';
@@ -2626,11 +2638,15 @@
                 var key = year + '-' + month + '-' + d;
                 var cats = marks.get(key);
                 var isToday = key === todayKey;
+                var catList = cats ? CAT_ORDER.filter(function (c) { return cats.has(c); }).map(function (c) { return CAT_LABELS[c]; }) : [];
+                var dayLabel = (pfGetLang() === 'en' ? (monthNameOnly + ' ' + d) : (monthNameOnly + d + '日'))
+                    + (catList.length ? (': ' + catList.join(', ')) : '');
+                var dayLabelAttr = pfEscapeHtml(dayLabel);
                 // 📏 ドットが無い日でも.dash-cal-dots自体は常に描画し(高さ4pxを確保したまま
                 // 中身だけ空にする)、justify-content:centerでの1要素/2要素の高さ差により
                 // 同じ行内で日付の数字の縦位置がずれる(ドットが無い日だけ数px下がる)のを防ぐ。
                 var dotsHtml = '<span class="dash-cal-dots">' + (cats ? CAT_ORDER.filter(function (c) { return cats.has(c); }).map(function (c) { return '<i class="dash-cal-dot ' + c + '"></i>'; }).join('') : '') + '</span>';
-                cellsHtml += '<div class="dash-cal-day' + (isToday ? ' is-today' : '') + '"><span class="dash-cal-daynum">' + d + '</span>' + dotsHtml + '</div>';
+                cellsHtml += '<div class="dash-cal-day' + (isToday ? ' is-today' : '') + '" title="' + dayLabelAttr + '" aria-label="' + dayLabelAttr + '"><span class="dash-cal-daynum">' + d + '</span>' + dotsHtml + '</div>';
             }
             var monthLabel = pfGetLang() === 'en'
                 ? new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(now)
@@ -2798,6 +2814,11 @@
                 // 次に開いた瞬間だけ無条件にinnerHTMLを差し替えてしまい、閉じる前に
                 // ユーザーが開いていたカレンダーが毎回まっさらな折りたたみ状態に戻ってしまう。
                 requestAnimationFrame(function () {
+                    // 🩹 rAFが実際に発火するまでの間にダッシュボードが閉じられている可能性がある
+                    // （開いて即座に閉じた等）。閉じた後にここへ来ると、見えていない#dashBodyを
+                    // 再構築した上でタイマーだけが起動してしまい、再度開かれるまでバックグラウンドで
+                    // 毎秒動き続けるリークになるため、閉じていたら何もしない。
+                    if (!overlay || !overlay.classList.contains('is-visible')) return;
                     var calWasOpen = body.querySelector('.dash-calendar') ? body.querySelector('.dash-calendar').open : false;
                     var focusSel = pfDashCaptureFocus(body);
                     body.innerHTML = pfDashBuildHtml(pfDashCache);
@@ -2814,6 +2835,10 @@
             if (!pfDashLoading) pfDashLoading = pfDashLoadData();
             pfDashLoading.then(function (data) {
                 pfDashCache = data;
+                // 🩹 上のrAF分岐と同じ理由で、フェッチ待ちの間にダッシュボードが閉じられている
+                // 可能性がある。キャッシュ自体は次回開いた時のために保存しつつ、見えていない
+                // #dashBodyの再構築とタイマー起動はスキップする。
+                if (!overlay || !overlay.classList.contains('is-visible')) return;
                 body.innerHTML = pfDashBuildHtml(data);
                 pfDashStartTimer();
             }).catch(function (e) {
