@@ -163,8 +163,11 @@
            #settingsModalOverlayと違って幅キャップの対象外指定が無いため)。.dash-cal-dayは
            aspect-ratio:1の7列gridでmax-widthの上限が無いと、その分セルが70px超まで
            肥大化し中身(11pxの数字・4pxのドット)だけ小さいまま不釣り合いになる。
-           カレンダー自体の幅を、コンパクトな見た目を保てる360pxに固定してキャップする。 */
-        .dash-calendar { max-width: 360px; margin: 0 auto; }
+           ⚠️ 以前は.dash-calendar自体をmax-width:360pxでキャップしていたが、そうすると
+           カレンダーブロックだけが他の全幅の兄弟セクション（デイリー/今日/今週/今月の各行）
+           に対して中央に浮いた幅の狭い「島」に見えてしまう。.dash-calendarとその
+           summary/背景は他の行と同じく全幅のまま保ち、実際にセルサイズへ影響する
+           grid本体（列トラック）とlegendだけを44pxセル基準の幅でキャップ・中央寄せする。 */
         .dash-calendar-summary {
             display: flex; align-items: center; gap: 6px; cursor: pointer; list-style: none;
             font-size: 12.5px; font-weight: 600; color: var(--text-color); padding: 9px 11px;
@@ -176,7 +179,7 @@
         .dash-calendar[open] .dash-calendar-summary { border-radius: 12px 12px 0 0; }
         .dash-calendar[open] .dash-calendar-chevron { transform: rotate(90deg); }
         .dash-cal-grid {
-            display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px;
+            display: grid; grid-template-columns: repeat(7, minmax(0, 44px)); justify-content: center; gap: 3px;
             padding: 10px 11px; background: var(--group-secondary-bg); border-radius: 0 0 12px 12px;
         }
         .dash-cal-dow { text-align: center; font-size: 10px; font-weight: 700; color: var(--text-gray); padding-bottom: 4px; }
@@ -186,19 +189,32 @@
         /* ♿ 実測コントラスト: 白文字+--accent-blue(#007aff)は4.02:1でWCAG AA(4.5:1)未達
            (このファイル冒頭:root内の--accent-blue-solidの説明コメント参照)。他の不透明背景+
            白文字の組み合わせと同じく--accent-blue-solid(#0071ec, 実測4.59:1)に差し替える。
-           ドットは彩度色のまま(季節2.10:1/イベント1.14:1/キャンドル1.43:1/再訪1.61:1と
-           いずれも非文字コントラスト基準3:1未達、solidに変えても届かない)なので、
-           is-today内のドットだけ白い縁取りを足して背景色に依らず視認できるようにする。 */
+           ドットは彩度色のまま(today背景=--accent-blue-solidに対し季節2.39:1/イベント1.30:1/
+           キャンドル1.64:1/再訪1.85:1といずれも非文字コントラスト基準3:1未達、solidに変えても
+           届かない)なので、is-today内のドットだけ白い縁取りを足して背景色に依らず視認できる
+           ようにする。同日に2種類以上のドットが並ぶ場合、隣接ドット間の通常gap(2px)のままだと
+           片側1pxずつの白い縁取り同士が接して1つの白い塊に見えてしまうため、is-today内だけ
+           ドット間のgapを広げて縁取り同士が触れないようにする。 */
         .dash-cal-day.is-today { background: var(--accent-blue-solid); }
         .dash-cal-day.is-today .dash-cal-daynum { color: #fff; font-weight: 700; }
         .dash-cal-day.is-today .dash-cal-dot { box-shadow: 0 0 0 1px #fff; }
+        .dash-cal-day.is-today .dash-cal-dots { gap: 4px; }
         .dash-cal-dots { display: flex; gap: 2px; height: 4px; }
         .dash-cal-dot { width: 4px; height: 4px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-        .dash-cal-dot.season { background: #eab308; }
+        /* ♿ 通常セル(--group-secondary-bg = 実測#f2f2f7)に対する非文字コントラスト(3:1必須)を
+           自前で計算: 季節#eab308=1.72:1・キャンドル#f97316=2.51:1・再訪#14b8a6=2.23:1と
+           いずれも未達(イベント#ec4899=3.16:1のみ達成)。ライトテーマだけ彩度を保ったまま
+           暗くした色に差し替えて3:1を確保する(季節→4.41:1・キャンドル→4.64:1・再訪→4.90:1)。
+           ダークテーマは元の背景(ほぼ黒)に対して既に視認性十分なため、[data-theme="dark"]で
+           元の鮮やかな色へ戻す。凡例(.dash-cal-legend)も同じクラスを使うため同時に直る。 */
+        .dash-cal-dot.season { background: #a16207; }
         .dash-cal-dot.event { background: #ec4899; }
-        .dash-cal-dot.candle { background: #f97316; }
-        .dash-cal-dot.revisit { background: #14b8a6; }
-        .dash-cal-legend { display: flex; flex-wrap: wrap; gap: 10px; padding: 8px 2px 2px; font-size: 10.5px; color: var(--text-gray); }
+        .dash-cal-dot.candle { background: #c2410c; }
+        .dash-cal-dot.revisit { background: #0f766e; }
+        [data-theme="dark"] .dash-cal-dot.season { background: #eab308; }
+        [data-theme="dark"] .dash-cal-dot.candle { background: #f97316; }
+        [data-theme="dark"] .dash-cal-dot.revisit { background: #14b8a6; }
+        .dash-cal-legend { display: flex; flex-wrap: wrap; gap: 10px; padding: 8px 2px 2px; font-size: 10.5px; color: var(--text-gray); max-width: 326px; margin: 0 auto; }
         .dash-cal-legend span { display: inline-flex; align-items: center; gap: 4px; }
         .dash-cal-legend .dash-cal-dot { width: 6px; height: 6px; }
         .pf-modal-overlay {
@@ -2736,7 +2752,11 @@
         function pfDashRestoreFocus(body, selector) {
             if (!selector) return;
             var el = body.querySelector(selector);
-            if (el && typeof el.focus === 'function') el.focus();
+            // 📜 preventScroll:trueを付けないと、素のfocus()はターゲットを画面内に
+            // スクロールして映そうとする。ユーザーがダッシュボード本文を下(今日/今週/
+            // 今月やリマインダー設定)までスクロールしている最中に毎秒のタイマーが発火すると、
+            // フォーカス復元のたびにカレンダーの位置まで強制的に巻き戻されてしまう。
+            if (el && typeof el.focus === 'function') el.focus({ preventScroll: true });
         }
         var pfDashCache = null;
         var pfDashLoading = null;
@@ -3823,7 +3843,12 @@
             }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'], subtree: true, attributeOldValue: true });
 
             function isInteractive(el) {
-                return !!(el && el.closest && el.closest('input, select, textarea, button, a, label, [contenteditable]'));
+                // 🗓️ summaryを含めないと、カレンダーの<details>開閉トグル(dash-calendar-summary、
+                // role="button"も無いネイティブ<summary>)へのタップがこのシートの
+                // ドラッグ判定に奪われる。指のわずかなブレを伴う普通のタップでも10px閾値を
+                // 超えて「ドラッグ」扱いになり、カレンダーが開閉しないばかりかシート自体が
+                // 閉じてしまうことがあった。
+                return !!(el && el.closest && el.closest('input, select, textarea, button, a, label, summary, [contenteditable]'));
             }
             document.addEventListener('pointerdown', function (e) {
                 if (REDUCE_MOTION.matches) return;
