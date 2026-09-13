@@ -227,6 +227,7 @@
             border-radius: 14px;
             padding: 20px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            box-sizing: border-box;
         }
         .pf-modal-card h3 { margin: 0 0 14px; font-size: 16px; color: var(--text-color); }
         .pf-row {
@@ -1046,6 +1047,7 @@
             border-radius: 20px 20px 0 0;
             padding: 30px 20px calc(20px + env(safe-area-inset-bottom));
             box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.25), inset 0 1px 0 var(--glass-edge);
+            box-sizing: border-box;
             position: relative; overscroll-behavior: contain;
             touch-action: pan-y; will-change: transform;
             /* タップでの単純な開閉はこのトランジションに任せる。ドラッグ中・フリック後の
@@ -2900,6 +2902,10 @@
                 if (!overlay || !overlay.classList.contains('is-visible')) return;
                 body.innerHTML = pfDashBuildHtml(data);
                 pfDashStartTimer();
+                // ♿ trapPush()の初回フォーカスはこのfetch待ちより先に走っており、その時点では
+                // #dashBodyがまだローディング表示だったため本来の先頭要素に当たっていない。
+                // 実コンテンツに差し替わった今、フォーカスを当て直す。
+                trapRefocusFirst('dashModalOverlay');
             }).catch(function (e) {
                 console.error('pfDashOpen', e);
                 body.innerHTML = '<div class="dash-empty">' + t('dash.loadFailed') + '</div>';
@@ -3566,6 +3572,8 @@
 
         function pfIconOpenModal() {
             var overlay = document.getElementById('iconCustomModal');
+            if (overlay.classList.contains('is-visible')) return;
+            pfCloseOtherTopLevelOverlays('iconCustomModal');
             overlay.classList.add('is-visible');
             trapPush('iconCustomModal', overlay.querySelector('.pf-modal-card'));
         }
@@ -3789,7 +3797,7 @@
         // モーダル）だけにする。これによりSettings上にDashboardが重なるような多重ネストにも
         // 自動的に対応でき、閉じるたびに開く前にフォーカスしていた要素（トリガー）へ正しく
         // 戻せる。サイドバー（「他のツール」ドロワー、Vue管理）もこの仕組みに統一して含める。
-        var FT_FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+        var FT_FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
         var trapStack = [];
         var trapListenerAttached = false;
         function trapFocusableEls(container) {
@@ -3825,6 +3833,18 @@
             var focusable = trapFocusableEls(card);
             (focusable[0] || card).focus();
         }
+        // 🩹 非同期データ取得を待つモーダル（ダッシュボード等）向け: trapPush()時点では
+        // まだローディング表示のため、初回フォーカスは「実質フォーカス不可能な」プレース
+        // ホルダー要素（カード内で偶然最初に見つかる閉じるボタン等）に当たってしまう。
+        // 実データの描画が終わった時点でこれを呼び直し、本来の先頭要素へフォーカスを
+        // 当て直す（スタック自体は積み直さない＝トリガー参照はそのまま維持する）。
+        function trapRefocusFirst(overlayId) {
+            var entry = null;
+            for (var i = 0; i < trapStack.length; i++) { if (trapStack[i].overlayId === overlayId) { entry = trapStack[i]; break; } }
+            if (!entry) return;
+            var focusable = trapFocusableEls(entry.card);
+            (focusable[0] || entry.card).focus();
+        }
         // overlayIdをスタックから取り除き、そのモーダルを開く前にフォーカスしていた要素
         // （トリガー）へフォーカスを戻す。document.contains()は、トリガーが別のオーバーレイの
         // 再描画等で既にDOMから失われていた場合に備えた安全策。
@@ -3847,14 +3867,19 @@
         // ページ内の各ボタンからいつでも独立して開けるため、他のどれかが開いたままもう1つを
         // 開くとオーバーレイ同士が重なって見えてしまう。開く前に、開こうとしているもの以外を
         // 閉じておく（各close関数は未オープン時は何もしない安全な関数）。
-        // バックアップ管理(dm)・アイコンカスタム(icon)モーダルは、それぞれプロフィール／表示設定
-        // モーダル内の専用ボタンからしか開けず、開いている間は親の全画面オーバーレイに覆われる
-        // （＝他のトップレベルが開いた状態でこの2つだけが独立して開くことはない）ため、
-        // ここでの排他制御には含めない。
+        // バックアップ管理(dm)モーダルは、プロフィール切替モーダル内の専用ボタンからしか開けず、
+        // 開いている間は常に親(pfModalOverlay)が閉じられないまま覆いかぶさる（＝pfCloseModal()が
+        // dmも道連れに閉じるため）ので、ここでの排他制御には含めない。
+        // ⚠️ アイコンカスタム(icon)モーダルは違う: 表示設定モーダル内のボタンは
+        // 「settingsCloseModal(); pfIconOpenModal();」の順で呼ばれ、iconが開く時点で
+        // 親(settings)は既に閉じられている。そのため覆いかぶさる親が存在せず、他のトップレベル
+        // （例: 「?」ショートカットでの表示設定の再オープン）が開いてもicon側は自動で閉じない
+        // ままになってしまう（実機確認済みの不具合）。iconもここに含める。
         function pfCloseOtherTopLevelOverlays(exceptId) {
             if (exceptId !== 'settingsModalOverlay' && document.getElementById('settingsModalOverlay').classList.contains('is-visible')) settingsCloseModal();
             if (exceptId !== 'dashModalOverlay' && document.getElementById('dashModalOverlay').classList.contains('is-visible')) pfDashClose();
             if (exceptId !== 'pfModalOverlay' && document.getElementById('pfModalOverlay').classList.contains('is-visible')) pfCloseModal();
+            if (exceptId !== 'iconCustomModal' && document.getElementById('iconCustomModal').classList.contains('is-visible')) pfIconCloseModal();
             if (exceptId !== 'sidebar' && window.pfSidebarIsOpen && window.pfSidebarIsOpen()) window.pfSidebarClose();
         }
 
