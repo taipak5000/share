@@ -820,7 +820,12 @@
             left: 0;
             right: 0;
             bottom: 0;
-            z-index: 90;
+            /* 🩹 z-index: オーバーレイ背景(.pf-modal-overlay:1000 / .sidebar-overlay:499)より
+               低いままだと、オーバーレイが開いている間ドックがクリックを奪われ、別のドック
+               アイコンをタップしても「現在のオーバーレイを閉じるだけ」になり、意図した
+               オーバーレイへの一発切り替えができなかった。ドックは常にクリック可能であるべき
+               なので、全オーバーレイ背景より上に置く。 */
+            z-index: 1001;
             padding: 6px 10px calc(8px + env(safe-area-inset-bottom));
             background: var(--card-bg);
             backdrop-filter: blur(10px);
@@ -4145,11 +4150,16 @@
         // ═══ ⌨️ グローバルキーボードショートカット（? / D / Esc） ═══
         // ・Escapeは sky_shortcuts_enabled の設定に関わらず常に有効（モーダルの基本UX）。
         // ・? と D はテキスト入力中は無効化し、有効/無効設定もチェックする。
+        // 🩹 INPUTはtagNameだけでなくtypeも見る（プロフィール切替モーダルは開くとtype=colorの
+        // カラースウォッチへ自動フォーカスするため、tagName判定だけだとモーダルを開いた
+        // 直後から'?'/'d'が効かなくなっていた）。実際に文字を打ち込めるtypeだけを「入力中」とみなす。
+        var PF_NON_TEXT_INPUT_TYPES = ['checkbox', 'radio', 'range', 'color', 'button', 'submit', 'reset', 'file', 'image', 'hidden'];
         document.addEventListener('keydown', function (e) {
             if (e.repeat) return;
             if (e.ctrlKey || e.metaKey || e.altKey) return;
             var tgt = e.target;
-            var isTyping = tgt && (tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA' || tgt.tagName === 'SELECT' || tgt.isContentEditable);
+            var isTextInput = tgt && tgt.tagName === 'INPUT' && PF_NON_TEXT_INPUT_TYPES.indexOf((tgt.type || '').toLowerCase()) === -1;
+            var isTyping = tgt && (isTextInput || tgt.tagName === 'TEXTAREA' || tgt.tagName === 'SELECT' || tgt.isContentEditable);
 
             if (e.key === 'Escape') {
                 closeTopmostOpenModal();
