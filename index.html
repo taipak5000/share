@@ -2915,9 +2915,13 @@
             // 既に開いている場合は何もしない（ここでガードしないとtrapPush側のトリガー参照が
             // モーダル内の要素で上書きされ、閉じたときにフォーカスの戻し先を見失う）
             if (overlay && overlay.classList.contains('is-visible')) return;
+            // 🩹 pfCloseOtherTopLevelOverlays()が他のオーバーレイを閉じるとtrapPop()経由で
+            // document.activeElementがそちら側のトリガーへ書き戻されてしまうため、本当の
+            // トリガー（この関数を呼んだ操作の直前のフォーカス）は排他制御より前に確保する。
+            var triggerEl = document.activeElement;
             pfCloseOtherTopLevelOverlays('dashModalOverlay');
             if (overlay) overlay.classList.add('is-visible');
-            trapPush('dashModalOverlay', overlay ? overlay.querySelector('.pf-modal-card') : null);
+            trapPush('dashModalOverlay', overlay ? overlay.querySelector('.pf-modal-card') : null, triggerEl);
             pfSyncReminderUI(); // ブラウザ側の通知許可状態が変わっている可能性があるため開くたびに再同期
             var body = document.getElementById('dashBody');
             if (pfDashCache) {
@@ -3459,6 +3463,10 @@
             // モーダル内の要素で上書きされ、閉じたときにフォーカスの戻し先を見失う）
             var overlay = document.getElementById('pfModalOverlay');
             if (overlay && overlay.classList.contains('is-visible')) return;
+            // 🩹 pfCloseOtherTopLevelOverlays()が他のオーバーレイを閉じるとtrapPop()経由で
+            // document.activeElementがそちら側のトリガーへ書き戻されてしまうため、本当の
+            // トリガー（この関数を呼んだ操作の直前のフォーカス）は排他制御より前に確保する。
+            var triggerEl = document.activeElement;
             pfCloseOtherTopLevelOverlays('pfModalOverlay');
             pfEditingId = null;
             pfDeletingId = null;
@@ -3466,7 +3474,7 @@
             // 一覧の描画(称号の横断集計を含み重い)を待ってから開いていたため、
             // タップしてから動き出すまでに一拍の間があった。
             if (overlay) overlay.classList.add('is-visible');
-            trapPush('pfModalOverlay', overlay ? overlay.querySelector('.pf-modal-card') : null);
+            trapPush('pfModalOverlay', overlay ? overlay.querySelector('.pf-modal-card') : null, triggerEl);
             requestAnimationFrame(function () {
                 pfRenderModal();
                 pfRenderCurrency();
@@ -3628,9 +3636,13 @@
         function pfIconOpenModal() {
             var overlay = document.getElementById('iconCustomModal');
             if (overlay.classList.contains('is-visible')) return;
+            // 🩹 pfCloseOtherTopLevelOverlays()が他のオーバーレイを閉じるとtrapPop()経由で
+            // document.activeElementがそちら側のトリガーへ書き戻されてしまうため、本当の
+            // トリガー（この関数を呼んだ操作の直前のフォーカス）は排他制御より前に確保する。
+            var triggerEl = document.activeElement;
             pfCloseOtherTopLevelOverlays('iconCustomModal');
             overlay.classList.add('is-visible');
-            trapPush('iconCustomModal', overlay.querySelector('.pf-modal-card'));
+            trapPush('iconCustomModal', overlay.querySelector('.pf-modal-card'), triggerEl);
         }
         function pfIconCloseModal() {
             var overlay = document.getElementById('iconCustomModal');
@@ -3832,10 +3844,14 @@
             // 要素で上書きされ、閉じたときにフォーカスの戻し先を見失う）
             var overlay = document.getElementById('settingsModalOverlay');
             if (overlay && overlay.classList.contains('is-visible')) return;
+            // 🩹 pfCloseOtherTopLevelOverlays()が他のオーバーレイを閉じるとtrapPop()経由で
+            // document.activeElementがそちら側のトリガーへ書き戻されてしまうため、本当の
+            // トリガー（この関数を呼んだ操作の直前のフォーカス）は排他制御より前に確保する。
+            var triggerEl = document.activeElement;
             pfCloseOtherTopLevelOverlays('settingsModalOverlay');
             settingsSyncUI();
             if (overlay) overlay.classList.add('is-visible');
-            trapPush('settingsModalOverlay', overlay ? overlay.querySelector('.pf-modal-card') : null);
+            trapPush('settingsModalOverlay', overlay ? overlay.querySelector('.pf-modal-card') : null, triggerEl);
         }
         function settingsCloseModal() {
             // 🧭 このモーダルの上にアイコンカスタムモーダルが重ねて開いている場合に備えた安全策
@@ -3878,9 +3894,18 @@
         // overlayIdをキーにカードへフォーカスを移し、Tabトラップのスタックに積む。同じ
         // overlayIdが既にスタックにある（＝多重呼び出し）場合は何もしない（トリガー参照の
         // 上書き防止。各open関数の「既に開いていれば何もしない」ガードと同じ考え方）。
-        function trapPush(overlayId, card) {
+        function trapPush(overlayId, card, triggerEl) {
             if (!card || trapStack.some(function (s) { return s.overlayId === overlayId; })) return;
-            trapStack.push({ overlayId: overlayId, card: card, prevFocusEl: document.activeElement });
+            // 🩹 呼び出し元がpfCloseOtherTopLevelOverlays()で他のオーバーレイを閉じてから
+            // ここに来る場合、その際のtrapPop()がdocument.activeElementを「閉じた側の」
+            // 古いトリガーへ書き戻してしまっている。そのままdocument.activeElementを読むと
+            // 今開こうとしているこのオーバーレイの本当のトリガーではなく、直前に閉じた
+            // 別オーバーレイの古いトリガーを誤って記録し、閉じたときにフォーカスの戻し先を
+            // 見失う。呼び出し元が排他制御より前に確保したtriggerElを渡せる場合はそれを
+            // 優先する（実機確認済みの不具合: A→A open→Bのトリガーをクリック→Bのトリガー
+            // 参照がAの古いトリガーに上書きされる）。
+            var prevFocusEl = (triggerEl !== undefined) ? triggerEl : document.activeElement;
+            trapStack.push({ overlayId: overlayId, card: card, prevFocusEl: prevFocusEl });
             if (!trapListenerAttached) {
                 document.addEventListener('keydown', trapKeydown, true);
                 trapListenerAttached = true;
@@ -4305,8 +4330,12 @@
                 // toggleLang()→window.pfApplyLang()と同じく、window経由でしか届かない
                 // （このsetup()はそのIIFEの外側の閉じたスコープにあるため直接参照できない）。
                 if (isOpen) {
+                    // 🩹 pfCloseOtherTopLevelOverlays()が他のオーバーレイを閉じるとtrapPop()経由で
+                    // document.activeElementがそちら側のトリガーへ書き戻されてしまうため、本当の
+                    // トリガー（サイドバーを開いた操作の直前のフォーカス）は排他制御より前に確保する。
+                    const triggerEl = document.activeElement;
                     window.pfCloseOtherTopLevelOverlays('sidebar');
-                    nextTick(() => window.trapPush('sidebar', document.querySelector('.sidebar')));
+                    nextTick(() => window.trapPush('sidebar', document.querySelector('.sidebar'), triggerEl));
                 } else {
                     window.trapPop('sidebar');
                 }
