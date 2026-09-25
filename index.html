@@ -109,8 +109,6 @@
             color: var(--accent-blue);
         }
         .icon-chip svg { display: block; stroke: var(--accent-blue); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-        .pf-titles-caret { transition: transform 0.15s ease; }
-        .pf-titles-toggle[aria-expanded="true"] .pf-titles-caret { transform: rotate(180deg); }
 
         /* 🗂️ プロフィール（保存枠）切り替え */
         .pf-bar {
@@ -319,11 +317,26 @@
         .pf-currency-title { font-size: 12px; font-weight: 700; color: var(--text-gray); margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.4px;
           display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
         .pf-currency-toggle-label { font-size: 11px; font-weight: 700; text-transform: none; letter-spacing: 0; }
-        .pf-currency-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 2px; }
+        .pf-currency-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 2px; flex-wrap: wrap; }
         .pf-currency-label { font-size: 13px; color: var(--text-color); }
-        .pf-currency-input { width: 90px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px;
-          padding: 6px 8px; font-size: 14px; color: var(--text-color); font-family: inherit; outline: none; box-sizing: border-box; text-align: right; }
+        /* ➖🔢➕ ステッパーボタン+入力欄のグループ。狭い画面でもラベルと衝突しないよう
+           flex-shrink:0で幅を確保しつつ、行自体はflex-wrapで折り返せるようにしてある
+           （.pf-currency-rowのwrap指定を参照）。 */
+        .pf-currency-controls { display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-left: auto; }
+        .pf-currency-step-btn {
+            width: 26px; height: 26px; flex-shrink: 0; padding: 0;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 7px;
+            color: var(--text-color); cursor: pointer;
+        }
+        .pf-currency-step-btn:active { background: var(--fill-secondary); }
+        .pf-currency-input { width: 64px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px;
+          padding: 6px 4px; font-size: 14px; color: var(--text-color); font-family: inherit; outline: none; box-sizing: border-box; text-align: right; }
         .pf-currency-input:focus { border-color: var(--accent-blue); }
+        /* 隣に➖➕ステッパーボタンがあるため、ブラウザ既定のnumber入力スピナーは
+           二重操作で紛らわしいので消す(狭い幅で誤タップしやすい問題の解消も兼ねる)。 */
+        .pf-currency-input::-webkit-inner-spin-button, .pf-currency-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .pf-currency-input { -moz-appearance: textfield; }
 
         /* 🏆 プロフィール切替モーダル：行ごとに8ツール横断の獲得済み称号を折りたたみ表示する。
            .pf-rowはflexなので、トグルボタンと本文にflex-basis:100%を与えて強制的に
@@ -1390,6 +1403,11 @@
                     <span class="pf-row-name" data-i18n="settings.darkModeLabel">テーマ</span>
                     <button type="button" class="pf-icon-btn" id="settingsThemeBtn" onclick="window.toggleTheme && window.toggleTheme()"></button>
                 </div>
+                <div class="pf-row">
+                    <span class="icon-chip" style="width:22px; height:22px;"><svg width="17" height="17"><use href="#i-trophy"/></svg></span>
+                    <span class="pf-row-name" data-i18n="settings.titlesVisibleLabel">称号を表示する</span>
+                    <button type="button" class="pf-icon-btn" id="settingsTitlesBtn" onclick="settingsToggleTitlesVisible()"></button>
+                </div>
             </div>
 
             <div class="pf-currency-section">
@@ -1583,7 +1601,7 @@
         </template>
     </div>
 
-    <div class="section-card">
+    <div class="section-card" v-if="titlesVisible">
         <div class="section-header" style="display: flex; align-items: center; justify-content: space-between;">
             <span>{{ t('titles.header') }}</span>
             <span class="titles-count">{{ t('titles.countTemplate', { earned: earnedTitleList.length, total: titleChipList.length }) }}</span>
@@ -1793,6 +1811,19 @@
                 return v === null ? true : v === '1'; // 未設定時はデフォルトで有効
             } catch (e) { return true; }
         }
+
+        // ═══ ⚙️ 表示設定: 称号(実績)の表示/非表示 (taipak5000.github.io 配下の各ツール共通キー) ═══
+        // テーマ・言語・ショートカット有効設定と同じ「端末単位(プロフィール非依存)」の
+        // 設定として、nsKey()を通さない共通キーで保存する。プロフィール切替モーダル内の
+        // 8ツール横断称号一覧・このサイト自身の称号カード・称号獲得トーストの全てが
+        // これを参照する(下の各箇所を参照)。
+        var TITLES_VISIBLE_KEY = 'sky_titles_visible';
+        function skyTitlesVisible() {
+            try {
+                var v = localStorage.getItem(TITLES_VISIBLE_KEY);
+                return v === null ? true : v === '1'; // 未設定時はデフォルトで表示(既存ユーザーは今まで通り見える)
+            } catch (e) { return true; }
+        }
         function pfGetLang() {
             try { return localStorage.getItem(LANG_KEY) === 'en' ? 'en' : 'ja'; } catch (e) { return 'ja'; }
         }
@@ -1805,6 +1836,8 @@
                 'pf.addBtn': '追加',
                 'pf.hint': 'プロフィールを切り替えると、登録した創作物の一覧がそのプロフィール専用の保存内容に切り替わります。サブアカウントなど複数アカウントをお持ちの方にご利用いただけます。',
                 'pf.currencyTitle': '所持通貨',
+                'pf.currencyMinus': '1減らす',
+                'pf.currencyPlus': '1増やす',
                 'pf.backupBtn': 'データのバックアップ・復元・削除',
                 'pf.colorTitle': 'アカウントカラー',
                 'pf.colorReset': 'カラーを初期値に戻す',
@@ -1921,6 +1954,9 @@
                 'theme.light': 'ライト',
                 'theme.system': 'システム',
                 'theme.ariaLabel': '現在のテーマ: {current}。クリックで{next}に切替',
+                'settings.titlesVisibleLabel': '称号を表示する',
+                'settings.titlesOn': '<svg class="inline-icon ok" width="13" height="13"><use href="#i-check"/></svg> 表示',
+                'settings.titlesOff': '<svg class="inline-icon warn" width="13" height="13"><use href="#i-warning"/></svg> 非表示',
                 'settings.iconSection': 'ホーム画面アイコン',
                 'settings.customizeIconLabel': 'ホーム画面アイコン',
                 'settings.customizeIconBtn': 'カスタマイズ',
@@ -1940,6 +1976,8 @@
                 'pf.addBtn': 'Add',
                 'pf.hint': 'Switching profiles swaps the whole list of registered creations for that profile’s own saved data. Handy if you have a sub-account or multiple accounts.',
                 'pf.currencyTitle': 'Owned Currency',
+                'pf.currencyMinus': 'Decrease by 1',
+                'pf.currencyPlus': 'Increase by 1',
                 'pf.backupBtn': 'Backup / restore / erase data',
                 'pf.colorTitle': 'Account color',
                 'pf.colorReset': 'Reset color to default',
@@ -2056,6 +2094,9 @@
                 'theme.light': 'Light',
                 'theme.system': 'System',
                 'theme.ariaLabel': 'Current theme: {current}. Click to switch to {next}.',
+                'settings.titlesVisibleLabel': 'Show titles',
+                'settings.titlesOn': '<svg class="inline-icon ok" width="13" height="13"><use href="#i-check"/></svg> Shown',
+                'settings.titlesOff': '<svg class="inline-icon warn" width="13" height="13"><use href="#i-warning"/></svg> Hidden',
                 'settings.iconSection': 'Home Screen Icon',
                 'settings.customizeIconLabel': 'Home Screen Icon',
                 'settings.customizeIconBtn': 'Customize',
@@ -2208,6 +2249,12 @@
             if (e.key === 'sky_app_theme') {
                 var newMode = (e.newValue === 'light' || e.newValue === 'dark') ? e.newValue : 'system';
                 if (window.pfSyncThemeMode) window.pfSyncThemeMode(newMode);
+            }
+            // 🏆 他タブ・他サイトで称号表示設定が変更された場合も、このタブの称号カード・
+            // トースト・プロフィールモーダルへ即座に反映する（テーマと同じ考え方）。
+            if (e.key === TITLES_VISIBLE_KEY) {
+                if (window.pfSyncTitlesVisible) window.pfSyncTitlesVisible(e.newValue === null ? true : e.newValue === '1');
+                pfRenderModal();
             }
         });
         function pfSetProfileColor(id, color) {
@@ -3325,7 +3372,10 @@
                 var colorVal = pfIsSafeColor(p.color) ? p.color : '#007AFF';
                 // 🏆 このプロフィールに切り替えなくても8ツール横断の獲得済み称号を確認できるように、
                 // 行ごとにpfCollectProfileTitles()の結果を折りたたみ表示する(条件文はホバー無しで常に見える)。
-                var pTitles = pfCollectProfileTitles(p.id);
+                // ⚙️ 表示設定で称号を非表示にしている場合は、この行自体を一切描画しない
+                // (空の「まだ称号を獲得していません」文言も含めて完全に隠す)。
+                var showTitlesUi = skyTitlesVisible();
+                var pTitles = showTitlesUi ? pfCollectProfileTitles(p.id) : [];
                 var titlesOpen = !!pfTitlesOpenIds[p.id];
                 html += '<div class="pf-row' + (p.id === activeId ? ' active' : '') + '" style="flex-wrap: wrap;">' +
                     '<input type="color" class="pf-color-input" value="' + colorVal + '" title="' + t('pf.colorTitle') + '" onchange="pfSetProfileColor(\'' + p.id + '\', this.value)">' +
@@ -3333,7 +3383,7 @@
                     (p.color ? '<button type="button" class="pf-icon-btn pf-color-clear-btn" title="' + t('pf.colorReset') + '" onclick="pfClearProfileColor(\'' + p.id + '\')"><svg class="inline-icon" width="14" height="14"><use href="#i-sync"/></svg></button>' : '') +
                     '<button type="button" class="pf-icon-btn" onclick="pfStartRename(\'' + p.id + '\')"><svg class="inline-icon" width="14" height="14"><use href="#i-edit"/></svg></button>' +
                     (list.length > 1 ? '<button type="button" class="pf-icon-btn" onclick="pfStartDelete(\'' + p.id + '\')"><svg class="inline-icon" width="14" height="14"><use href="#i-trash"/></svg></button>' : '') +
-                    (pTitles.length > 0
+                    (!showTitlesUi ? '' : (pTitles.length > 0
                         ? '<button type="button" class="pf-titles-toggle" aria-expanded="' + titlesOpen + '" onclick="pfToggleProfileTitles(\'' + p.id + '\')"><svg class="inline-icon" width="13" height="13"><use href="#i-trophy"/></svg> ' +
                             t('pf.titlesToggle', { count: pTitles.length }) + '<span class="pf-titles-caret"><svg class="inline-icon" width="13" height="13"><use href="#i-chevron-down"/></svg></span></button>' +
                           (titlesOpen
@@ -3343,7 +3393,7 @@
                                       ' <span class="pf-title-source">(' + pfEscapeHtml(ti.source) + ')</span></span></div>';
                               }).join('') + '</div>'
                               : '')
-                        : '<p class="pf-titles-empty">' + t('pf.titlesEmpty') + '</p>') +
+                        : '<p class="pf-titles-empty">' + t('pf.titlesEmpty') + '</p>')) +
                     '</div>';
             });
             body.innerHTML = html;
@@ -3406,7 +3456,10 @@
             { key: 'candle',         icon: '<svg class="inline-icon" width="14" height="14"><use href="#i-candle"/></svg>' },
             { key: 'heart',          icon: '<svg class="inline-icon" width="14" height="14"><use href="#i-heart"/></svg>' },
             { key: 'ascendedCandle', icon: '<svg class="inline-icon" width="14" height="14"><use href="#i-star-candle"/></svg>' },
-            { key: 'seasonCandle',   icon: '<svg class="inline-icon" width="14" height="14"><use href="#i-candle"/></svg>' },
+            // 🩹 通常の「キャンドル」(i-candle)と見た目で見分けやすいよう、シーズンキャンドルは
+            // 別アイコン(i-sparkle)にする(以前は2行とも同じi-candleで、縦に並ぶと一瞬で
+            // 見分けがつかなかった)。
+            { key: 'seasonCandle',   icon: '<svg class="inline-icon" width="14" height="14"><use href="#i-sparkle"/></svg>' },
             { key: 'giftPass',       icon: '<svg class="inline-icon" width="14" height="14"><use href="#i-ticket"/></svg>' }
         ];
         function pfCompanionDataKey() {
@@ -3455,6 +3508,15 @@
                 localStorage.setItem(ekey, JSON.stringify(extra));
             }
         }
+        // ➖➕ 数値入力欄の隣にステッパーボタンを添える(モバイルでnumber入力の小さい
+        // スピナー矢印を正確にタップするのが難しいため、増減1ずつのタップ操作を用意する)。
+        // 大きな値へまとめて変更したい場合は引き続き入力欄への直接入力も使える。
+        function pfStepCurrency(field, delta) {
+            var c = pfLoadCurrency();
+            var next = Math.max(0, (Number(c[field]) || 0) + delta);
+            pfSaveCurrencyField(field, next);
+            pfRenderCurrency();
+        }
         // 所持通貨の値をそのまま文字列結合すると、極端に大きい値(1e+21以上)は
         // Numberの既定のtoString()で "1e+24" のような指数表記になってしまい、
         // type="number"の入力欄にその文字列がそのまま表示されてしまう。
@@ -3471,8 +3533,14 @@
             body.innerHTML = PF_CURRENCY_FIELDS.map(function (f) {
                 return '<div class="pf-currency-row">' +
                     '<span class="pf-currency-label">' + f.icon + ' ' + t('pf.currency.' + f.key) + '</span>' +
-                    '<input type="number" min="0" class="pf-currency-input" value="' + pfPlainNumber(c[f.key]) + '" ' +
-                    'onchange="pfSaveCurrencyField(\'' + f.key + '\', this.value)">' +
+                    '<div class="pf-currency-controls">' +
+                    '<button type="button" class="pf-currency-step-btn" aria-label="' + t('pf.currencyMinus') + '" onclick="pfStepCurrency(\'' + f.key + '\', -1)">' +
+                    '<svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>' +
+                    '<input type="number" min="0" inputmode="numeric" class="pf-currency-input" value="' + pfPlainNumber(c[f.key]) + '" ' +
+                    'onchange="pfSaveCurrencyField(\'' + f.key + '\', this.value); pfRenderCurrency();">' +
+                    '<button type="button" class="pf-currency-step-btn" aria-label="' + t('pf.currencyPlus') + '" onclick="pfStepCurrency(\'' + f.key + '\', 1)">' +
+                    '<svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>' +
+                    '</div>' +
                     '</div>';
             }).join('');
             pfSyncCurrencyToggleUI();
@@ -3852,6 +3920,10 @@
             if (shortcutsBtn) {
                 shortcutsBtn.innerHTML = skyShortcutsEnabled() ? t('settings.shortcutsOn') : t('settings.shortcutsOff');
             }
+            var titlesBtn = document.getElementById('settingsTitlesBtn');
+            if (titlesBtn) {
+                titlesBtn.innerHTML = skyTitlesVisible() ? t('settings.titlesOn') : t('settings.titlesOff');
+            }
             // 🌐 言語セレクター：現在アクティブな言語のボタンをハイライトする
             // （ホーム画面アイコンのモード切替ボタンと同じ「選択中はアクセントカラー」方式）。
             var curLang = pfGetLang();
@@ -3868,6 +3940,20 @@
         function settingsToggleShortcuts() {
             try { localStorage.setItem(SHORTCUTS_KEY, skyShortcutsEnabled() ? '0' : '1'); } catch (e) {}
             settingsSyncUI();
+        }
+
+        // 🏆 称号の表示/非表示トグル。テーマ切替(window.toggleTheme)と同じく、この設定の
+        // 実際の表示反映はVue側の称号カード・トースト(titlesVisible ref)が担うため、
+        // ここではlocalStorage更新に加えてwindow.pfSyncTitlesVisible経由で橋渡しする
+        // （IIFE⇄Vue間はwindowに生やした関数で橋渡しする、既存の考え方に合わせる）。
+        // プロフィール切替モーダル内の称号一覧はIIFE側(pfRenderModal)が毎回
+        // skyTitlesVisible()を読んで描画するため、開いていれば併せて再描画する。
+        function settingsToggleTitlesVisible() {
+            var next = !skyTitlesVisible();
+            try { localStorage.setItem(TITLES_VISIBLE_KEY, next ? '1' : '0'); } catch (e) {}
+            settingsSyncUI();
+            if (window.pfSyncTitlesVisible) window.pfSyncTitlesVisible(next);
+            pfRenderModal();
         }
 
         function settingsOpenModal() {
@@ -4311,6 +4397,7 @@
         window.settingsOpenModal = settingsOpenModal;
         window.settingsCloseModal = settingsCloseModal;
         window.settingsToggleShortcuts = settingsToggleShortcuts;
+        window.settingsToggleTitlesVisible = settingsToggleTitlesVisible;
         window.settingsSyncUI = settingsSyncUI;
 
         window.pfIconOpenModal = pfIconOpenModal;
@@ -4347,6 +4434,7 @@
         window.pfConfirmDeleteInline = pfConfirmDeleteInline;
         window.pfAddProfile = pfAddProfile;
         window.pfSaveCurrencyField = pfSaveCurrencyField;
+        window.pfStepCurrency = pfStepCurrency;
         window.pfToggleCurrency = pfToggleCurrency;
         window.pfSetProfileColor = pfSetProfileColor;
         window.pfClearProfileColor = pfClearProfileColor;
@@ -4448,6 +4536,13 @@
             // template の {{ }} からも、setup() 内のプレーンな関数からも t() で参照でき、
             // 値が変わればテンプレートはVueが自動で再描画する(手動でのDOM操作は不要)。
             const lang = ref(localStorage.getItem('sky_app_lang') === 'en' ? 'en' : 'ja');
+
+            // 🏆 称号の表示/非表示（⚙️ 表示設定モーダル、端末単位・プロフィール非依存）。
+            // テーマ・言語と同じ「ref + window橋渡し」方式: 設定の実体(IIFE側の
+            // settingsToggleTitlesVisible/表示設定モーダルのボタン)はVue管理外のプレーン
+            // JSにあるため、変更されたらwindow.pfSyncTitlesVisible経由でこのrefへ反映する。
+            const titlesVisible = ref(localStorage.getItem('sky_titles_visible') !== '0');
+            window.pfSyncTitlesVisible = (visible) => { titlesVisible.value = !!visible; };
 
             const TRANSLATIONS = {
                 ja: {
@@ -4982,6 +5077,11 @@
             });
 
             const showTitleToast = (title) => {
+                // ⚙️ 表示設定で称号を非表示にしている場合はトーストも出さない
+                // (称号が表示される箇所すべてに設定を反映させるため)。獲得の記録自体
+                // (titlesData/saveTitles)は設定に関わらず継続するので、後で表示をONに
+                // 戻せば獲得済み分もちゃんと見える。
+                if (!titlesVisible.value) return;
                 const seq = ++titleToastSeq;
                 titleToasts.value.push({ seq, icon: title.icon, name: t('titles.' + title.id + '.name') });
                 setTimeout(() => {
@@ -5420,7 +5520,7 @@
                 expiringSoonOnly, focusExpiringSoon, listSectionRef,
                 exportItemIcs, exportListText, exportAllIcs, activeItemsForIcs,
                 handlePhotoFile, removePhoto,
-                earnedTitleList, titleChipList, titleToasts,
+                earnedTitleList, titleChipList, titleToasts, titlesVisible,
                 hasAnyCalendarEvents, calendarMonthLabel, calendarWeekdayLabels, calendarCells, calendarSeverityColor,
                 isCurrentMonthShown, goToPrevMonth, goToNextMonth, goToCurrentMonth,
                 selectedCalendarDate, selectCalendarDay, selectedDayItems, selectedCalendarDateLabel,
