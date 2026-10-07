@@ -804,16 +804,6 @@
 
         .sidebar-nav-link:hover { background: var(--tab-bg); text-decoration: none; }
 
-        .sidebar-nav-link.current-tool {
-            background: rgba(0, 122, 255, 0.1);
-            color: var(--accent-blue);
-            font-weight: 700;
-        }
-
-        [data-theme="dark"] .sidebar-nav-link.current-tool {
-            background: rgba(0, 122, 255, 0.18);
-        }
-
         /* 精度に不安がある新機能であることを示す小さな注記（例: 楽譜づくり） */
         .tool-badge-test { font-size: 9px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.3px; }
 
@@ -1465,49 +1455,12 @@
                 <div class="sidebar-section-label" style="margin-bottom: 0;">{{ t('sidebar.relatedTools') }}</div>
                 <button class="sidebar-close-btn" @click="showSidebar = false"><span class="icon-chip" style="width:22px; height:22px;"><svg width="16" height="16"><use href="#i-close"/></svg></span></button>
             </div>
+            <!-- 関連ツール一覧は共通JSON(site-links.json)から描画する（取得・キャッシュは setup() 内の siteLinks* を参照） -->
             <nav>
-                <a href="https://taipak5000.github.io/tai-item/" class="sidebar-nav-link">
-                    <svg class="inline-icon" width="19" height="19"><use href="#i-folder"/></svg> {{ t('sidebar.item') }}
+                <a v-for="tool in siteLinksData" :key="tool.path" :href="'https://taipak5000.github.io/' + tool.path + '/'" class="sidebar-nav-link">
+                    <svg class="inline-icon" width="19" height="19"><use :href="'#' + tool.icon"/></svg><span v-if="tool.badgeTest" class="tool-badge-test">test</span> {{ siteLinkName(tool) }}
                 </a>
-                <a href="https://taipak5000.github.io/tai-emote/" class="sidebar-nav-link">
-                    <svg class="inline-icon" width="19" height="19"><use href="#i-masks"/></svg> {{ t('sidebar.emote') }}
-                </a>
-                <a href="https://taipak5000.github.io/share/" class="sidebar-nav-link current-tool">
-                    <svg class="inline-icon" width="19" height="19"><use href="#i-pin"/></svg> {{ t('sidebar.share') }}
-                </a>
-                <a href="https://taipak5000.github.io/tai-nomacan/" class="sidebar-nav-link">
-                    <svg class="inline-icon" width="19" height="19"><use href="#i-candle"/></svg> {{ t('sidebar.nomacan') }}
-                </a>
-                <a href="https://taipak5000.github.io/star-candle/" class="sidebar-nav-link">
-                    <svg class="inline-icon" width="19" height="19"><use href="#i-star-candle"/></svg> {{ t('sidebar.starCandle') }}
-                </a>
-                <a href="https://taipak5000.github.io/companion/" class="sidebar-nav-link">
-                    <svg class="inline-icon" width="19" height="19"><use href="#i-sparkle"/></svg> {{ t('sidebar.companion') }}
-                </a>
-                <a href="https://taipak5000.github.io/wings/" class="sidebar-nav-link">
-                    <svg class="inline-icon" width="19" height="19"><use href="#i-wing"/></svg> {{ t('sidebar.wings') }}
-                </a>
-                <a href="https://taipak5000.github.io/tai-catalog/" class="sidebar-nav-link">
-                    <svg class="inline-icon" width="19" height="19"><use href="#i-tree"/></svg><span class="tool-badge-test">test</span> {{ t('sidebar.catalog') }}
-                </a>
-                <a href="https://taipak5000.github.io/tai-revisit/" class="sidebar-nav-link">
-                    <svg class="inline-icon" width="19" height="19"><use href="#i-wing"/></svg> {{ t('sidebar.revisit') }}
-                </a>
-                <a href="https://taipak5000.github.io/tai-score/" class="sidebar-nav-link">
-                    <svg class="inline-icon" width="19" height="19"><use href="#i-music-note"/></svg><span class="tool-badge-test">test</span> {{ t('sidebar.score') }}
-                </a>
-                <a href="https://taipak5000.github.io/tai-card/" class="sidebar-nav-link">
-                    <svg class="inline-icon" width="19" height="19"><use href="#i-card"/></svg> {{ t('sidebar.card') }}
-                </a>
-                <a href="https://taipak5000.github.io/tai-transfer/" class="sidebar-nav-link">
-                    <svg class="inline-icon" width="19" height="19"><use href="#i-sync"/></svg> {{ t('sidebar.transfer') }}
-                </a>
-                <a href="https://taipak5000.github.io/tai-info/" class="sidebar-nav-link">
-                    <svg class="inline-icon" width="19" height="19"><use href="#i-settings"/></svg> {{ t('sidebar.info') }}
-                </a>
-                <a href="https://taipak5000.github.io/skyzztai-profile/" class="sidebar-nav-link">
-                    <svg class="inline-icon" width="19" height="19"><use href="#i-person"/></svg> {{ t('sidebar.profile') }}
-                </a>
+                <p v-if="!siteLinksData && siteLinksFailed" style="margin: 0; padding: 4px 12px; font-size: 12px; color: var(--text-gray);">{{ t('sidebar.loadFailed') }}</p>
             </nav>
         </aside>
 
@@ -4557,20 +4510,7 @@
                     'theme.system': 'システム',
                     'theme.ariaLabel': '現在のテーマ: {current}。クリックで{next}に切替',
                     'sidebar.relatedTools': '関連ツール',
-                    'sidebar.item': 'アイテム所持管理',
-                    'sidebar.emote': 'エモート所持率管理',
-                    'sidebar.share': '創作物管理ツール',
-                    'sidebar.nomacan': 'ノマキャン計算機',
-                    'sidebar.starCandle': '星のキャンドル計算機',
-                    'sidebar.companion': '精霊同行ツール',
-                    'sidebar.wings': '羽トラッカー',
-                    'sidebar.catalog': '精霊ツリー管理',
-                    'sidebar.revisit': '再訪精霊データベース',
-                    'sidebar.score': '楽譜づくり',
-                    'sidebar.card': '星紡ぎカード',
-                    'sidebar.transfer': 'データ引継ぎ',
-                    'sidebar.info': '設定・クレジット',
-                    'sidebar.profile': '作者プロフィール',
+                    'sidebar.loadFailed': 'ツール一覧を読み込めませんでした',
                     'stats.header': '現在の状態',
                     'stats.active': '設置中',
                     'stats.warning': '期限間近',
@@ -4665,20 +4605,7 @@
                     'theme.system': 'System',
                     'theme.ariaLabel': 'Current theme: {current}. Click to switch to {next}.',
                     'sidebar.relatedTools': 'Related Tools',
-                    'sidebar.item': 'Item Collection',
-                    'sidebar.emote': 'Emote Collection',
-                    'sidebar.share': 'Creation Manager',
-                    'sidebar.nomacan': 'Nomacan Calculator',
-                    'sidebar.starCandle': 'Star Candle Calculator',
-                    'sidebar.companion': 'Spirit Companion Tool',
-                    'sidebar.wings': 'Wing Tracker',
-                    'sidebar.catalog': 'Spirit Tree Catalog',
-                    'sidebar.revisit': 'Revisit Spirit Database',
-                    'sidebar.score': 'Sheet Music Maker',
-                    'sidebar.card': 'Self-Intro Card Maker',
-                    'sidebar.transfer': 'Data Transfer',
-                    'sidebar.info': 'Settings & Credits',
-                    'sidebar.profile': 'Creator Profile',
+                    'sidebar.loadFailed': 'Could not load the tool list',
                     'stats.header': 'Current Status',
                     'stats.active': 'Active',
                     'stats.warning': 'Expiring Soon',
@@ -4779,6 +4706,40 @@
             };
 
             const optLabel = (o) => lang.value === 'en' ? o.labelEn : o.label;
+
+            /* ================================================================
+               🧭 共通「関連ツール」一覧（サイドバー）
+               一覧の元データは1か所だけ: https://taipak5000.github.io/tai-item/site-links.json
+               （itemリポジトリ）。そこを編集すると全サイトのサイドバーに反映される。
+               取得結果は端末にキャッシュし、オフラインでも前回の一覧で表示する。
+               ※反映は各サイトのService Workerのキャッシュ経由のため、編集後1回リロードが遅れることがある
+               ※描画はテンプレート側の v-for（siteLinksData / siteLinkName）。言語切替は lang(ref) に自動で追従する
+               ================================================================ */
+            const SITE_LINKS_URL = 'https://taipak5000.github.io/tai-item/site-links.json';
+            const SITE_LINKS_CACHE_KEY = 'sky_site_links_v1'; // 端末単位・全サイト共通（プロフィールには依存しない）
+
+            const siteLinksParse = (d) => {
+                if (!d || !Array.isArray(d.tools)) return null;
+                const ok = d.tools.filter(tool => tool && /^[A-Za-z0-9._-]+$/.test(tool.path) && /^i-[a-z0-9-]+$/.test(tool.icon));
+                return ok.length ? ok : null;
+            };
+            const siteLinksLoadCached = () => {
+                try { return siteLinksParse(JSON.parse(localStorage.getItem(SITE_LINKS_CACHE_KEY))); } catch (e) { return null; }
+            };
+            const siteLinksData = ref(siteLinksLoadCached());
+            const siteLinksFailed = ref(false); // 取得に失敗し、かつキャッシュも無い時だけ「読み込めませんでした」を出す（取得中は何も出さない）
+            const siteLinksRefresh = async () => {
+                const res = await fetch(SITE_LINKS_URL, { cache: 'no-cache' });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const raw = await res.json();
+                const tools = siteLinksParse(raw);
+                if (!tools) throw new Error('invalid site-links.json');
+                if (JSON.stringify(tools) !== JSON.stringify(siteLinksData.value)) siteLinksData.value = tools;
+                try { localStorage.setItem(SITE_LINKS_CACHE_KEY, JSON.stringify(raw)); } catch (e) {}
+            };
+            const siteLinkName = (tool) => tool[lang.value] || tool.en || tool.ja;
+            // 起動時: キャッシュで即表示 → 裏で最新を取得（失敗してもキャッシュ表示のまま・キャッシュも無ければ「読み込めませんでした」を出す）
+            siteLinksRefresh().catch(() => { siteLinksFailed.value = true; });
 
             // 🌓 ヘッダーのテーマ切替ボタン用: 現在のモードと、クリックした場合に
             // 次に切り替わる先を説明するaria-label。3状態を巡回するボタンはON/OFFの
@@ -5513,7 +5474,7 @@
             watch(placedItems, () => { save(); }, { deep: true });
 
             return {
-                isDarkMode, themeMode, toggleTheme, themeAriaLabel, showSidebar,
+                isDarkMode, themeMode, toggleTheme, themeAriaLabel, showSidebar, siteLinksData, siteLinksFailed, siteLinkName,
                 lang, t, optLabel, toggleLang, activeProfileName,
                 placedItems, sortedPlacedItems, stats, getDaysLeft, getExpiryDateString, formatDateForInput,
                 updateItemDate, addItem, removeItem, rePlaceItem, suspendItem, confirmDeleteId,
